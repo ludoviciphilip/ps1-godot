@@ -1,0 +1,129 @@
+## Headless regression tests for the toolkit:
+##   godot --headless --path . res://tests/test_toolkit.tscn
+extends Node3D
+
+var _fails := 0
+
+func check(cond: bool, msg: String) -> void:
+	print(("  ok   " if cond else "  FAIL ") + msg)
+	if not cond:
+		_fails += 1
+
+func _ready() -> void:
+	await _test_bake()
+	_test_palette()
+	_test_lod()
+	_test_convert()
+	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
+	get_tree().quit(1 if _fails else 0)
+
+func _vertex_color_near(mi: MeshInstance3D, p: Vector3) -> Color:
+	var arr := mi.mesh.surface_get_arrays(0)
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var cols: PackedColorArray = arr[Mesh.ARRAY_COLOR]
+	var best := 0
+	for i in verts.size():
+		if (mi.global_transform * verts[i]).distance_to(p) < (mi.global_transform * verts[best]).distance_to(p):
+			best = i
+	return cols[best]
+
+func _test_bake() -> void:
+	print("PS1Bake")
+	var root := Node3D.new()
+	add_child(root)
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(20, 20)
+	plane.subdivide_width = 19
+	plane.subdivide_depth = 19
+	var ground := MeshInstance3D.new()
+	ground.mesh = plane
+	ground.material_override = PS1.make(null, {})
+	root.add_child(ground)
+	var wall := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.5, 3, 4)
+	wall.mesh = bm
+	wall.position = Vector3(3, 1.5, 0)
+	wall.material_override = PS1.make(null, {})
+	root.add_child(wall)
+	var light := OmniLight3D.new()
+	light.omni_range = 10.0
+	light.light_energy = 2.0
+	light.position = Vector3(0, 1.0, 0)
+	add_child(light)
+	await PS1Bake.bake_scene(root, Color.BLACK, true, [light])
+	var near := _vertex_color_near(ground, Vector3(1, 0, 0))
+	var behind := _vertex_color_near(ground, Vector3(5, 0, 0))
+	var side := _vertex_color_near(ground, Vector3(-5, 0, 0))
+	print("    near=%s behind_wall=%s same_dist_open=%s" % [near, behind, side])
+	check(near.r > 0.1, "ground near the light is lit")
+	check(side.r > 0.005, "ground at 5 m (open side) receives light")
+	check(behind.r < side.r * 0.2, "ground behind the wall is in shadow")
+	check(PS1Convert.mode_of(ground.material_override) == "unlit", "material switched to unlit")
+	light.queue_free()
+	root.queue_free()
+
+func _test_palette() -> void:
+	print("PS1Palette")
+	var tex := PS1Textures.mossy_rock()
+	var q := PS1Palette.quantize(tex, 16)
+	var img := q.get_image()
+	var colors := {}
+	for y in img.get_height():
+		for x in img.get_width():
+			colors[img.get_pixel(x, y).to_html()] = true
+	var orig := {}
+	var oi := tex.get_image()
+	for y in oi.get_height():
+		for x in oi.get_width():
+			orig[oi.get_pixel(x, y).to_html()] = true
+	print("    original colors=%d quantized=%d" % [orig.size(), colors.size()])
+	check(colors.size() <= 16, "quantized texture has <= 16 colors")
+	check(orig.size() > 16, "source texture had more than 16 colors")
+	if OS.get_cmdline_user_args().has("--save-images"):
+		var a := tex.get_image()
+		var b := q.get_image()
+		a.convert(Image.FORMAT_RGB8)
+		b.convert(Image.FORMAT_RGB8)
+		a.resize(256, 256, Image.INTERPOLATE_NEAREST)
+		b.resize(256, 256, Image.INTERPOLATE_NEAREST)
+		var out := Image.create(520, 256, false, Image.FORMAT_RGB8)
+		out.fill(Color.BLACK)
+		out.blit_rect(a, Rect2i(0, 0, 256, 256), Vector2i(0, 0))
+		out.blit_rect(b, Rect2i(0, 0, 256, 256), Vector2i(264, 0))
+		out.save_png(ProjectSettings.globalize_path("res://docs/palette.png"))
+
+func _test_lod() -> void:
+	print("PS1LOD")
+	var lod := PS1LOD.new()
+	lod.distances = PackedFloat32Array([10.0])
+	lod.draw_distance = 20.0
+	lod.fade = 2.0
+	var a := MeshInstance3D.new()
+	a.mesh = BoxMesh.new()
+	a.material_override = PS1.make(null, {})
+	var b := MeshInstance3D.new()
+	b.mesh = BoxMesh.new()
+	b.material_override = PS1.make(null, {})
+	lod.add_child(a)
+	lod.add_child(b)
+	add_child(lod)
+	var fa: Vector4 = a.get_instance_shader_parameter("ps1_fade")
+	var fb: Vector4 = b.get_instance_shader_parameter("ps1_fade")
+	print("    level0=%s level1=%s" % [fa, fb])
+	check(fa == Vector4(0, 0, 9, 11), "level 0 fades out around 10 m")
+	check(fb == Vector4(9, 11, 19, 21), "level 1 fades in at 10 m and out at 20 m")
+	check(a.visibility_range_end > 11.0 and b.visibility_range_begin < 9.0, "culling ranges have margins")
+	lod.queue_free()
+
+func _test_convert() -> void:
+	print("PS1Convert")
+	var sm := StandardMaterial3D.new()
+	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	sm.alpha_scissor_threshold = 0.3
+	var m := PS1Convert.to_ps1(sm)
+	check(PS1Convert.mode_of(m) == "cutout", "alpha scissor -> cutout")
+	check(is_equal_approx(m.get_shader_parameter("alpha_cut"), 0.3), "keeps the scissor threshold")
+	var sm2 := StandardMaterial3D.new()
+	sm2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	check(PS1Convert.mode_of(PS1Convert.to_ps1(sm2)) == "dither_alpha", "alpha blend -> dither_alpha")

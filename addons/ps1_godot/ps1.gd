@@ -5,8 +5,6 @@ extends CanvasLayer
 const RESOLUTIONS := [Vector2i(320, 240), Vector2i(480, 360), Vector2i(640, 480)]
 var _res_index := 0
 
-const LIT_SHADER := preload("res://addons/ps1_godot/shaders/ps1_lit.gdshader")
-const LIT_DOUBLE_SHADER := preload("res://addons/ps1_godot/shaders/ps1_lit_double_sided.gdshader")
 
 ## Set to false to disable the F1-F5 debug keys.
 var debug_keys := OS.is_debug_build()
@@ -22,17 +20,25 @@ func _ready() -> void:
 	rect.material = m
 	add_child(rect)
 
-## Creates a ready-to-use PS1 material.
+## Creates a ready-to-use PS1 material (shortcut; see make() for every option).
 func material(tex: Texture2D, color := Color.WHITE, uv_scale := Vector2.ONE,
 		emission := Color.BLACK, emission_energy := 0.0, double_sided := false) -> ShaderMaterial:
-	var m := ShaderMaterial.new()
-	m.shader = LIT_DOUBLE_SHADER if double_sided else LIT_SHADER
-	m.set_shader_parameter("albedo_tex", tex)
-	m.set_shader_parameter("albedo_color", color)
-	m.set_shader_parameter("uv_scale", uv_scale)
-	m.set_shader_parameter("emission_color", emission)
-	m.set_shader_parameter("emission_energy", emission_energy)
-	return m
+	return PS1Convert.make(tex, {color = color, uv_scale = uv_scale, emission = emission,
+		emission_energy = emission_energy, mode = "double_sided" if double_sided else "opaque"})
+
+## Creates a PS1 material with options: color, uv_scale, emission, emission_energy,
+## mode ("opaque", "double_sided", "cutout", "dither_alpha", "unlit", "unlit_cutout"),
+## alpha_cut, texture_color_levels, vertex_color.
+func make(tex: Texture2D, opts := {}) -> ShaderMaterial:
+	return PS1Convert.make(tex, opts)
+
+## Hides every mesh under node beyond `distance` (meters), with a dithered fade of `fade` meters.
+## The classic PS1 draw distance; pair it with fog.
+func draw_distance(node: Node, distance: float, fade := 3.0) -> void:
+	for g in PS1LOD.geometries(node):
+		g.set_instance_shader_parameter("ps1_fade", Vector4(0, 0, distance - fade, distance))
+		g.visibility_range_end = distance + PS1LOD.radius(g)
+		g.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 
 ## Flashes every mesh under node (hit feedback). Works with PS1 materials only.
 func flash(node: Node, color := Color.WHITE, duration := 0.12) -> void:

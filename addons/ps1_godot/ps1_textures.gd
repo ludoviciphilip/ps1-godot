@@ -68,3 +68,55 @@ static func flat(c: Color) -> ImageTexture:
 	var img := _img(4)
 	img.fill(c)
 	return ImageTexture.create_from_image(img)
+
+static func _img_rgba(size := 64) -> Image:
+	return Image.create(size, size, false, Image.FORMAT_RGBA8)
+
+## Wrought-iron fence with transparent gaps (use with mode "cutout").
+static func iron_fence() -> ImageTexture:
+	var img := _img_rgba()
+	img.fill(Color(0, 0, 0, 0))
+	var n := _noise(13, 0.3)
+	for y in 64:
+		for x in 64:
+			var bar := x % 16 < 3
+			var rail := (y >= 8 and y < 11) or (y >= 52 and y < 55)
+			var spike := y < 8 and x % 16 < 3 and absi((x % 16) - 1) <= (y / 3)
+			if (bar and y >= 6) or rail or spike:
+				var v := 0.5 + 0.5 * n.get_noise_2d(x, y)
+				img.set_pixel(x, y, _quant(Color(0.16, 0.15, 0.15) * (0.7 + 0.6 * v), 10.0))
+	return ImageTexture.create_from_image(img)
+
+## Grass tuft card (use with mode "cutout" on crossed quads).
+static func grass() -> ImageTexture:
+	var img := _img_rgba()
+	img.fill(Color(0, 0, 0, 0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 21
+	for i in 22:
+		var x0 := rng.randf_range(4, 60)
+		var hgt := rng.randf_range(24, 60)
+		var lean := rng.randf_range(-10, 10)
+		var c := Color(0.2, 0.28, 0.12).lerp(Color(0.36, 0.38, 0.16), rng.randf())
+		for t in int(hgt):
+			var f := t / hgt
+			var x := int(x0 + lean * f * f)
+			var wdt := int(2.0 * (1.0 - f)) + 1
+			for dx in wdt:
+				var px := clampi(x + dx, 0, 63)
+				img.set_pixel(px, 63 - t, _quant(c * (0.6 + 0.6 * f), 10.0))
+	return ImageTexture.create_from_image(img)
+
+## Smooth, colorful texture (many colors): handy to show what PS1Palette does.
+static func mossy_rock() -> ImageTexture:
+	var img := _img(64)
+	var n := _noise(31, 0.06)
+	var n2 := _noise(37, 0.25)
+	for y in 64:
+		for x in 64:
+			var v := 0.5 + 0.5 * n.get_noise_2d(x, y)
+			var d := 0.5 + 0.5 * n2.get_noise_2d(x, y)
+			var rock := Color(0.42, 0.40, 0.38).lerp(Color(0.25, 0.27, 0.33), d)
+			var moss := Color(0.22, 0.38, 0.14).lerp(Color(0.45, 0.48, 0.18), d)
+			img.set_pixel(x, y, rock.lerp(moss, smoothstep(0.45, 0.7, v)) * (0.75 + 0.4 * d))
+	return ImageTexture.create_from_image(img)
