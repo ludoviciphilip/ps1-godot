@@ -35,6 +35,12 @@ var glow := PS1.material(tex, Color.WHITE, Vector2.ONE, Color.ORANGE, 2.0)  # + 
 var cape := PS1.material(tex, Color.WHITE, Vector2.ONE, Color.BLACK, 0.0, true)  # double-sided
 ```
 
+**Hit flash** (per-instance, no material duplication)
+```gdscript
+PS1.flash($Enemy)                         # white flash, 0.12 s
+PS1.flash($Player, Color.RED, 0.2)
+```
+
 **Convert imported models (Blender .glb, .blend...)**
 ```gdscript
 PS1Convert.apply($Knight)   # keeps albedo color/texture, emission and cull mode
@@ -74,6 +80,7 @@ Open this folder in Godot and press F5. `TAB` toggles a free camera (WASD, Q/E, 
 
 - [x] Core look: jitter, affine, vertex lighting, low-res, dithering
 - [x] Material converter + import script
+- [x] Per-instance hit flash
 - [ ] Optional texture color quantization / palettes
 - [ ] Alpha-scissor material (foliage, fences)
 - [ ] Per-object draw distance / LOD helpers

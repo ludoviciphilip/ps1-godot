@@ -9,6 +9,8 @@ uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform vec2 uv_scale = vec2(1.0);
 uniform vec3 emission_color : source_color = vec3(0.0);
 uniform float emission_energy = 0.0;
+// Per-instance flash (hit feedback): rgb = color, a = amount. Set with PS1.flash().
+instance uniform vec4 ps1_flash = vec4(0.0);
 
 // (uv * w, w): dividir no fragment desfaz a correção de perspectiva -> mapeamento affine.
 varying vec3 affine_uv;
@@ -28,5 +30,6 @@ void fragment() {
 	vec2 uv = affine_uv.xy / affine_uv.z;
 	vec4 tex = texture(albedo_tex, uv);
 	ALBEDO = tex.rgb * albedo_color.rgb;
-	EMISSION = emission_color * emission_energy;
+	ALBEDO = mix(ALBEDO, ps1_flash.rgb, ps1_flash.a);
+	EMISSION = emission_color * emission_energy + ps1_flash.rgb * ps1_flash.a * 0.6;
 }

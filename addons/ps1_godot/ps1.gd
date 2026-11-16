@@ -34,6 +34,20 @@ func material(tex: Texture2D, color := Color.WHITE, uv_scale := Vector2.ONE,
 	m.set_shader_parameter("emission_energy", emission_energy)
 	return m
 
+## Flashes every mesh under node (hit feedback). Works with PS1 materials only.
+func flash(node: Node, color := Color.WHITE, duration := 0.12) -> void:
+	var meshes: Array[GeometryInstance3D] = []
+	if node is GeometryInstance3D:
+		meshes.append(node)
+	for n in node.find_children("*", "GeometryInstance3D", true, false):
+		meshes.append(n)
+	var tw := node.create_tween()
+	tw.tween_method(func(a: float) -> void:
+		for m in meshes:
+			if is_instance_valid(m):
+				m.set_instance_shader_parameter("ps1_flash", Color(color.r, color.g, color.b, a)),
+		1.0, 0.0, duration)
+
 func toggle(param: String) -> void:
 	var v: float = RenderingServer.global_shader_parameter_get(param)
 	RenderingServer.global_shader_parameter_set(param, 0.0 if v > 0.5 else 1.0)
