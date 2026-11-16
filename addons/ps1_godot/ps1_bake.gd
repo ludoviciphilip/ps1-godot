@@ -9,6 +9,10 @@
 ## bonfire right next to the light):   mesh_instance.set_meta("ps1_no_cast", true)
 ## Skip shadows from a light:   light.set_meta("ps1_no_shadow", true)
 ## Tip: lighting is per vertex, so subdivide big surfaces (sharper shadows need more vertices).
+##
+## Bake once, load instantly: bake_scene_cached() saves the baked meshes to a resource and
+## reuses them while the scene (meshes, transforms, lights) is unchanged. Run the scene once
+## from the editor and ship the cache file with the game (res:// is read-only in exports).
 class_name PS1Bake
 
 const SHADOW_LAYER := 1 << 19   # temporary collision layer used for the shadow rays
@@ -17,11 +21,8 @@ const SHADOW_LAYER := 1 << 19   # temporary collision layer used for the shadow 
 static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Array = [], to_unlit := true) -> void:
 	var tree := root.get_tree()
 	if lights.is_empty():
-		lights = tree.root.find_children("*", "Light3D", true, false).filter(func(l): return l.is_visible_in_tree())
-	var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)
-	if root is MeshInstance3D:
-		meshes.append(root)
-	meshes = meshes.filter(func(m): return m.mesh != null and m.skin == null and m.is_visible_in_tree() and not m.has_meta("ps1_no_bake"))
+		lights = _scene_lights(tree)
+	var meshes := _bakeable(root)
 	var temp: Array[Node] = []
 	var space: PhysicsDirectSpaceState3D = null
 	if shadows:
@@ -44,6 +45,75 @@ static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Ar
 		bake_mesh(mi, ambient, lights, space, to_unlit)
 	for b in temp:
 		b.queue_free()
+
+## Like bake_scene(), but loads the result from cache_path when it is still valid and saves
+## it after a fresh bake. Returns true if the cache was used.
+static func bake_scene_cached(root: Node3D, ambient: Color, cache_path := "", shadows := true, lights: Array = []) -> bool:
+	var tree := root.get_tree()
+	if lights.is_empty():
+		lights = _scene_lights(tree)
+	if cache_path == "":
+		var scene_file := tree.current_scene.scene_file_path if tree.current_scene else ""
+		cache_path = "res://ps1_bake_cache/%s_%s.res" % [scene_file.get_file().get_basename() if scene_file else "scene", root.name]
+	var meshes := _bakeable(root)
+	var sig := _signature(root, meshes, lights, ambient, shadows)
+	if ResourceLoader.exists(cache_path):
+		var cache := load(cache_path) as PS1BakeCache
+		if cache and cache.signature == sig:
+			for mi in meshes:
+				var key := _key(root, mi)
+				if cache.meshes.has(key):
+					_apply_baked(mi, cache.meshes[key])
+			return true
+	await bake_scene(root, ambient, shadows, lights)
+	var out := PS1BakeCache.new()
+	out.signature = sig
+	for mi in meshes:
+		out.meshes[_key(root, mi)] = [mi.mesh, mi.material_override]
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(cache_path.get_base_dir()))
+	var err := ResourceSaver.save(out, cache_path)
+	if err != OK and OS.has_feature("editor"):
+		push_warning("PS1Bake: could not save cache to %s (%s)" % [cache_path, error_string(err)])
+	return false
+
+## Stable key for a node: its child-index path from root (auto-generated names like
+## "@MeshInstance3D@42" change between runs, indices don't).
+static func _key(root: Node, n: Node) -> String:
+	var idx := PackedStringArray()
+	while n != root and n != null:
+		idx.append(str(n.get_index()))
+		n = n.get_parent()
+	idx.reverse()
+	return "/".join(idx)
+
+static func _apply_baked(mi: MeshInstance3D, data: Array) -> void:
+	mi.mesh = data[0]
+	mi.material_override = data[1]
+	for s in mi.get_surface_override_material_count():
+		mi.set_surface_override_material(s, null)
+
+static func _scene_lights(tree: SceneTree) -> Array:
+	return tree.root.find_children("*", "Light3D", true, false).filter(func(l): return l.is_visible_in_tree())
+
+static func _bakeable(root: Node3D) -> Array:
+	var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)
+	if root is MeshInstance3D:
+		meshes.append(root)
+	return meshes.filter(func(m): return m.mesh != null and m.skin == null and m.is_visible_in_tree() and not m.has_meta("ps1_no_bake"))
+
+## Changes when geometry, transforms, materials' modes or lights change (then the cache is rebuilt).
+static func _signature(root: Node3D, meshes: Array, lights: Array, ambient: Color, shadows: bool) -> String:
+	var parts := PackedStringArray([str(ambient), str(shadows), "v2"])
+	for mi in meshes:
+		var vcount := 0
+		for s in mi.mesh.get_surface_count():
+			vcount += (mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+		parts.append("%s|%s|%d|%s|%s|%s" % [_key(root, mi), mi.global_transform, vcount,
+			PS1Convert.mode_of(mi.material_override), mi.has_meta("ps1_no_cast"), mi.mesh.get_class()])
+	for l in lights:
+		parts.append("%s|%s|%s|%s|%s" % [l.get_class(), l.global_transform, l.light_color, l.light_energy,
+			[l.get("omni_range"), l.get("omni_attenuation"), l.get("spot_range"), l.get("spot_angle")]])
+	return "|".join(parts).md5_text()
 
 static func bake_mesh(mi: MeshInstance3D, ambient: Color, lights: Array, space: PhysicsDirectSpaceState3D = null, to_unlit := true) -> void:
 	var src := mi.mesh

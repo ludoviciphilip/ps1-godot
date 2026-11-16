@@ -11,6 +11,8 @@ func check(cond: bool, msg: String) -> void:
 
 func _ready() -> void:
 	await _test_bake()
+	await _test_bake_cache()
+	_test_screen_palette()
 	_test_palette()
 	_test_lod()
 	_test_convert()
@@ -62,6 +64,58 @@ func _test_bake() -> void:
 	check(PS1Convert.mode_of(ground.material_override) == "unlit", "material switched to unlit")
 	light.queue_free()
 	root.queue_free()
+
+func _scene_for_cache() -> Node3D:
+	var root := Node3D.new()
+	root.name = "CacheTest"
+	add_child(root)
+	var mi := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.subdivide_width = 4
+	pm.subdivide_depth = 4
+	mi.mesh = pm
+	mi.material_override = PS1.make(null, {})
+	root.add_child(mi)
+	return root
+
+func _test_bake_cache() -> void:
+	print("PS1Bake cache")
+	var path := "user://test_bake_cache.res"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var light := OmniLight3D.new()
+	light.position = Vector3(0, 1, 0)
+	add_child(light)
+	var r1 := _scene_for_cache()
+	var first: bool = await PS1Bake.bake_scene_cached(r1, Color.BLACK, path, true, [light])
+	var baked_color := _vertex_color_near(r1.get_child(0), Vector3.ZERO)
+	r1.free()
+	var r2 := _scene_for_cache()
+	var second: bool = await PS1Bake.bake_scene_cached(r2, Color.BLACK, path, true, [light])
+	var cached_color := _vertex_color_near(r2.get_child(0), Vector3.ZERO)
+	check(not first and FileAccess.file_exists(path), "first run bakes and saves the cache")
+	check(second, "second run loads from the cache")
+	check(baked_color.is_equal_approx(cached_color) and baked_color.r > 0.0, "cached result equals the bake")
+	r2.free()
+	light.position = Vector3(2, 1, 0)
+	var r3 := _scene_for_cache()
+	var third: bool = await PS1Bake.bake_scene_cached(r3, Color.BLACK, path, true, [light])
+	check(not third, "moving a light invalidates the cache")
+	r3.free()
+	light.free()
+
+func _test_screen_palette() -> void:
+	print("Screen palette")
+	PS1.set_screen_palette(PackedColorArray([Color.BLACK, Color.RED, Color.WHITE]))
+	check(is_equal_approx(PS1.get_global("ps1_palette_size"), 3.0), "palette size set")
+	var tex: Texture2D = PS1.get_global("ps1_palette")
+	check(tex != null and tex.get_width() == 3, "palette texture is Nx1")
+	PS1.clear_screen_palette()
+	check(PS1.get_global("ps1_palette_size") == 0.0, "palette cleared")
+	print("PS1 globals")
+	check(PS1.get_global("ps1_jitter_enabled") == 1.0, "reads defaults from project settings")
+	PS1.toggle("ps1_jitter_enabled")
+	check(PS1.get_global("ps1_jitter_enabled") == 0.0, "toggle works at runtime (was broken: get() is editor-only)")
+	PS1.toggle("ps1_jitter_enabled")
 
 func _test_palette() -> void:
 	print("PS1Palette")

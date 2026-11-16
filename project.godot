@@ -54,3 +54,11 @@ ps1_color_levels={
 "type": "float",
 "value": 32.0
 }
+ps1_palette={
+"type": "sampler2D",
+"value": ""
+}
+ps1_palette_size={
+"type": "float",
+"value": 0.0
+}

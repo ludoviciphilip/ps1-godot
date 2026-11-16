@@ -17,16 +17,25 @@ static func quantize(tex: Texture2D, colors := 16, dither := 0.0, iterations := 
 	return ImageTexture.create_from_image(img)
 
 ## K-means palette of an image (ignores transparent pixels).
-static func palette(img: Image, colors := 16, iterations := 8) -> PackedColorArray:
+## unique = true counts each distinct color once (15-bit buckets), so small but important
+## areas (a fire, a moon) keep their own colors instead of being outvoted by big dark areas.
+static func palette(img: Image, colors := 16, iterations := 8, unique := false) -> PackedColorArray:
 	var w := img.get_width()
 	var h := img.get_height()
 	var step := maxi(1, int(sqrt(w * h / 4096.0)))
 	var samples: Array[Vector3] = []
+	var seen := {}
 	for y in range(0, h, step):
 		for x in range(0, w, step):
 			var c := img.get_pixel(x, y)
-			if c.a >= 0.5:
-				samples.append(Vector3(c.r, c.g, c.b))
+			if c.a < 0.5:
+				continue
+			if unique:
+				var key := (int(c.r * 31.0) << 10) | (int(c.g * 31.0) << 5) | int(c.b * 31.0)
+				if seen.has(key):
+					continue
+				seen[key] = true
+			samples.append(Vector3(c.r, c.g, c.b))
 	if samples.is_empty():
 		return PackedColorArray([Color.BLACK])
 	samples.sort_custom(func(a: Vector3, b: Vector3): return a.dot(LUMA) < b.dot(LUMA))

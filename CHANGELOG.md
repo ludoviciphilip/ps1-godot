@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+- `PS1Bake.bake_scene_cached()`: saves baked meshes to a resource and reuses them while the scene
+  is unchanged (signature of meshes, transforms, lights). Stable keys by child-index path.
+- Screen palette: `PS1.set_screen_palette()`, `PS1.palette_from_screen(n)`, `clear_screen_palette()`
+  (nearest-color lookup in the post-process, with ordered dithering).
+- `PS1Palette.palette(..., unique = true)`: distinct-color k-means that keeps small bright areas.
+- `PS1Sky` (gradient into fog, clouds, stars, moon) and `PS1Water` (waves, two scrolling affine
+  layers, screen-door transparency).
+- `PS1.set_global()` / `get_global()`.
+- Fix: debug keys F1-F5 never worked in a running game (they used
+  `RenderingServer.global_shader_parameter_get()`, which is editor-only).
+
 ## 0.2.0
 - Material modes: `cutout` (alpha test), `dither_alpha` (screen-door transparency), `unlit`,
   `unlit_cutout`; `PS1.make(tex, opts)` with every option; `PS1Convert` maps Godot transparency

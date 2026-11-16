@@ -1,7 +1,8 @@
 ## PS1 Godot demo: a ruined courtyard with a bonfire, showing every toolkit feature.
 ## The camera orbits on its own. TAB = free camera (WASD + mouse, Q/E down/up).
 ## F1-F5: global effects (see PS1 autoload) | F6: baked vertex lighting | F7: 16-color texture palettes
-## Command line (screenshots): -- --screenshot=PATH [--angle=RAD] [--baked] [--palette] [--dist=M]
+## F8: screen palette taken from the current frame (off -> 24 -> 12 colors)
+## Command line (screenshots): -- --screenshot=PATH [--angle=RAD] [--baked] [--palette] [--dist=M] [--screen-palette=N]
 extends Node3D
 
 var cam: Camera3D
@@ -23,6 +24,8 @@ var _baked_state := {}   # MeshInstance3D -> [mesh, material_override] (baked)
 var _palette_on := false
 var _palette_swaps: Array = []   # [material, original_tex, palette_tex]
 var _info: Label
+var _screen_palette := 0
+var _moon: DirectionalLight3D
 
 func _ready() -> void:
 	var want_baked := false
@@ -38,6 +41,8 @@ func _ready() -> void:
 			want_baked = true
 		elif a == "--palette":
 			want_palette = true
+		elif a.begins_with("--screen-palette="):
+			_screen_palette = int(a.trim_prefix("--screen-palette="))
 	level = Node3D.new()
 	level.name = "Level"
 	add_child(level)
@@ -55,6 +60,10 @@ func _ready() -> void:
 	if want_baked:
 		await _wait_bake()
 		_toggle_baked()
+	if _screen_palette > 0:
+		await _wait_bake()
+		await PS1.palette_from_screen(_screen_palette)
+		_update_info()
 
 func _build_environment() -> void:
 	var env := Environment.new()
@@ -74,11 +83,17 @@ func _build_environment() -> void:
 	we.environment = env
 	add_child(we)
 
-	var moon := DirectionalLight3D.new()
-	moon.light_color = Color(0.55, 0.62, 0.85)
-	moon.light_energy = 0.7
-	moon.rotation_degrees = Vector3(-35, 30, 0)
-	add_child(moon)
+	_moon = DirectionalLight3D.new()
+	_moon.light_color = Color(0.55, 0.62, 0.85)
+	_moon.light_energy = 0.7
+	_moon.rotation_degrees = Vector3(-35, 30, 0)
+	add_child(_moon)
+
+	# Sky dome: melts into the fog at the horizon, moon placed where the moonlight comes from.
+	var sky := PS1Sky.new()
+	sky.clouds = PS1Sky.cloud_texture()
+	sky.moon_direction = _moon.global_basis.z
+	add_child(sky)
 
 func _mesh(mesh: Mesh, mat: Material, pos: Vector3, rot := Vector3.ZERO, scl := Vector3.ONE, parent: Node = null) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
@@ -222,6 +237,16 @@ func _build_level() -> void:
 		_mesh(q, m_grass, p, Vector3(0, yr, 0))
 		_mesh(q, m_grass, p, Vector3(0, yr + 90, 0))
 
+	# Pond: PS1Water (vertex waves, scrolling affine layers, dithered transparency) in a stone ring.
+	var pond := PS1Water.new()
+	pond.size = Vector2(4.0, 3.0)
+	pond.position = Vector3(4.6, 0.12, -2.6)
+	add_child(pond)
+	for i in 14:
+		var ang := TAU * i / 14.0
+		var st := _box(Vector3(0.7, 0.35, 0.5))
+		_mesh(st, m_stone, pond.position + Vector3(cos(ang) * 2.3, 0.05, sin(ang) * 1.8), Vector3(0, -rad_to_deg(ang), rng.randf_range(-8, 8)))
+
 	# Mossy boulder: smooth, many-colored texture to show F7 (16-color palette).
 	var boulder := SphereMesh.new()
 	boulder.radius = 0.9
@@ -302,8 +327,9 @@ func _build_info() -> void:
 	_update_info()
 
 func _update_info() -> void:
-	_info.text = "F1 jitter  F2 affine  F3 dither  F4 res  F5 color\nF6 baked light: %s   F7 palette: %s   TAB cam" % [
-		("ON" if _baked else "off") if _bake_ready else "baking...", "16 colors" if _palette_on else "off"]
+	_info.text = "F1 jitter  F2 affine  F3 dither  F4 res  F5 color\nF6 baked light: %s   F7 tex palette: %s\nF8 screen palette: %s   TAB cam" % [
+		("ON" if _baked else "off") if _bake_ready else "baking...", "16 colors" if _palette_on else "off",
+		("%d colors" % _screen_palette) if _screen_palette > 0 else "off"]
 
 # ---------------- F6: baked vertex lighting ----------------
 
@@ -311,7 +337,10 @@ func _bake() -> void:
 	for mi in level.find_children("*", "MeshInstance3D", true, false):
 		_lit_state[mi] = [mi.mesh, mi.material_override]
 	# Bake against the static lights only (fire at its average brightness).
-	await PS1Bake.bake_scene(level, Color(0.25, 0.28, 0.35) * 0.9, true)
+	# Cached: the first run bakes and saves res://ps1_bake_cache/..., later runs load it instantly.
+	var t0 := Time.get_ticks_msec()
+	var cached := await PS1Bake.bake_scene_cached(level, Color(0.25, 0.28, 0.35) * 0.9)
+	print("bake: %s in %d ms" % ["loaded from cache" if cached else "baked + saved", Time.get_ticks_msec() - t0])
 	for mi in _lit_state:
 		_baked_state[mi] = [mi.mesh, mi.material_override]
 		mi.mesh = _lit_state[mi][0]
@@ -401,6 +430,13 @@ func _unhandled_input(e: InputEvent) -> void:
 				_toggle_baked()
 			KEY_F7:
 				_toggle_palette()
+			KEY_F8:
+				_screen_palette = {0: 24, 24: 12}.get(_screen_palette, 0)
+				if _screen_palette > 0:
+					PS1.palette_from_screen(_screen_palette)
+				else:
+					PS1.clear_screen_palette()
+				_update_info()
 			KEY_ESCAPE:
 				get_tree().quit()
 	elif e is InputEventMouseMotion and free_cam:

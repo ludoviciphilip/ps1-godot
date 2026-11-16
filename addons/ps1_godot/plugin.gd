@@ -7,6 +7,8 @@ const GLOBALS := {
 	"ps1_affine_enabled": ["float", 1.0],
 	"ps1_dither_enabled": ["float", 1.0],
 	"ps1_color_levels": ["float", 32.0],
+	"ps1_palette": ["sampler2D", ""],
+	"ps1_palette_size": ["float", 0.0],
 }
 
 func _enable_plugin() -> void:

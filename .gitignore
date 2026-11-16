@@ -1,3 +1,4 @@
 .godot/
 *.tmp
 screenshots/
+ps1_bake_cache/

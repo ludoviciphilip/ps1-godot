@@ -10,7 +10,15 @@ var _res_index := 0
 var debug_keys := OS.is_debug_build()
 const POST_SHADER := preload("res://addons/ps1_godot/shaders/ps1_post.gdshader")
 
+## Current values of the ps1_* shader globals. RenderingServer.global_shader_parameter_get()
+## only works in the editor, so the toolkit tracks the values itself.
+var _globals := {}
+
 func _ready() -> void:
+	for key in ["ps1_snap_resolution", "ps1_jitter_enabled", "ps1_affine_enabled", "ps1_dither_enabled",
+			"ps1_color_levels", "ps1_palette_size"]:
+		var entry = ProjectSettings.get_setting("shader_globals/" + key)
+		_globals[key] = entry["value"] if entry is Dictionary else null
 	layer = 100
 	var rect := ColorRect.new()
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -54,16 +62,50 @@ func flash(node: Node, color := Color.WHITE, duration := 0.12) -> void:
 				m.set_instance_shader_parameter("ps1_flash", Color(color.r, color.g, color.b, a)),
 		1.0, 0.0, duration)
 
+## Limits the whole screen to these colors (max 256), like a fixed hardware palette.
+func set_screen_palette(colors: PackedColorArray) -> void:
+	var n := mini(colors.size(), 256)
+	if n == 0:
+		clear_screen_palette()
+		return
+	var img := Image.create(n, 1, false, Image.FORMAT_RGBA8)
+	for i in n:
+		img.set_pixel(i, 0, colors[i])
+	set_global("ps1_palette", ImageTexture.create_from_image(img))
+	set_global("ps1_palette_size", float(n))
+
+func clear_screen_palette() -> void:
+	set_global("ps1_palette_size", 0.0)
+
+## Builds a palette from the current frame (k-means) and applies it: a quick way to lock a
+## scene into its own N-color look. Call it after a few frames have rendered.
+func palette_from_screen(colors := 32) -> PackedColorArray:
+	clear_screen_palette()
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	var pal := PS1Palette.palette(img, colors, 10, true)
+	set_screen_palette(pal)
+	return pal
+
+## Sets a ps1_* shader global (and remembers it; see get_global()).
+func set_global(param: String, value) -> void:
+	_globals[param] = value
+	RenderingServer.global_shader_parameter_set(param, value)
+
+func get_global(param: String):
+	return _globals.get(param)
+
 func toggle(param: String) -> void:
-	var v: float = RenderingServer.global_shader_parameter_get(param)
-	RenderingServer.global_shader_parameter_set(param, 0.0 if v > 0.5 else 1.0)
-	print("%s = %s" % [param, RenderingServer.global_shader_parameter_get(param)])
+	var v = get_global(param)
+	set_global(param, 0.0 if v != null and float(v) > 0.5 else 1.0)
+	print("%s = %s" % [param, get_global(param)])
 
 func cycle_resolution() -> void:
 	_res_index = (_res_index + 1) % RESOLUTIONS.size()
 	var r: Vector2i = RESOLUTIONS[_res_index]
 	get_window().content_scale_size = r
-	RenderingServer.global_shader_parameter_set("ps1_snap_resolution", Vector2(r))
+	set_global("ps1_snap_resolution", Vector2(r))
 	print("base resolution = %s" % r)
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -75,7 +117,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_F3: toggle("ps1_dither_enabled")
 		KEY_F4: cycle_resolution()
 		KEY_F5:
-			var lv: float = RenderingServer.global_shader_parameter_get("ps1_color_levels")
+			var lv: float = float(get_global("ps1_color_levels")) if get_global("ps1_color_levels") != null else 32.0
 			lv = 8.0 if lv >= 32.0 else lv * 2.0
-			RenderingServer.global_shader_parameter_set("ps1_color_levels", lv)
+			set_global("ps1_color_levels", lv)
 			print("color levels = %s" % lv)

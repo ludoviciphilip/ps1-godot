@@ -16,7 +16,9 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | Screen-door transparency | `dither_alpha` material (no alpha blending, like the PS1) |
 | Alpha-tested textures | `cutout` material (fences, grass, foliage) |
 | 4/8-bit CLUT textures | `PS1Palette.quantize(tex, 16)` (k-means palette) |
-| Pre-lit geometry (Silent Hill / RE style) | `PS1Bake`: lights + raycast shadows baked into vertex colors |
+| Pre-lit geometry (Silent Hill / RE style) | `PS1Bake`: lights + raycast shadows baked into vertex colors, cached to disk |
+| Fixed screen palette | `PS1.set_screen_palette()` / `PS1.palette_from_screen(24)` |
+| Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
 
 ![demo](https://raw.githubusercontent.com/ludoviciphilip/ps1-godot/main/docs/demo.png)
 
@@ -81,8 +83,43 @@ moving props on lit materials. Lighting is per vertex, so subdivide big surfaces
 shadows (small props sitting on a light), `light.set_meta("ps1_no_shadow", true)` disables a
 light's shadows. Cutout meshes (grass, fences) never cast baked shadows.
 
+**Bake once, load instantly**
+```gdscript
+await PS1Bake.bake_scene_cached($Level, Color(0.2, 0.2, 0.25))   # -> res://ps1_bake_cache/<scene>_<node>.res
+```
+The first run bakes and saves; later runs load the result (demo: ~400 ms -> ~80 ms). The cache is
+rebuilt automatically when meshes, transforms or lights change. Run the scene once from the editor
+and ship the cache file with your game (`res://` is read-only in exported builds).
+
 ![baked](docs/baked.png)
 *Left: realtime vertex lighting. Right: baked (light + shadows in vertex colors, unlit materials).*
+
+**Screen palette** (the whole frame limited to N colors, max 256)
+```gdscript
+PS1.set_screen_palette(PackedColorArray([Color("#0b0c10"), Color("#3a2f2a"), ...]))
+await PS1.palette_from_screen(24)   # k-means palette of the current frame, applied at once
+PS1.clear_screen_palette()
+```
+`palette_from_screen` counts each distinct color once, so small but important areas (a fire, a
+moon) keep their colors. Uses the global dithering setting.
+
+![screen palette](docs/screen_palette.png)
+
+**Sky and water**
+```gdscript
+var sky := PS1Sky.new()                  # follows the camera; horizon = fog color by default
+sky.clouds = PS1Sky.cloud_texture()
+sky.moon_direction = $Moon.global_basis.z
+add_child(sky)
+
+var pond := PS1Water.new()               # subdivided plane with vertex waves
+pond.size = Vector2(6, 4)
+pond.color = Color(0.35, 0.5, 0.62, 0.7) # alpha = screen-door density
+add_child(pond)
+```
+
+**Shader globals at runtime**: use `PS1.set_global(name, value)` / `PS1.get_global(name)`.
+(`RenderingServer.global_shader_parameter_get()` only works inside the editor.)
 
 **Hit flash** (per-instance, no material duplication)
 ```gdscript
@@ -124,7 +161,8 @@ F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth.
 ## Demo
 
 Open this folder in Godot and press F5. `TAB` toggles a free camera (WASD, Q/E, mouse),
-**F6** switches realtime / baked lighting, **F7** toggles 16-color texture palettes.
+**F6** switches realtime / baked lighting, **F7** toggles 16-color texture palettes,
+**F8** cycles screen palettes taken from the current frame (24 / 12 colors).
 
 ## Tests
 
@@ -142,9 +180,12 @@ godot --path . res://tests/lod_visual.tscn                   # visual LOD check
 - [x] Cutout (alpha-test) and screen-door (dithered) transparency
 - [x] Draw distance + LOD with dithered cross-fades
 - [x] Baked vertex lighting with raycast shadows
-- [ ] Bake in the editor (save pre-lit meshes as resources instead of baking at load)
-- [ ] Global screen palette / color LUT
-- [ ] PS1-style sky and water helpers
+- [x] Bake cache (bake once, load instantly)
+- [x] Screen palette (fixed or taken from the current frame)
+- [x] Sky dome and water
+- [ ] One-click bake from the editor toolbar
+- [ ] CRT / composite video filter (optional)
+- [ ] Sprite billboards (PS1 trees, particles) with jitter
 
 ## License
 
