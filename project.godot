@@ -3,13 +3,17 @@ config_version=5
 
 [application]
 
-config/name="PS1 Souls (codinome)"
-run/main_scene="res://scenes/demo/ps1_demo.tscn"
+config/name="PS1 Godot - Demo"
+run/main_scene="res://demo/ps1_demo.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
 
-PS1="*res://ps1/ps1.gd"
+PS1="*res://addons/ps1_godot/ps1.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/ps1_godot/plugin.cfg")
 
 [display]
 

@@ -1,5 +1,5 @@
-## Cena de teste do visual PS1: um pátio em ruínas com uma fogueira.
-## Câmera orbita sozinha. TAB = câmera livre (WASD + mouse, Q/E desce/sobe).
+## PS1 look demo: a ruined courtyard with a bonfire.
+## The camera orbits on its own. TAB = free camera (WASD + mouse, Q/E down/up).
 extends Node3D
 
 var cam: Camera3D
@@ -70,14 +70,14 @@ func _build_level() -> void:
 	var m_fire := PS1.material(PS1Textures.flat(Color(1, 0.55, 0.15)), Color.WHITE, Vector2.ONE, Color(1.0, 0.45, 0.1), 2.5)
 	var m_ash := PS1.material(PS1Textures.flat(Color(0.12, 0.11, 0.1)), Color.WHITE)
 
-	# Chão: subdividido porque a luz é por vértice (truque da época); ainda mostra distorção affine.
+	# Ground: subdivided because lighting is per-vertex (a period trick); affine warping still shows.
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(60, 60)
 	ground.subdivide_width = 40
 	ground.subdivide_depth = 40
 	_mesh(ground, m_ground, Vector3.ZERO)
 
-	# Pilares em círculo, alguns quebrados.
+	# Ring of pillars, some broken.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 42
 	for i in 10:
@@ -91,7 +91,7 @@ func _build_level() -> void:
 			cap.size = Vector3(1.4, 0.4, 1.4)
 			_mesh(cap, m_stone, Vector3(cos(ang) * 9.0, h + 0.2, sin(ang) * 9.0))
 
-	# Muralha ao fundo com um arco.
+	# Back wall with an arch.
 	for x in [-10.0, -4.0, 4.0, 10.0]:
 		var w := BoxMesh.new()
 		w.size = Vector3(6.0 if abs(x) > 5 else 2.0, 7.0, 1.2)
@@ -100,7 +100,7 @@ func _build_level() -> void:
 	lintel.size = Vector3(6.0, 1.6, 1.4)
 	_mesh(lintel, m_wall, Vector3(0, 6.2, -16))
 
-	# Fogueira com espada fincada.
+	# Bonfire with a sword stuck in it.
 	var logs := CylinderMesh.new()
 	logs.top_radius = 0.08
 	logs.bottom_radius = 0.08
@@ -135,7 +135,7 @@ func _build_level() -> void:
 	fire_light.position = Vector3(0, 1.2, 0)
 	add_child(fire_light)
 
-	# Cavaleiro (placeholder) sentado perto da fogueira.
+	# Placeholder knight by the fire.
 	var body := CapsuleMesh.new()
 	body.radius = 0.35
 	body.height = 1.5
@@ -146,7 +146,7 @@ func _build_level() -> void:
 	helm.size = Vector3(0.4, 0.45, 0.45)
 	_mesh(helm, m_metal, Vector3(1.8, 1.7, 1.0), Vector3(0, 30, 0))
 
-	# Árvores mortas e lápides.
+	# Dead trees and gravestones.
 	for i in 7:
 		var ang := rng.randf_range(0, TAU)
 		var r := rng.randf_range(12, 22)
@@ -189,7 +189,7 @@ func _process(delta: float) -> void:
 			var img := get_viewport().get_texture().get_image()
 			img.resize(img.get_width() * 3, img.get_height() * 3, Image.INTERPOLATE_NEAREST)
 			img.save_png(_shot_path)
-			print("screenshot salvo: ", _shot_path)
+			print("screenshot saved: ", _shot_path)
 			get_tree().quit()
 
 func _unhandled_input(e: InputEvent) -> void:

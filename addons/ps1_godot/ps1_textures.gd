@@ -1,4 +1,4 @@
-## Texturas procedurais 64x64 (placeholder até termos as texturas pintadas à mão).
+## Procedural 64x64 placeholder textures (until you have hand-painted ones).
 class_name PS1Textures
 
 static func _img(size := 64) -> Image:

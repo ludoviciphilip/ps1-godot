@@ -1,13 +1,10 @@
-// Material base PS1: vertex snapping (jitter), texturas affine, iluminação por vértice,
-// filtragem nearest sem mipmaps. Parâmetros globais em Project Settings > Shader Globals.
-shader_type spatial;
-render_mode vertex_lighting, diffuse_lambert, specular_disabled, cull_back;
+// Shared body of the PS1 lit materials (vertex jitter, affine UVs, nearest textures).
 
 global uniform vec2 ps1_snap_resolution;
 global uniform float ps1_jitter_enabled;
 global uniform float ps1_affine_enabled;
 
-uniform sampler2D albedo_tex : source_color, filter_nearest, repeat_enable;
+uniform sampler2D albedo_tex : source_color, hint_default_white, filter_nearest, repeat_enable;
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform vec2 uv_scale = vec2(1.0);
 uniform vec3 emission_color : source_color = vec3(0.0);

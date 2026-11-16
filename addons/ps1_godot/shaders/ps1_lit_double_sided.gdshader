@@ -1,0 +1,4 @@
+// Same as ps1_lit, without backface culling (capes, leaves, thin planes).
+shader_type spatial;
+render_mode vertex_lighting, diffuse_lambert, specular_disabled, cull_disabled;
+#include "res://addons/ps1_godot/shaders/ps1_lit.gdshaderinc"

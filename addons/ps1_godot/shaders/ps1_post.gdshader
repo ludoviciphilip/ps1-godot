@@ -1,4 +1,4 @@
-// Pós-processamento: reduz a profundidade de cor (15 bits = 32 níveis/canal) com dithering Bayer 4x4.
+// Post-process: reduces color depth (15-bit = 32 levels/channel) with 4x4 Bayer dithering.
 shader_type canvas_item;
 
 global uniform float ps1_dither_enabled;
