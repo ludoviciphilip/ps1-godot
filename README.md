@@ -18,6 +18,8 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | 4/8-bit CLUT textures | `PS1Palette.quantize(tex, 16)` (k-means palette) |
 | Pre-lit geometry (Silent Hill / RE style) | `PS1Bake`: lights + raycast shadows baked into vertex colors, cached to disk |
 | Fixed screen palette | `PS1.set_screen_palette()` / `PS1.palette_from_screen(24)` |
+| Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
+| Composite video (TV) look | `PS1.set_composite(1.0)`: chroma bleed, line jitter, grain, vignette |
 | Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
 
 ![demo](https://raw.githubusercontent.com/ludoviciphilip/ps1-godot/main/docs/demo.png)
@@ -83,7 +85,17 @@ moving props on lit materials. Lighting is per vertex, so subdivide big surfaces
 shadows (small props sitting on a light), `light.set_meta("ps1_no_shadow", true)` disables a
 light's shadows. Cutout meshes (grass, fences) never cast baked shadows.
 
-**Bake once, load instantly**
+**One-click bake (recommended workflow)**
+1. Put the static geometry of your level under a **`PS1BakedLevel`** node (set its `ambient`).
+2. Click **PS1 Bake** in the 3D editor toolbar. The scene is saved and baked in a background
+   headless process (physics is needed for the shadow rays), and the result goes to
+   `res://ps1_bake_cache/`.
+3. At runtime the node loads the cache instantly; if the level changed since the bake, it rebakes
+   on load and saves again (when running from the editor).
+
+Same thing from a terminal / CI: `godot --headless --path . res://my_level.tscn -- --ps1-bake-only --ps1-bake-force`
+
+**Bake once, load instantly (from code)**
 ```gdscript
 await PS1Bake.bake_scene_cached($Level, Color(0.2, 0.2, 0.25))   # -> res://ps1_bake_cache/<scene>_<node>.res
 ```
@@ -93,6 +105,33 @@ and ship the cache file with your game (`res://` is read-only in exported builds
 
 ![baked](docs/baked.png)
 *Left: realtime vertex lighting. Right: baked (light + shadows in vertex colors, unlit materials).*
+
+**Sprites** (`PS1Sprite`: pivot at the bottom center)
+```gdscript
+var pine := PS1Sprite.new()              # lit, turns around Y only: trees, sprite characters
+pine.texture = PS1Textures.pine()
+pine.size = Vector2(3, 6)
+
+var fire := PS1Sprite.new()              # unlit, always faces the camera: fire, effects
+fire.texture = PS1Textures.flame_sheet() # 4 frames side by side
+fire.hframes = 4
+fire.fps = 10.0
+fire.lit = false
+```
+Materials `billboard` / `billboard_unlit` also work on any quad, including `GPUParticles3D`
+draw passes. Frame selection is a per-instance uniform (`ps1_uv_rect`), so many sprites share
+one material.
+
+![sprites](docs/sprites.png)
+
+**Composite video filter**
+```gdscript
+PS1.set_composite(1.0)   # 0 = off. Chroma bleeds over ~3 pixels, luma stays sharp, rare line
+                         # jitter, grain and vignette. Applied after dithering, so it "melts"
+                         # the dither pattern like a real TV did.
+```
+![composite](docs/composite.png)
+*Left: clean output. Right: composite filter.*
 
 **Screen palette** (the whole frame limited to N colors, max 256)
 ```gdscript
@@ -149,7 +188,7 @@ Or do it at import time: select the model, in the *Import* dock set **Import Scr
 | `ps1_color_levels` | `32.0` | Levels per color channel (32 = 15-bit color) |
 
 **Debug keys** (debug builds only; set `PS1.debug_keys = false` to disable):
-F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth.
+F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth, F9 composite.
 
 ## Tips for authentic results
 
@@ -162,13 +201,15 @@ F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth.
 
 Open this folder in Godot and press F5. `TAB` toggles a free camera (WASD, Q/E, mouse),
 **F6** switches realtime / baked lighting, **F7** toggles 16-color texture palettes,
-**F8** cycles screen palettes taken from the current frame (24 / 12 colors).
+**F8** cycles screen palettes taken from the current frame (24 / 12 colors), **F9** toggles the
+composite video filter.
 
 ## Tests
 
 ```
 godot --headless --path . res://tests/test_toolkit.tscn     # bake, palette, LOD, converter
 godot --path . res://tests/lod_visual.tscn                   # visual LOD check
+godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only --ps1-bake-force
 ```
 
 ## Roadmap
@@ -183,9 +224,12 @@ godot --path . res://tests/lod_visual.tscn                   # visual LOD check
 - [x] Bake cache (bake once, load instantly)
 - [x] Screen palette (fixed or taken from the current frame)
 - [x] Sky dome and water
-- [ ] One-click bake from the editor toolbar
-- [ ] CRT / composite video filter (optional)
-- [ ] Sprite billboards (PS1 trees, particles) with jitter
+- [x] One-click bake from the editor toolbar (`PS1BakedLevel`)
+- [x] Composite video filter
+- [x] Sprites / billboards with sprite-sheet animation
+- [ ] Native-resolution CRT pass (scanlines, mask, curvature)
+- [ ] Vertex-color painting helpers (fake AO, gradients)
+- [ ] Asset Library package
 
 ## License
 

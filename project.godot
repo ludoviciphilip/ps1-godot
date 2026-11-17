@@ -62,3 +62,7 @@ ps1_palette_size={
 "type": "float",
 "value": 0.0
 }
+ps1_composite={
+"type": "float",
+"value": 0.0
+}

@@ -1,7 +1,10 @@
 // Shared body of all PS1 materials. Variants set render_mode and optional defines:
 //   PS1_CUTOUT        alpha test (fences, foliage)       uniform alpha_cut
 //   PS1_DITHER_ALPHA  "screen-door" transparency (no blending, like the PS1)
-//   PS1_UNLIT         pre-lit: color = texture * vertex color * 2 (see PS1Bake)
+//   PS1_UNLIT         pre-lit: color = texture * vertex color * 2 (see PS1Bake), or just the
+//                     texture when use_vertex_color is off (sprites, effects)
+//   PS1_BILLBOARD     the quad always faces the camera (sprites, particles)
+//   PS1_BILLBOARD_Y   faces the camera turning only around Y (trees, characters as sprites)
 global uniform vec2 ps1_snap_resolution;
 global uniform float ps1_jitter_enabled;
 global uniform float ps1_affine_enabled;
@@ -13,12 +16,14 @@ uniform vec3 emission_color : source_color = vec3(0.0);
 uniform float emission_energy = 0.0;
 // Per-channel levels applied to the texture color (0 = off). For real palettes use PS1Palette.
 uniform float texture_color_levels = 0.0;
-// Multiply by the mesh vertex colors (lit variants; unlit variants always do).
+// Multiply by the mesh vertex colors (unlit variants: baked light, 2x modulation).
 uniform bool use_vertex_color = false;
 #ifdef PS1_CUTOUT
 uniform float alpha_cut : hint_range(0.0, 1.0) = 0.5;
 #endif
 
+// Per-instance UV rectangle (scale.xy, offset.zw): sprite-sheet frames. Set by PS1Sprite.
+instance uniform vec4 ps1_uv_rect = vec4(1.0, 1.0, 0.0, 0.0);
 // Per-instance flash (hit feedback): rgb = color, a = amount. Set with PS1.flash().
 instance uniform vec4 ps1_flash = vec4(0.0);
 // Per-instance dithered distance fade: xy = fade-in range, zw = fade-out range (0 = off).
@@ -41,14 +46,29 @@ float ps1_bayer(vec2 frag) {
 }
 
 void vertex() {
-	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+	mat4 mv = MODELVIEW_MATRIX;
+#if defined(PS1_BILLBOARD) || defined(PS1_BILLBOARD_Y)
+	vec3 scl = vec3(length(MODEL_MATRIX[0].xyz), length(MODEL_MATRIX[1].xyz), length(MODEL_MATRIX[2].xyz));
+#ifdef PS1_BILLBOARD
+	mat4 bb = mat4(INV_VIEW_MATRIX[0] * scl.x, INV_VIEW_MATRIX[1] * scl.y, INV_VIEW_MATRIX[2] * scl.z, MODEL_MATRIX[3]);
+#else
+	vec3 right = normalize(vec3(INV_VIEW_MATRIX[0].x, 0.0, INV_VIEW_MATRIX[0].z));
+	vec3 back = vec3(-right.z, 0.0, right.x);
+	mat4 bb = mat4(vec4(right * scl.x, 0.0), vec4(0.0, scl.y, 0.0, 0.0), vec4(back * scl.z, 0.0), MODEL_MATRIX[3]);
+#endif
+	mv = VIEW_MATRIX * bb;
+	MODELVIEW_MATRIX = mv;
+	NORMAL = vec3(0.0, 0.0, 1.0);
+	MODELVIEW_NORMAL_MATRIX = mat3(1.0);
+#endif
+	vec4 clip = PROJECTION_MATRIX * mv * vec4(VERTEX, 1.0);
 	if (ps1_jitter_enabled > 0.5) {
 		vec2 grid = ps1_snap_resolution * 0.5;
 		clip.xy = round(clip.xy / clip.w * grid) / grid * clip.w;
 	}
 	POSITION = clip;
 	float w = mix(1.0, clip.w, ps1_affine_enabled);
-	affine_uv = vec3(UV * uv_scale * w, w);
+	affine_uv = vec3((UV * ps1_uv_rect.xy + ps1_uv_rect.zw) * uv_scale * w, w);
 }
 
 void fragment() {
@@ -84,7 +104,8 @@ void fragment() {
 	albedo = mix(albedo, ps1_flash.rgb, ps1_flash.a);
 #ifdef PS1_UNLIT
 	// PS1 vertex colors were a 2x modulation (128 = 1.0): lets baked light go above 1.
-	ALBEDO = albedo * COLOR.rgb * 2.0 + emission_color * emission_energy + ps1_flash.rgb * ps1_flash.a * 0.6;
+	vec3 vc = use_vertex_color ? COLOR.rgb * 2.0 : vec3(1.0);
+	ALBEDO = albedo * vc + emission_color * emission_energy + ps1_flash.rgb * ps1_flash.a * 0.6;
 #else
 	if (use_vertex_color) {
 		albedo *= COLOR.rgb;

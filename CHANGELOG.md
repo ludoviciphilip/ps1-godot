@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+- `PS1BakedLevel` node + **PS1 Bake** button in the 3D editor toolbar (bakes in a headless
+  process, saves to `res://ps1_bake_cache/`); `--ps1-bake-only` / `--ps1-bake-force` flags.
+- `PS1Sprite` and the `billboard` / `billboard_unlit` materials (Y-axis or full billboards,
+  sprite-sheet frames via the `ps1_uv_rect` instance uniform). `PS1Textures.flame_sheet()`, `pine()`.
+- Composite video filter in the post-process (`PS1.set_composite()`, F9).
+- Unlit materials only use vertex colors when `use_vertex_color` is on (default on for
+  `unlit`/`unlit_cutout`, which PS1Bake also sets).
+
 ## 0.3.0
 - `PS1Bake.bake_scene_cached()`: saves baked meshes to a resource and reuses them while the scene
   is unchanged (signature of meshes, transforms, lights). Stable keys by child-index path.

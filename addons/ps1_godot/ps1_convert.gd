@@ -10,6 +10,8 @@ const SHADERS := {
 	"dither_alpha": preload("res://addons/ps1_godot/shaders/ps1_dither_alpha.gdshader"),
 	"unlit": preload("res://addons/ps1_godot/shaders/ps1_unlit.gdshader"),
 	"unlit_cutout": preload("res://addons/ps1_godot/shaders/ps1_unlit_cutout.gdshader"),
+	"billboard": preload("res://addons/ps1_godot/shaders/ps1_billboard.gdshader"),
+	"billboard_unlit": preload("res://addons/ps1_godot/shaders/ps1_billboard_unlit.gdshader"),
 }
 # Kept for backwards compatibility.
 const LIT := preload("res://addons/ps1_godot/shaders/ps1_lit.gdshader")
@@ -27,8 +29,8 @@ static func mode_of(m: Material) -> String:
 	return SHADERS.find_key((m as ShaderMaterial).shader)
 
 ## Builds a PS1 material. opts: color, uv_scale, emission, emission_energy, mode
-## ("opaque", "double_sided", "cutout", "dither_alpha", "unlit", "unlit_cutout"),
-## alpha_cut, texture_color_levels, vertex_color.
+## ("opaque", "double_sided", "cutout", "dither_alpha", "unlit", "unlit_cutout", "billboard",
+## "billboard_unlit"), alpha_cut, texture_color_levels, vertex_color (default: on for unlit/unlit_cutout).
 static func make(tex: Texture2D, opts := {}) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = SHADERS[opts.get("mode", "opaque")]
@@ -39,7 +41,8 @@ static func make(tex: Texture2D, opts := {}) -> ShaderMaterial:
 	m.set_shader_parameter("emission_color", opts.get("emission", Color.BLACK))
 	m.set_shader_parameter("emission_energy", opts.get("emission_energy", 0.0))
 	m.set_shader_parameter("texture_color_levels", opts.get("texture_color_levels", 0.0))
-	m.set_shader_parameter("use_vertex_color", opts.get("vertex_color", false))
+	var mode: String = opts.get("mode", "opaque")
+	m.set_shader_parameter("use_vertex_color", opts.get("vertex_color", mode == "unlit" or mode == "unlit_cutout"))
 	if opts.has("alpha_cut"):
 		m.set_shader_parameter("alpha_cut", opts.alpha_cut)
 	return m

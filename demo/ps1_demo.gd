@@ -1,7 +1,7 @@
 ## PS1 Godot demo: a ruined courtyard with a bonfire, showing every toolkit feature.
 ## The camera orbits on its own. TAB = free camera (WASD + mouse, Q/E down/up).
 ## F1-F5: global effects (see PS1 autoload) | F6: baked vertex lighting | F7: 16-color texture palettes
-## F8: screen palette taken from the current frame (off -> 24 -> 12 colors)
+## F8: screen palette taken from the current frame (off -> 24 -> 12 colors) | F9: composite video
 ## Command line (screenshots): -- --screenshot=PATH [--angle=RAD] [--baked] [--palette] [--dist=M] [--screen-palette=N]
 extends Node3D
 
@@ -41,6 +41,8 @@ func _ready() -> void:
 			want_baked = true
 		elif a == "--palette":
 			want_palette = true
+		elif a == "--composite":
+			PS1.set_composite(1.0)
 		elif a.begins_with("--screen-palette="):
 			_screen_palette = int(a.trim_prefix("--screen-palette="))
 	level = Node3D.new()
@@ -175,7 +177,16 @@ func _build_level() -> void:
 	flame.bottom_radius = 0.35
 	flame.height = 0.9
 	flame.radial_segments = 5
-	_mesh(flame, m_fire, Vector3(0, 0.55, 0)).set_meta("ps1_no_bake", true)
+	_mesh(flame, m_fire, Vector3(0, 0.45, 0), Vector3.ZERO, Vector3(0.6, 0.6, 0.6)).set_meta("ps1_no_bake", true)
+	# Animated flame: unlit PS1Sprite playing a 4-frame sheet, always facing the camera.
+	var fire_sprite := PS1Sprite.new()
+	fire_sprite.texture = PS1Textures.flame_sheet()
+	fire_sprite.hframes = 4
+	fire_sprite.fps = 10.0
+	fire_sprite.lit = false
+	fire_sprite.size = Vector2(0.9, 1.1)
+	fire_sprite.position = Vector3(0, 0.1, 0)
+	add_child(fire_sprite)
 	var blade := BoxMesh.new()
 	blade.size = Vector3(0.08, 1.4, 0.02)
 	# The sword sits right on the fire light: it must not cast baked shadows.
@@ -212,6 +223,18 @@ func _build_level() -> void:
 		branch.radial_segments = 4
 		_mesh(branch, m_bark, pos + Vector3(0.5, trunk.height * 0.3, 0), Vector3(0, rng.randf_range(0, 360), -50), Vector3.ONE, tree)
 		PS1.draw_distance(tree, 20.0, 4.0)
+
+	# Distant pine forest: lit PS1Sprites (turn around Y only), the cheap PS1 way.
+	var pine_tex := PS1Textures.pine()
+	for i in 36:
+		var ang := TAU * i / 36.0 + rng.randf_range(-0.05, 0.05)
+		var r := rng.randf_range(24.0, 29.0)
+		var pine := PS1Sprite.new()
+		pine.texture = pine_tex
+		var hgt := rng.randf_range(5.0, 8.0)
+		pine.size = Vector2(hgt * 0.5, hgt)
+		pine.position = Vector3(cos(ang) * r, 0, sin(ang) * r)
+		add_child(pine)
 
 	# Gravestones.
 	for i in 12:
@@ -327,7 +350,7 @@ func _build_info() -> void:
 	_update_info()
 
 func _update_info() -> void:
-	_info.text = "F1 jitter  F2 affine  F3 dither  F4 res  F5 color\nF6 baked light: %s   F7 tex palette: %s\nF8 screen palette: %s   TAB cam" % [
+	_info.text = "F1 jitter  F2 affine  F3 dither  F4 res  F5 color\nF6 baked light: %s   F7 tex palette: %s\nF8 screen palette: %s   F9 composite   TAB cam" % [
 		("ON" if _baked else "off") if _bake_ready else "baking...", "16 colors" if _palette_on else "off",
 		("%d colors" % _screen_palette) if _screen_palette > 0 else "off"]
 

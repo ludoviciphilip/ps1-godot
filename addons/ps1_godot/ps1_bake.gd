@@ -160,9 +160,11 @@ static func _is_cutout(mi: MeshInstance3D) -> bool:
 
 static func _unlit(m: ShaderMaterial) -> ShaderMaterial:
 	var mode := PS1Convert.mode_of(m)
-	if mode.begins_with("unlit"):
+	if mode.begins_with("unlit") or mode.begins_with("billboard"):
 		return m
-	return PS1Convert.with_mode(m, "unlit_cutout" if mode == "cutout" else "unlit")
+	var n := PS1Convert.with_mode(m, "unlit_cutout" if mode == "cutout" else "unlit")
+	n.set_shader_parameter("use_vertex_color", true)
+	return n
 
 static func _light(l: Light3D, p: Vector3, n: Vector3, space: PhysicsDirectSpaceState3D) -> Color:
 	# Same falloff and Lambert term as Godot's renderer, so baked and realtime lighting match.

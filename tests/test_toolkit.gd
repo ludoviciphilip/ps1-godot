@@ -16,6 +16,7 @@ func _ready() -> void:
 	_test_palette()
 	_test_lod()
 	_test_convert()
+	_test_sprite()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -169,6 +170,24 @@ func _test_lod() -> void:
 	check(fb == Vector4(9, 11, 19, 21), "level 1 fades in at 10 m and out at 20 m")
 	check(a.visibility_range_end > 11.0 and b.visibility_range_begin < 9.0, "culling ranges have margins")
 	lod.queue_free()
+
+func _test_sprite() -> void:
+	print("PS1Sprite")
+	var sp := PS1Sprite.new()
+	sp.hframes = 4
+	sp.vframes = 2
+	add_child(sp)
+	sp.frame = 5
+	var r: Vector4 = sp.get_instance_shader_parameter("ps1_uv_rect")
+	check(r.is_equal_approx(Vector4(0.25, 0.5, 0.25, 0.5)), "frame 5 of 4x2 -> uv rect (0.25,0.5,0.25,0.5): %s" % r)
+	check(PS1Convert.mode_of(sp.material_override) == "billboard", "lit sprite uses billboard material")
+	sp.lit = false
+	check(PS1Convert.mode_of(sp.material_override) == "billboard_unlit", "unlit sprite uses billboard_unlit")
+	check(sp.material_override.get_shader_parameter("use_vertex_color") == false, "unlit sprite ignores vertex color")
+	PS1.set_composite(1.0)
+	check(PS1.get_global("ps1_composite") == 1.0, "composite filter on")
+	PS1.set_composite(0.0)
+	sp.queue_free()
 
 func _test_convert() -> void:
 	print("PS1Convert")

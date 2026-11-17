@@ -1,5 +1,6 @@
 ## Autoload "PS1": applies the post-process to every scene and controls the global effects.
 ## Debug keys (only in debug builds): F1 jitter | F2 affine | F3 dither | F4 resolution | F5 color depth
+## | F9 composite video filter
 extends CanvasLayer
 
 const RESOLUTIONS := [Vector2i(320, 240), Vector2i(480, 360), Vector2i(640, 480)]
@@ -16,7 +17,7 @@ var _globals := {}
 
 func _ready() -> void:
 	for key in ["ps1_snap_resolution", "ps1_jitter_enabled", "ps1_affine_enabled", "ps1_dither_enabled",
-			"ps1_color_levels", "ps1_palette_size"]:
+			"ps1_color_levels", "ps1_palette_size", "ps1_composite"]:
 		var entry = ProjectSettings.get_setting("shader_globals/" + key)
 		_globals[key] = entry["value"] if entry is Dictionary else null
 	layer = 100
@@ -61,6 +62,10 @@ func flash(node: Node, color := Color.WHITE, duration := 0.12) -> void:
 			if is_instance_valid(m):
 				m.set_instance_shader_parameter("ps1_flash", Color(color.r, color.g, color.b, a)),
 		1.0, 0.0, duration)
+
+## Composite video filter (chroma bleed, line jitter, grain, vignette): 0 = off, 1 = full.
+func set_composite(strength: float) -> void:
+	set_global("ps1_composite", clampf(strength, 0.0, 1.0))
 
 ## Limits the whole screen to these colors (max 256), like a fixed hardware palette.
 func set_screen_palette(colors: PackedColorArray) -> void:
@@ -116,6 +121,10 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_F2: toggle("ps1_affine_enabled")
 		KEY_F3: toggle("ps1_dither_enabled")
 		KEY_F4: cycle_resolution()
+		KEY_F9:
+			var cv = get_global("ps1_composite")
+			set_composite(0.0 if cv != null and float(cv) > 0.0 else 1.0)
+			print("composite = %s" % get_global("ps1_composite"))
 		KEY_F5:
 			var lv: float = float(get_global("ps1_color_levels")) if get_global("ps1_color_levels") != null else 32.0
 			lv = 8.0 if lv >= 32.0 else lv * 2.0
