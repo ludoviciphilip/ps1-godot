@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://demo/grid_level_demo.gd" id="1_38w4h"]
 [ext_resource type="Script" path="res://addons/ps1_godot/ps1_grid_level.gd" id="2_f60ma"]
-[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/stairs.tscn" id="3_a5psx"]
-[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn" id="4_xgnpv"]
-[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/pillar.tscn" id="5_mwty1"]
-[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/2_props/coffin.tscn" id="6_sblpd"]
-[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/3_lights/brazier.tscn" id="7_37mjs"]
-[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn" id="8_w7kxr"]
+[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn" id="3_a5psx"]
+[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/stairs.tscn" id="4_xgnpv"]
+[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn" id="5_mwty1"]
+[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/1_structure/pillar.tscn" id="6_sblpd"]
+[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/2_props/coffin.tscn" id="7_37mjs"]
+[ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/3_lights/brazier.tscn" id="8_w7kxr"]
 [ext_resource type="PackedScene" path="res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn" id="9_rmx6s"]
 
 [sub_resource type="Environment" id="Environment_vhoja"]
@@ -22,358 +22,359 @@ fog_density = 1.0
 fog_depth_begin = 4.0
 fog_depth_end = 22.0
 
-[node name="GridLevelDemo" type="Node3D" unique_id=1098288422]
+[node name="GridLevelDemo" type="Node3D" unique_id=1236866962]
 script = ExtResource("1_38w4h")
 
-[node name="Env" type="WorldEnvironment" parent="." unique_id=2072830109]
+[node name="Env" type="WorldEnvironment" parent="." unique_id=87919129]
 environment = SubResource("Environment_vhoja")
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=989485761]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=523145441]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.6, 13)
 
-[node name="Level" type="Node3D" parent="." unique_id=1491199241]
+[node name="Level" type="Node3D" parent="." unique_id=2125683254]
 script = ExtResource("2_f60ma")
 palette_dirs = PackedStringArray("res://pieces", "res://addons/ps1_godot/starter_pieces")
 xray_slots = PackedStringArray("ceiling")
+auto_wall = ExtResource("3_a5psx")
 ambient = Color(0.08, 0.08, 0.1, 1)
 
-[node name="stairs_4_0_1" type="StaticBody3D" parent="Level" unique_id=1549433317 instance=ExtResource("3_a5psx")]
+[node name="stairs_4_0_1" type="StaticBody3D" parent="Level" unique_id=1549433317 instance=ExtResource("4_xgnpv")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 2)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 0, 1)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/stairs.tscn"
 
-[node name="floor_1_0_2" type="StaticBody3D" parent="Level" unique_id=1402818699 instance=ExtResource("4_xgnpv")]
+[node name="floor_1_0_2" type="StaticBody3D" parent="Level" unique_id=1402818699 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(1, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_2_0_2" type="StaticBody3D" parent="Level" unique_id=1592224174 instance=ExtResource("4_xgnpv")]
+[node name="floor_2_0_2" type="StaticBody3D" parent="Level" unique_id=1188638733 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(2, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_3_0_2" type="StaticBody3D" parent="Level" unique_id=228101235 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_0_2" type="StaticBody3D" parent="Level" unique_id=368276227 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_4_0_2" type="StaticBody3D" parent="Level" unique_id=1890885614 instance=ExtResource("4_xgnpv")]
+[node name="floor_4_0_2" type="StaticBody3D" parent="Level" unique_id=1341002330 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="pillar_4_0_2" type="StaticBody3D" parent="Level" unique_id=2125705069 instance=ExtResource("5_mwty1")]
+[node name="pillar_4_0_2" type="StaticBody3D" parent="Level" unique_id=2125705069 instance=ExtResource("6_sblpd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
 metadata/ps1_slot = "pillar"
 metadata/ps1_cell = Vector3i(4, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/pillar.tscn"
 
-[node name="floor_5_0_2" type="StaticBody3D" parent="Level" unique_id=952840117 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_0_2" type="StaticBody3D" parent="Level" unique_id=454833702 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_6_0_2" type="StaticBody3D" parent="Level" unique_id=1902491626 instance=ExtResource("4_xgnpv")]
+[node name="floor_6_0_2" type="StaticBody3D" parent="Level" unique_id=534418631 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(6, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_7_0_2" type="StaticBody3D" parent="Level" unique_id=137862550 instance=ExtResource("4_xgnpv")]
+[node name="floor_7_0_2" type="StaticBody3D" parent="Level" unique_id=654845794 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 4)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(7, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_1_0_3" type="StaticBody3D" parent="Level" unique_id=391319713 instance=ExtResource("4_xgnpv")]
+[node name="floor_1_0_3" type="StaticBody3D" parent="Level" unique_id=256383137 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(1, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_2_0_3" type="StaticBody3D" parent="Level" unique_id=1496447965 instance=ExtResource("4_xgnpv")]
+[node name="floor_2_0_3" type="StaticBody3D" parent="Level" unique_id=758268251 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(2, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="coffin_2_0_3" type="StaticBody3D" parent="Level" unique_id=967716076 instance=ExtResource("6_sblpd")]
+[node name="coffin_2_0_3" type="StaticBody3D" parent="Level" unique_id=967716076 instance=ExtResource("7_37mjs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6)
 metadata/ps1_slot = "prop"
 metadata/ps1_cell = Vector3i(2, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/2_props/coffin.tscn"
 
-[node name="floor_3_0_3" type="StaticBody3D" parent="Level" unique_id=114695572 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_0_3" type="StaticBody3D" parent="Level" unique_id=729121543 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_4_0_3" type="StaticBody3D" parent="Level" unique_id=1431960745 instance=ExtResource("4_xgnpv")]
+[node name="floor_4_0_3" type="StaticBody3D" parent="Level" unique_id=7197215 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_5_0_3" type="StaticBody3D" parent="Level" unique_id=1551335379 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_0_3" type="StaticBody3D" parent="Level" unique_id=835482708 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_6_0_3" type="StaticBody3D" parent="Level" unique_id=865175192 instance=ExtResource("4_xgnpv")]
+[node name="floor_6_0_3" type="StaticBody3D" parent="Level" unique_id=1745017026 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(6, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="coffin_6_0_3" type="StaticBody3D" parent="Level" unique_id=276526376 instance=ExtResource("6_sblpd")]
+[node name="coffin_6_0_3" type="StaticBody3D" parent="Level" unique_id=1246861065 instance=ExtResource("7_37mjs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
 metadata/ps1_slot = "prop"
 metadata/ps1_cell = Vector3i(6, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/2_props/coffin.tscn"
 
-[node name="floor_7_0_3" type="StaticBody3D" parent="Level" unique_id=375058953 instance=ExtResource("4_xgnpv")]
+[node name="floor_7_0_3" type="StaticBody3D" parent="Level" unique_id=631067033 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 6)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(7, 0, 3)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_1_0_4" type="StaticBody3D" parent="Level" unique_id=1617146663 instance=ExtResource("4_xgnpv")]
+[node name="floor_1_0_4" type="StaticBody3D" parent="Level" unique_id=1919117337 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(1, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_2_0_4" type="StaticBody3D" parent="Level" unique_id=1774506792 instance=ExtResource("4_xgnpv")]
+[node name="floor_2_0_4" type="StaticBody3D" parent="Level" unique_id=1147909166 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(2, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_3_0_4" type="StaticBody3D" parent="Level" unique_id=1986451855 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_0_4" type="StaticBody3D" parent="Level" unique_id=485844897 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_4_0_4" type="StaticBody3D" parent="Level" unique_id=2138226952 instance=ExtResource("4_xgnpv")]
+[node name="floor_4_0_4" type="StaticBody3D" parent="Level" unique_id=340251209 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="brazier_4_0_4" type="StaticBody3D" parent="Level" unique_id=1677914039 instance=ExtResource("7_37mjs")]
+[node name="brazier_4_0_4" type="StaticBody3D" parent="Level" unique_id=1677914039 instance=ExtResource("8_w7kxr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 8)
 metadata/ps1_slot = "prop"
 metadata/ps1_cell = Vector3i(4, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/brazier.tscn"
 
-[node name="floor_5_0_4" type="StaticBody3D" parent="Level" unique_id=139850016 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_0_4" type="StaticBody3D" parent="Level" unique_id=2131770972 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_6_0_4" type="StaticBody3D" parent="Level" unique_id=58223102 instance=ExtResource("4_xgnpv")]
+[node name="floor_6_0_4" type="StaticBody3D" parent="Level" unique_id=1669173307 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(6, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_7_0_4" type="StaticBody3D" parent="Level" unique_id=871396972 instance=ExtResource("4_xgnpv")]
+[node name="floor_7_0_4" type="StaticBody3D" parent="Level" unique_id=1287365174 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 8)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(7, 0, 4)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_1_0_5" type="StaticBody3D" parent="Level" unique_id=639874066 instance=ExtResource("4_xgnpv")]
+[node name="floor_1_0_5" type="StaticBody3D" parent="Level" unique_id=1022224092 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(1, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_2_0_5" type="StaticBody3D" parent="Level" unique_id=1914987383 instance=ExtResource("4_xgnpv")]
+[node name="floor_2_0_5" type="StaticBody3D" parent="Level" unique_id=1006739797 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(2, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="coffin_2_0_5" type="StaticBody3D" parent="Level" unique_id=1453592812 instance=ExtResource("6_sblpd")]
+[node name="coffin_2_0_5" type="StaticBody3D" parent="Level" unique_id=909966531 instance=ExtResource("7_37mjs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 10)
 metadata/ps1_slot = "prop"
 metadata/ps1_cell = Vector3i(2, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/2_props/coffin.tscn"
 
-[node name="floor_3_0_5" type="StaticBody3D" parent="Level" unique_id=366188182 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_0_5" type="StaticBody3D" parent="Level" unique_id=1672626789 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_4_0_5" type="StaticBody3D" parent="Level" unique_id=1229036782 instance=ExtResource("4_xgnpv")]
+[node name="floor_4_0_5" type="StaticBody3D" parent="Level" unique_id=67652253 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_5_0_5" type="StaticBody3D" parent="Level" unique_id=1624772653 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_0_5" type="StaticBody3D" parent="Level" unique_id=1614427560 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_6_0_5" type="StaticBody3D" parent="Level" unique_id=986104723 instance=ExtResource("4_xgnpv")]
+[node name="floor_6_0_5" type="StaticBody3D" parent="Level" unique_id=869497015 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(6, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="coffin_6_0_5" type="StaticBody3D" parent="Level" unique_id=1618180240 instance=ExtResource("6_sblpd")]
+[node name="coffin_6_0_5" type="StaticBody3D" parent="Level" unique_id=138776223 instance=ExtResource("7_37mjs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 10)
 metadata/ps1_slot = "prop"
 metadata/ps1_cell = Vector3i(6, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/2_props/coffin.tscn"
 
-[node name="floor_7_0_5" type="StaticBody3D" parent="Level" unique_id=1545308990 instance=ExtResource("4_xgnpv")]
+[node name="floor_7_0_5" type="StaticBody3D" parent="Level" unique_id=2029056074 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 10)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(7, 0, 5)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_1_0_6" type="StaticBody3D" parent="Level" unique_id=72464952 instance=ExtResource("4_xgnpv")]
+[node name="floor_1_0_6" type="StaticBody3D" parent="Level" unique_id=955975653 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(1, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_2_0_6" type="StaticBody3D" parent="Level" unique_id=1454674739 instance=ExtResource("4_xgnpv")]
+[node name="floor_2_0_6" type="StaticBody3D" parent="Level" unique_id=555441018 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(2, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_3_0_6" type="StaticBody3D" parent="Level" unique_id=221309384 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_0_6" type="StaticBody3D" parent="Level" unique_id=205171162 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_4_0_6" type="StaticBody3D" parent="Level" unique_id=556245884 instance=ExtResource("4_xgnpv")]
+[node name="floor_4_0_6" type="StaticBody3D" parent="Level" unique_id=689582687 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="pillar_4_0_6" type="StaticBody3D" parent="Level" unique_id=492000488 instance=ExtResource("5_mwty1")]
+[node name="pillar_4_0_6" type="StaticBody3D" parent="Level" unique_id=1953621557 instance=ExtResource("6_sblpd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 12)
 metadata/ps1_slot = "pillar"
 metadata/ps1_cell = Vector3i(4, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/pillar.tscn"
 
-[node name="floor_5_0_6" type="StaticBody3D" parent="Level" unique_id=498076949 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_0_6" type="StaticBody3D" parent="Level" unique_id=1991072557 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_6_0_6" type="StaticBody3D" parent="Level" unique_id=1322212621 instance=ExtResource("4_xgnpv")]
+[node name="floor_6_0_6" type="StaticBody3D" parent="Level" unique_id=1052411823 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(6, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_7_0_6" type="StaticBody3D" parent="Level" unique_id=1197520225 instance=ExtResource("4_xgnpv")]
+[node name="floor_7_0_6" type="StaticBody3D" parent="Level" unique_id=1000589266 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 12)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(7, 0, 6)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_3_1_0" type="StaticBody3D" parent="Level" unique_id=720442303 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_1_0" type="StaticBody3D" parent="Level" unique_id=1046772061 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1, 0)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 1, 0)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_4_1_0" type="StaticBody3D" parent="Level" unique_id=935752419 instance=ExtResource("4_xgnpv")]
+[node name="floor_4_1_0" type="StaticBody3D" parent="Level" unique_id=1712803643 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1, 0)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(4, 1, 0)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_5_1_0" type="StaticBody3D" parent="Level" unique_id=337755770 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_1_0" type="StaticBody3D" parent="Level" unique_id=1707541368 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 1, 0)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_3_1_1" type="StaticBody3D" parent="Level" unique_id=378349107 instance=ExtResource("4_xgnpv")]
+[node name="floor_3_1_1" type="StaticBody3D" parent="Level" unique_id=778241997 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1, 2)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(3, 1, 1)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="floor_5_1_1" type="StaticBody3D" parent="Level" unique_id=854177781 instance=ExtResource("4_xgnpv")]
+[node name="floor_5_1_1" type="StaticBody3D" parent="Level" unique_id=41283166 instance=ExtResource("5_mwty1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 2)
 metadata/ps1_slot = "floor"
 metadata/ps1_cell = Vector3i(5, 1, 1)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/floor.tscn"
 
-[node name="wall_1_0_2" type="StaticBody3D" parent="Level" unique_id=1986830973 instance=ExtResource("8_w7kxr")]
+[node name="wall_1_0_2" type="StaticBody3D" parent="Level" unique_id=1986830973 instance=ExtResource("3_a5psx")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 4)
 metadata/ps1_slot = "wall"
 metadata/ps1_edge = true
@@ -381,7 +382,7 @@ metadata/ps1_cell = Vector3i(1, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
 
-[node name="wall_1_0_3" type="StaticBody3D" parent="Level" unique_id=1344099085 instance=ExtResource("8_w7kxr")]
+[node name="wall_1_0_3" type="StaticBody3D" parent="Level" unique_id=218835626 instance=ExtResource("3_a5psx")]
 transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 4)
 metadata/ps1_slot = "wall"
 metadata/ps1_edge = true
@@ -389,12 +390,212 @@ metadata/ps1_cell = Vector3i(1, 0, 2)
 metadata/ps1_rot = 3
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
 
-[node name="wall_2_0_2" type="StaticBody3D" parent="Level" unique_id=1650106433 instance=ExtResource("8_w7kxr")]
+[node name="wall_2_0_2" type="StaticBody3D" parent="Level" unique_id=1234531014 instance=ExtResource("3_a5psx")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 4)
 metadata/ps1_slot = "wall"
 metadata/ps1_edge = true
 metadata/ps1_cell = Vector3i(2, 0, 2)
 metadata/ps1_rot = 0
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_1_0_4" type="StaticBody3D" parent="Level" unique_id=1909579214 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 6)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(1, 0, 3)
+metadata/ps1_rot = 3
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_6_0_2" type="StaticBody3D" parent="Level" unique_id=846847967 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 4)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(6, 0, 2)
+metadata/ps1_rot = 0
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_2" type="StaticBody3D" parent="Level" unique_id=1415487111 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 4)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 2)
+metadata/ps1_rot = 0
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_3" type="StaticBody3D" parent="Level" unique_id=2005136488 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 4)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 2)
+metadata/ps1_rot = 1
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_4" type="StaticBody3D" parent="Level" unique_id=2073228561 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 6)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 3)
+metadata/ps1_rot = 1
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_1_0_5" type="StaticBody3D" parent="Level" unique_id=967642134 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 8)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(1, 0, 4)
+metadata/ps1_rot = 3
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_5" type="StaticBody3D" parent="Level" unique_id=1187182538 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 8)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 4)
+metadata/ps1_rot = 1
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_1_0_6" type="StaticBody3D" parent="Level" unique_id=723354852 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 10)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(1, 0, 5)
+metadata/ps1_rot = 3
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_6" type="StaticBody3D" parent="Level" unique_id=720479669 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 10)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 5)
+metadata/ps1_rot = 1
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_1_0_7" type="StaticBody3D" parent="Level" unique_id=84567506 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 2, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(1, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_1_0_8" type="StaticBody3D" parent="Level" unique_id=456311637 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(1, 0, 6)
+metadata/ps1_rot = 3
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_2_0_6" type="StaticBody3D" parent="Level" unique_id=975656804 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(2, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_3_0_6" type="StaticBody3D" parent="Level" unique_id=1185537657 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 6, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(3, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_4_0_6" type="StaticBody3D" parent="Level" unique_id=1477086157 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(4, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_5_0_6" type="StaticBody3D" parent="Level" unique_id=806803096 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 10, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(5, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_6_0_6" type="StaticBody3D" parent="Level" unique_id=31068748 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 12, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(6, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_7" type="StaticBody3D" parent="Level" unique_id=1728986801 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 6)
+metadata/ps1_rot = 1
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_7_0_8" type="StaticBody3D" parent="Level" unique_id=400216036 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 14, 0, 12)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(7, 0, 6)
+metadata/ps1_rot = 2
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_3_1_0" type="StaticBody3D" parent="Level" unique_id=1445746776 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1, 0)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(3, 1, 0)
+metadata/ps1_rot = 0
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_3_1_1" type="StaticBody3D" parent="Level" unique_id=1658642477 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 6, 1, 0)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(3, 1, 0)
+metadata/ps1_rot = 3
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_4_1_0" type="StaticBody3D" parent="Level" unique_id=723613575 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1, 0)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(4, 1, 0)
+metadata/ps1_rot = 0
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_3_1_2" type="StaticBody3D" parent="Level" unique_id=266849311 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 6, 1, 2)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(3, 1, 1)
+metadata/ps1_rot = 3
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_5_1_0" type="StaticBody3D" parent="Level" unique_id=523045191 instance=ExtResource("3_a5psx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(5, 1, 0)
+metadata/ps1_rot = 0
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_5_1_1" type="StaticBody3D" parent="Level" unique_id=712581365 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 10, 1, 0)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(5, 1, 0)
+metadata/ps1_rot = 1
+metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
+
+[node name="wall_5_1_2" type="StaticBody3D" parent="Level" unique_id=495298321 instance=ExtResource("3_a5psx")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 10, 1, 2)
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+metadata/ps1_cell = Vector3i(5, 1, 1)
+metadata/ps1_rot = 1
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
 
 [node name="wall_torch_2_0_2" type="Node3D" parent="Level" unique_id=620683212 instance=ExtResource("9_rmx6s")]
@@ -405,63 +606,15 @@ metadata/ps1_cell = Vector3i(2, 0, 2)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_6_0_2" type="StaticBody3D" parent="Level" unique_id=357725030 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 4)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(6, 0, 2)
-metadata/ps1_rot = 0
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_7_0_2" type="StaticBody3D" parent="Level" unique_id=766315765 instance=ExtResource("8_w7kxr")]
+[node name="wall_torch_7_0_2" type="Node3D" parent="Level" unique_id=1487829128 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 4)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 2)
-metadata/ps1_rot = 0
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_7_0_3" type="StaticBody3D" parent="Level" unique_id=963019034 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 4)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 2)
-metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_7_0_2" type="Node3D" parent="Level" unique_id=1428034887 instance=ExtResource("9_rmx6s")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 4)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
 metadata/ps1_cell = Vector3i(7, 0, 2)
-metadata/ps1_rot = 1
+metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_1_0_4" type="StaticBody3D" parent="Level" unique_id=1697402542 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 6)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(1, 0, 3)
-metadata/ps1_rot = 3
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_7_0_4" type="StaticBody3D" parent="Level" unique_id=1391130581 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 6)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 3)
-metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_1_0_5" type="StaticBody3D" parent="Level" unique_id=277382192 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 8)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(1, 0, 4)
-metadata/ps1_rot = 3
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_1_0_4" type="Node3D" parent="Level" unique_id=1304685696 instance=ExtResource("9_rmx6s")]
+[node name="wall_torch_1_0_4" type="Node3D" parent="Level" unique_id=1331450884 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 8)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
@@ -469,31 +622,7 @@ metadata/ps1_cell = Vector3i(1, 0, 4)
 metadata/ps1_rot = 3
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_7_0_5" type="StaticBody3D" parent="Level" unique_id=1247426556 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 8)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 4)
-metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_1_0_6" type="StaticBody3D" parent="Level" unique_id=1163402169 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 10)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(1, 0, 5)
-metadata/ps1_rot = 3
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_7_0_6" type="StaticBody3D" parent="Level" unique_id=604379774 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 10)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 5)
-metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_7_0_5" type="Node3D" parent="Level" unique_id=2050270372 instance=ExtResource("9_rmx6s")]
+[node name="wall_torch_7_0_5" type="Node3D" parent="Level" unique_id=603544026 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 10)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
@@ -501,31 +630,7 @@ metadata/ps1_cell = Vector3i(7, 0, 5)
 metadata/ps1_rot = 1
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_1_0_7" type="StaticBody3D" parent="Level" unique_id=10381580 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 2, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(1, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_1_0_8" type="StaticBody3D" parent="Level" unique_id=1891480732 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 2, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(1, 0, 6)
-metadata/ps1_rot = 3
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_2_0_6" type="StaticBody3D" parent="Level" unique_id=796479557 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(2, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_2_0_6" type="Node3D" parent="Level" unique_id=1111447204 instance=ExtResource("9_rmx6s")]
+[node name="wall_torch_2_0_6" type="Node3D" parent="Level" unique_id=403656777 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4, 0, 12)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
@@ -533,31 +638,7 @@ metadata/ps1_cell = Vector3i(2, 0, 6)
 metadata/ps1_rot = 2
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_3_0_6" type="StaticBody3D" parent="Level" unique_id=1401396416 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 6, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(3, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_4_0_6" type="StaticBody3D" parent="Level" unique_id=939706903 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(4, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_5_0_6" type="StaticBody3D" parent="Level" unique_id=415628973 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 10, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(5, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_5_0_6" type="Node3D" parent="Level" unique_id=2850886 instance=ExtResource("9_rmx6s")]
+[node name="wall_torch_5_0_6" type="Node3D" parent="Level" unique_id=301454059 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 10, 0, 12)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
@@ -565,31 +646,7 @@ metadata/ps1_cell = Vector3i(5, 0, 6)
 metadata/ps1_rot = 2
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_6_0_6" type="StaticBody3D" parent="Level" unique_id=1697297768 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 12, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(6, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_7_0_7" type="StaticBody3D" parent="Level" unique_id=683955963 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 6)
-metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_7_0_8" type="StaticBody3D" parent="Level" unique_id=260202087 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 14, 0, 12)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(7, 0, 6)
-metadata/ps1_rot = 2
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_7_0_6" type="Node3D" parent="Level" unique_id=1087064527 instance=ExtResource("9_rmx6s")]
+[node name="wall_torch_7_0_6" type="Node3D" parent="Level" unique_id=1204236207 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 14, 0, 12)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
@@ -597,31 +654,7 @@ metadata/ps1_cell = Vector3i(7, 0, 6)
 metadata/ps1_rot = 2
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_3_1_0" type="StaticBody3D" parent="Level" unique_id=71836535 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1, 0)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(3, 1, 0)
-metadata/ps1_rot = 0
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_3_1_1" type="StaticBody3D" parent="Level" unique_id=760302762 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 6, 1, 0)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(3, 1, 0)
-metadata/ps1_rot = 3
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_4_1_0" type="StaticBody3D" parent="Level" unique_id=1729525235 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1, 0)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(4, 1, 0)
-metadata/ps1_rot = 0
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_4_1_0" type="Node3D" parent="Level" unique_id=1251419006 instance=ExtResource("9_rmx6s")]
+[node name="wall_torch_4_1_0" type="Node3D" parent="Level" unique_id=1183426752 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1, 0)
 metadata/ps1_slot = "light"
 metadata/ps1_edge = true
@@ -629,42 +662,10 @@ metadata/ps1_cell = Vector3i(4, 1, 0)
 metadata/ps1_rot = 0
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
 
-[node name="wall_5_1_0" type="StaticBody3D" parent="Level" unique_id=599763870 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(5, 1, 0)
-metadata/ps1_rot = 0
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_5_1_1" type="StaticBody3D" parent="Level" unique_id=2060492313 instance=ExtResource("8_w7kxr")]
+[node name="wall_torch_5_1_0" type="Node3D" parent="Level" unique_id=1531337715 instance=ExtResource("9_rmx6s")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 10, 1, 0)
-metadata/ps1_slot = "wall"
+metadata/ps1_slot = "light"
 metadata/ps1_edge = true
 metadata/ps1_cell = Vector3i(5, 1, 0)
 metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_3_1_2" type="StaticBody3D" parent="Level" unique_id=2111372688 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 6, 1, 2)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(3, 1, 1)
-metadata/ps1_rot = 3
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"
-
-[node name="wall_torch_3_1_1" type="Node3D" parent="Level" unique_id=1207748593 instance=ExtResource("9_rmx6s")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 6, 1, 2)
-metadata/ps1_slot = "light"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(3, 1, 1)
-metadata/ps1_rot = 3
 metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/3_lights/wall_torch.tscn"
-
-[node name="wall_5_1_2" type="StaticBody3D" parent="Level" unique_id=1755382041 instance=ExtResource("8_w7kxr")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 10, 1, 2)
-metadata/ps1_slot = "wall"
-metadata/ps1_edge = true
-metadata/ps1_cell = Vector3i(5, 1, 1)
-metadata/ps1_rot = 1
-metadata/ps1_scene = "res://addons/ps1_godot/starter_pieces/1_structure/wall.tscn"

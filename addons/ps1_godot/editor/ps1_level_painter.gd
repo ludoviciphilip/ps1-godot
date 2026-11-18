@@ -16,6 +16,7 @@ var _list: ItemList
 var _layer: SpinBox
 var _eraser: Button
 var _xray: Button
+var _auto: Button
 var _info: Label
 var _paths_by_cat := {}         # category -> Array[String]
 var _thumbs := {}               # path -> Texture2D
@@ -58,6 +59,12 @@ func build_panel() -> Control:
 	_eraser.toggle_mode = true
 	_eraser.tooltip_text = "LMB erases instead of painting (same as Shift+LMB)"
 	bar.add_child(_eraser)
+	_auto = Button.new()
+	_auto.text = "Auto walls"
+	_auto.toggle_mode = true
+	_auto.button_pressed = true
+	_auto.tooltip_text = "Painting/erasing floors adds/removes walls (and ceilings) automatically.\nSet auto_wall / auto_ceiling on the PS1GridLevel."
+	bar.add_child(_auto)
 	_xray = Button.new()
 	_xray.text = "Hide ceilings"
 	_xray.toggle_mode = true
@@ -252,6 +259,8 @@ func edit(l: PS1GridLevel) -> void:
 		_layer.value = 0
 		scan()
 		apply_xray()
+		if selected != "":
+			_rebuild_ghost()  # coming back to the level with a piece still picked
 
 func release() -> void:
 	apply_xray(false)
@@ -285,6 +294,8 @@ func _is_edge() -> bool:
 	return is_instance_valid(_ghost) and _ghost.get_meta("ps1_edge", false)
 
 func _slot_selected() -> String:
+	if not is_instance_valid(_ghost) and selected != "" and level:
+		_rebuild_ghost()
 	if not is_instance_valid(_ghost):
 		return ""
 	var s := String(_ghost.get_meta("ps1_slot", "prop"))
@@ -429,12 +440,27 @@ func _apply() -> void:
 			if p.get_meta("ps1_scene", "") == selected and int(p.get_meta("ps1_rot", 0)) == _hover_rot:
 				return  # already there
 		var r := level.place(s, _hover, _hover_rot, root)
-		if _xray.button_pressed and String(r[0].get_meta("ps1_slot", "")) in level.xray_slots:
-			r[0].visible = false
 		_added.append(r[0])
-		_removed.append_array(r[1])
+		_note_removed(r[1])
 	else:
-		_removed.append_array(level.erase(_hover, "" if _stroke_all else _slot_selected()))
+		_note_removed(level.erase(_hover, "" if _stroke_all else _slot_selected()))
+	if _auto.button_pressed and (_stroke_all or _slot_selected() == level.auto_floor_slot or selected == ""):
+		var a := level.update_auto([_hover], root)
+		_added.append_array(a[0])
+		_note_removed(a[1])
+	if _xray.button_pressed:
+		for n in _added:
+			if String(n.get_meta("ps1_slot", "")) in level.xray_slots:
+				n.visible = false
+
+## A piece added earlier in this same stroke and removed again just disappears (no undo entry).
+func _note_removed(nodes: Array) -> void:
+	for n in nodes:
+		if n in _added:
+			_added.erase(n)
+			n.queue_free()
+		else:
+			_removed.append(n)
 
 ## Already applied while dragging: register one undo step for the whole stroke.
 func _commit() -> void:

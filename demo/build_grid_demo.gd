@@ -46,24 +46,16 @@ func _init() -> void:
 		"S": [P.call("1_structure/stairs")]}, 0, Vector2i(1, 0), root)
 	# raised platform (layer 1) north of the stairs
 	lvl.paint_ascii(rows.slice(0, 1) + PackedStringArray(["  U U  "]), {"U": [floor_s]}, 1, Vector2i(1, 0), root)
-	# automatic walls on every floor -> empty edge, a torch every few walls
-	var dirs := [Vector3i(0, 0, -1), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(-1, 0, 0)]
-	var wall = P.call("1_structure/wall")
+	# automatic walls (and ceilings off: open-roof demo) + a torch every few walls
+	lvl.auto_wall = P.call("1_structure/wall")
+	lvl.rebuild_auto(root)
 	var torch = P.call("3_lights/wall_torch")
 	var k := 0
 	for p in lvl.pieces():
-		if p.get_meta("ps1_slot") != "floor":
-			continue
-		var c: Vector3i = p.get_meta("ps1_cell")
-		for r in 4:
-			var n: Vector3i = c + dirs[r]
-			var open := not lvl.pieces_at(n, "floor").is_empty() or not lvl.pieces_at(n + Vector3i(0, 1, 0), "floor").is_empty() \
-				or not lvl.pieces_at(n - Vector3i(0, 1, 0), "floor").is_empty()
-			if not open:
-				lvl.place(wall, c, r, root)
-				k += 1
-				if k % 3 == 0:
-					lvl.place(torch, c, r, root)
+		if String(p.get_meta("ps1_slot")) == "wall":
+			k += 1
+			if k % 3 == 0:
+				lvl.place(torch, p.get_meta("ps1_cell"), p.get_meta("ps1_rot"), root)
 	for n in [env, cam, lvl]:
 		n.owner = root
 	var ps := PackedScene.new()

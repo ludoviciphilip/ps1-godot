@@ -20,6 +20,18 @@ extends PS1BakedLevel
 @export var palette_dirs: PackedStringArray = ["res://pieces", "res://addons/ps1_godot/starter_pieces"]
 ## Slots the painter's "Hide ceilings" button hides in the editor (so you can see inside rooms).
 @export var xray_slots: PackedStringArray = ["ceiling"]
+@export_group("Auto walls")
+## Painting/erasing floors puts this wall on every floor -> empty edge (and removes it when the
+## edge stops being one). Only walls of THIS scene are managed: doors and arches you placed stay.
+@export var auto_wall: PackedScene
+## Optional: every floor cell gets this ceiling (removed with the floor).
+@export var auto_ceiling: PackedScene
+## Slot that counts as floor for the auto walls.
+@export var auto_floor_slot := "floor"
+@export_group("")
+
+const _DIRS := [Vector3i(0, 0, -1), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(-1, 0, 0)]
+var _slot_cache := {}
 
 func cell_to_local(cell: Vector3i) -> Vector3:
 	return Vector3(cell.x * cell_size, cell.y * layer_height, cell.z * cell_size)
@@ -102,3 +114,70 @@ func paint_ascii(rows: PackedStringArray, legend: Dictionary, layer := 0, origin
 				place(scene, Vector3i(origin.x + x, layer, origin.y + z), rot, owner_node)
 				count += 1
 	return count
+
+# ---------------- auto walls / ceilings ----------------
+
+func has_floor(cell: Vector3i) -> bool:
+	return not pieces_at(cell, auto_floor_slot).is_empty()
+
+## An edge is open if the neighbor has floor on the same layer or one layer up/down (stairs,
+## platforms: their floor blocks fill down to the layer below).
+func _open(cell: Vector3i) -> bool:
+	return has_floor(cell) or has_floor(cell + Vector3i(0, 1, 0)) or has_floor(cell - Vector3i(0, 1, 0))
+
+func _base_slot(scene: PackedScene) -> String:
+	var key := scene.get_instance_id()   # not the path: scenes made in code have none
+	if not _slot_cache.has(key):
+		var n := scene.instantiate()
+		_slot_cache[key] = String(n.get_meta("ps1_slot", "prop"))
+		n.free()
+	return _slot_cache[key]
+
+## Re-evaluates walls/ceiling of the given cells and their neighbors. Returns [added, removed]
+## (removed nodes are detached, not freed, so an undo can put them back).
+func update_auto(cells: Array, owner_node: Node = null) -> Array:
+	var added: Array[Node3D] = []
+	var removed: Array[Node3D] = []
+	if auto_wall == null and auto_ceiling == null:
+		return [added, removed]
+	var todo := {}
+	for c in cells:
+		todo[c] = true
+		for d in _DIRS:
+			todo[c + d] = true
+	for c in todo:
+		var floor_here := has_floor(c)
+		if auto_ceiling:
+			var cs := _base_slot(auto_ceiling)
+			var ceil := pieces_at(c, cs)
+			if floor_here and ceil.is_empty():
+				added.append(place(auto_ceiling, c, 0, owner_node)[0])
+			elif not floor_here:
+				for p in ceil:
+					if p.get_meta("ps1_scene", "") == auto_ceiling.resource_path:
+						remove_child(p)
+						removed.append(p)
+		if auto_wall == null:
+			continue
+		var ws := _base_slot(auto_wall)
+		for r in 4:
+			var need := floor_here and not _open(c + _DIRS[r])
+			var on_edge := pieces_at(c, "%s:%d" % [ws, r])
+			if need and on_edge.is_empty():
+				added.append(place(auto_wall, c, r, owner_node)[0])
+			elif not need:
+				var had_auto := on_edge.any(func(p): return p.get_meta("ps1_scene", "") == auto_wall.resource_path)
+				if had_auto:
+					# the auto wall goes, and so does whatever hung on it (torches...)
+					for p in pieces_at(c):
+						if p.get_meta("ps1_edge", false) and int(p.get_meta("ps1_rot", 0)) % 4 == r:
+							remove_child(p)
+							removed.append(p)
+	return [added, removed]
+
+## Recomputes the auto walls/ceilings of the whole level.
+func rebuild_auto(owner_node: Node = null) -> Array:
+	var cells := {}
+	for p in pieces():
+		cells[p.get_meta("ps1_cell")] = true
+	return update_auto(cells.keys(), owner_node)

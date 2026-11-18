@@ -153,8 +153,13 @@ func _selftest(scene: String, shot: String) -> void:
 	var fails := []
 	if _painter._list.item_count == 0:
 		fails.append("empty palette")
-	_painter._list.select(0)
-	_painter._on_pick(0)
+	var pick := 0
+	for i in _painter._list.item_count:
+		var path := String(_painter._list.get_item_metadata(i))
+		if path.get_file().get_basename() in ["floor", "chao"]:
+			pick = i
+	_painter._list.select(pick)
+	_painter._on_pick(pick)
 	# Frame the middle of the level like a user would (select a piece, press F), ceilings hidden.
 	var ps := lvl.pieces()
 	ps.sort_custom(func(a, b): return a.position.length() < b.position.length())
@@ -223,8 +228,19 @@ func _selftest(scene: String, shot: String) -> void:
 	var up := InputEventMouseButton.new(); up.button_index = MOUSE_BUTTON_LEFT; up.pressed = false; up.position = p2
 	_painter.input(cam, up)
 	var n1 := lvl.pieces().size()
+	if lvl.auto_wall and _painter._slot_selected() == lvl.auto_floor_slot:
+		var ws := lvl._base_slot(lvl.auto_wall)
+		var faltando := 0
+		for c in [target, target + Vector3i(1, 0, 0)]:
+			for r in 4:
+				if not lvl._open(c + PS1GridLevel._DIRS[r]) and lvl.pieces_at(c, "%s:%d" % [ws, r]).is_empty():
+					faltando += 1
+		print("PS1 SELFTEST auto walls: edges without wall = %d" % faltando)
+		if faltando > 0:
+			fails.append("auto walls: %d closed edges without a wall" % faltando)
 	if lvl.pieces_at(target).is_empty() or lvl.pieces_at(target + Vector3i(1, 0, 0)).is_empty():
 		fails.append("paint: pieces not at the hovered cells (%s -> %s)" % [target, lvl.pieces_at(target)])
+	print("PS1 SELFTEST auto walls: +%d pieces for 2 floor cells" % (n1 - n0))
 	print("PS1 SELFTEST palette=%d categories=%d picked=%s pieces %d -> %d" % [_painter._list.item_count,
 		_painter._cats.item_count, _painter.selected, n0, n1])
 	var vis := lvl.pieces().filter(func(n): return n.is_visible_in_tree()).size()

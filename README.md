@@ -212,6 +212,10 @@ Build levels by painting pieces on a grid, like RPG Maker, inside the normal God
 | RMB / MMB | camera, as usual |
 
 * **Walls, doors and wall torches snap to the cell edge nearest the mouse**: no rotating needed.
+* **Auto walls**: set `auto_wall` (and optionally `auto_ceiling`) on the `PS1GridLevel`, then just
+  paint floors: every floor -> empty edge gets a wall, erasing floor removes the walls left inside
+  (and the torches hanging on them). Doors/arches you placed by hand are never touched. From code:
+  `level.update_auto(cells)` / `level.rebuild_auto()`.
 * One undo step per stroke. **Hide ceilings** shows inside rooms while you edit (ceilings are never
   saved hidden). **Test here** saves and runs the scene with the player at the hovered cell: call
   `PS1.take_test_spawn(scene_file_path)` where your game spawns the player.
@@ -277,7 +281,7 @@ godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only -
 - [ ] Native-resolution CRT pass (scanlines, mask, curvature)
 - [ ] Vertex-color painting helpers (fake AO, gradients)
 - [x] Level painter (`PS1GridLevel`) with starter pieces
-- [ ] Autotile: paint floors and get walls automatically
+- [x] Auto walls / ceilings: paint floors, walls follow
 - [ ] Asset Library package
 
 ## License

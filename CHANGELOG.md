@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0
+- **Auto walls / ceilings** on `PS1GridLevel` (`auto_wall`, `auto_ceiling`, `auto_floor_slot`;
+  `update_auto()`, `rebuild_auto()`) and the painter's **Auto walls** toggle (one undo step with the floor).
+- Fix: coming back to a level with a piece still picked lost its preview (and its slot).
+- Fix: slot cache collided for scenes created in code (no resource path).
+- Grid demo built with `rebuild_auto()`; painter self-test checks the auto walls.
+
 ## 0.5.0
 - **Level painter**: `PS1GridLevel` (a `PS1BakedLevel` with a grid) and the **PS1 Pieces** bottom panel:
   palette with auto-rendered thumbnails, paint/drag/erase in the 3D viewport, edge pieces snap to the

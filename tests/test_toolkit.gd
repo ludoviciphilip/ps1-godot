@@ -225,6 +225,26 @@ func _test_grid_level() -> void:
 	check(n == 4 and lvl.pieces_at(Vector3i(11, 1, 10), "wall:2").size() == 1, "paint_ascii")
 	for g in gone:
 		g.free()
+	# auto walls
+	var auto := PS1GridLevel.new()
+	add_child(auto)
+	auto.auto_wall = wall_s
+	auto.auto_ceiling = _piece_scene("ceiling", false)
+	auto.place(floor_s, Vector3i(0, 0, 0))
+	var a1 := auto.update_auto([Vector3i(0, 0, 0)])
+	check(a1[0].size() == 5, "1 floor -> 4 walls + ceiling (%d)" % a1[0].size())
+	auto.place(floor_s, Vector3i(1, 0, 0))
+	var a2 := auto.update_auto([Vector3i(1, 0, 0)])
+	check(a2[1].size() == 1 and auto.pieces_at(Vector3i(0, 0, 0), "wall:1").is_empty(), "neighbor floor removes the shared wall")
+	check(auto.pieces_at(Vector3i(1, 0, 0), "wall:1").size() == 1 and auto.pieces_at(Vector3i(1, 0, 0), "wall:3").is_empty(), "new cell walls only outside")
+	for e in auto.erase(Vector3i(1, 0, 0), "floor"):
+		e.free()
+	var a3 := auto.update_auto([Vector3i(1, 0, 0)])
+	check(auto.pieces_at(Vector3i(0, 0, 0), "wall:1").size() == 1 and auto.pieces_at(Vector3i(1, 0, 0)).is_empty(), "erasing floor restores the wall, cleans the cell")
+	for x in a2[1] + a3[1]:
+		if is_instance_valid(x) and x.get_parent() == null:
+			x.free()
+	auto.queue_free()
 	lvl.queue_free()
 
 func _piece_scene(slot: String, edge: bool) -> PackedScene:
