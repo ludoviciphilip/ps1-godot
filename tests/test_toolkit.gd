@@ -19,6 +19,8 @@ func _ready() -> void:
 	_test_sprite()
 	_test_grid_level()
 	await _test_events()
+	await _test_particles()
+	_test_audio()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -330,3 +332,41 @@ func _test_events() -> void:
 	check(ch.describe().contains("[Yes]") and cif.describe() == "If gold >= 0", "describe(): %s | %s" % [ch.describe(), cif.describe()])
 	ev.queue_free()
 	actor.queue_free()
+
+func _test_particles() -> void:
+	print("PS1Particles")
+	var p := PS1Particles.preset("embers")
+	p.update_fps = 1000.0
+	add_child(p)
+	for i in 20: await get_tree().process_frame
+	check(p.alive_count() > 0, "continuous emitter spawns (%d alive)" % p.alive_count())
+	var b := PS1Particles.spawn(self, "sparks", Vector3(3, 1, 0))
+	b.update_fps = 1000.0
+	await get_tree().process_frame
+	check(b.alive_count() == b.burst_count, "one-shot burst at spawn (%d)" % b.alive_count())
+	check(b._pos[0].distance_to(Vector3(3, 1, 0)) < 0.5, "burst happens where it was placed (deferred)")
+	b.amount = 4
+	check(b.alive_count() <= 4 and b._pos.size() == 4, "amount can shrink at runtime")
+	var t0 := Time.get_ticks_msec()
+	while is_instance_valid(b) and Time.get_ticks_msec() - t0 < 3000:
+		await get_tree().process_frame
+	check(not is_instance_valid(b), "one-shot frees itself")
+	for n in ["embers", "sparks", "smoke", "mist", "dust", "ash", "motes", "soul", "burst", "blood", "fog_puff"]:
+		var q := PS1Particles.preset(n)
+		check(q.texture_name != "" and PS1Particles.sheet(q.texture_name) != null, "preset " + n)
+		q.free()
+	p.queue_free()
+
+func _test_audio() -> void:
+	print("PS1Audio")
+	PS1Audio.setup()
+	check(AudioServer.get_bus_index("SFX") != -1 and AudioServer.get_bus_index("Music") != -1, "buses created")
+	var old := PS1Audio.sound_dir
+	PS1Audio.sound_dir = "res://tests/_no_such_dir"
+	check(PS1Audio.streams("nothing").is_empty(), "missing sound -> empty list, no crash")
+	PS1Audio.sound_dir = old
+	var gen := AudioStreamGenerator.new()
+	check(PS1Audio.play(gen, Vector3.ZERO) != null, "play 3D stream")
+	PS1Audio.set_reverb(0.9, 0.4)
+	var rv := AudioServer.get_bus_effect(AudioServer.get_bus_index("SFX"), 0) as AudioEffectReverb
+	check(is_equal_approx(rv.room_size, 0.9), "set_reverb")

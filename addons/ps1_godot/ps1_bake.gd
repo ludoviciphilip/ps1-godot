@@ -105,13 +105,17 @@ static func _bakeable(root: Node3D) -> Array:
 
 ## Changes when geometry, transforms, materials' modes or lights change (then the cache is rebuilt).
 static func _signature(root: Node3D, meshes: Array, lights: Array, ambient: Color, shadows: bool) -> String:
-	var parts := PackedStringArray([str(ambient), str(shadows), "v2"])
+	var parts := PackedStringArray([str(ambient), str(shadows), "v3"])
 	for mi in meshes:
 		var vcount := 0
 		for s in mi.mesh.get_surface_count():
 			vcount += (mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
-		parts.append("%s|%s|%d|%s|%s|%s" % [_key(root, mi), mi.global_transform, vcount,
-			PS1Convert.mode_of(mi.material_override), mi.has_meta("ps1_no_cast"), mi.mesh.get_class()])
+		# node class + texture too: swapping a piece (or its texture) must invalidate the cache,
+		# otherwise baked meshes get applied to the wrong nodes
+		var tex = mi.material_override.get_shader_parameter("albedo_tex") if mi.material_override is ShaderMaterial else null
+		parts.append("%s|%s|%d|%s|%s|%s|%s|%s" % [_key(root, mi), mi.global_transform, vcount,
+			PS1Convert.mode_of(mi.material_override), mi.has_meta("ps1_no_cast"), mi.mesh.get_class(), mi.get_class(),
+			tex.resource_path if tex is Resource else ""])
 	for l in lights:
 		parts.append("%s|%s|%s|%s|%s" % [l.get_class(), l.global_transform, l.light_color, l.light_energy,
 			[l.get("omni_range"), l.get("omni_attenuation"), l.get("spot_range"), l.get("spot_angle")]])

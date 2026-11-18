@@ -52,16 +52,28 @@ func draw_distance(node: Node, distance: float, fade := 3.0) -> void:
 ## Flashes every mesh under node (hit feedback). Works with PS1 materials only.
 func flash(node: Node, color := Color.WHITE, duration := 0.12) -> void:
 	var meshes: Array[GeometryInstance3D] = []
-	if node is GeometryInstance3D:
-		meshes.append(node)
-	for n in node.find_children("*", "GeometryInstance3D", true, false):
-		meshes.append(n)
+	for n in ([node] if node is GeometryInstance3D else []) + node.find_children("*", "GeometryInstance3D", true, false):
+		if _has_shader_material(n):
+			meshes.append(n)
 	var tw := node.create_tween()
 	tw.tween_method(func(a: float) -> void:
 		for m in meshes:
 			if is_instance_valid(m):
 				m.set_instance_shader_parameter("ps1_flash", Color(color.r, color.g, color.b, a)),
 		1.0, 0.0, duration)
+
+## Instance uniforms only exist on shader materials: setting one on a surface without a material
+## (or on a Label3D) floods the log with errors.
+static func _has_shader_material(g: GeometryInstance3D) -> bool:
+	if g.material_override:
+		return g.material_override is ShaderMaterial
+	if g is MeshInstance3D and (g as MeshInstance3D).mesh:
+		var mi := g as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			if not mi.get_active_material(i) is ShaderMaterial:
+				return false
+		return mi.mesh.get_surface_count() > 0
+	return false
 
 ## Composite video filter (chroma bleed, line jitter, grain, vignette): 0 = off, 1 = full.
 func set_composite(strength: float) -> void:

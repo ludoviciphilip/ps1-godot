@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0
+- **PS1Particles**: CPU particles in one MultiMesh, 15-bit stepped colors, choppy update rate,
+  snapped vertices, additive or dithered blending, code-made sprite sheets, 11 presets,
+  `spawn()` one-shots that free themselves, editor preview. Demo `demo/particles_demo.tscn`.
+- **PS1Audio**: Music/SFX buses (reverb + low-pass), `play()` with pitch variation, variants
+  (`name_1..n`) and voice limit, `loop()`, `music()` crossfade, `set_reverb()`.
+- `PS1DialogBox` optional blip / move / confirm sounds.
+- Fix: `PS1.flash()` skipped nothing and spammed "material is null" on surfaces without a shader
+  material (and Label3D); now only shader-material geometry is flashed.
+- Fix: bake cache signature now includes node class and albedo texture, so swapping a piece
+  re-bakes instead of applying stale meshes to the wrong nodes.
+
 ## 0.7.0
 - **Events (RPG Maker style)**: `PS1Event` (pages with condition / trigger Interact-Touch-Autorun /
   graphic / command list), commands Show Text, Show Choices, Conditional Branch, Control Variable

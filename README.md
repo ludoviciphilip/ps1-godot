@@ -18,6 +18,8 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | 4/8-bit CLUT textures | `PS1Palette.quantize(tex, 16)` (k-means palette) |
 | Pre-lit geometry (Silent Hill / RE style) | `PS1Bake`: lights + raycast shadows baked into vertex colors, cached to disk |
 | Fixed screen palette | `PS1.set_screen_palette()` / `PS1.palette_from_screen(24)` |
+| Particles: PS1-looking CPU particles + 11 presets | `PS1Particles` |
+| Audio: SPU-ish buses, pitch-varied one-shots, music crossfade | `PS1Audio` |
 | Events (RPG Maker style): pages, triggers, text/choices, variables, custom commands | `PS1Event` + "PS1 Events" panel |
 | Level painter (RPG Maker style) | `PS1GridLevel` + "PS1 Pieces" panel: paint pieces on a grid in the 3D viewport, auto-edge walls, layers, undo, "Test here"; starter piece kit included |
 | Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
@@ -191,6 +193,38 @@ Or do it at import time: select the model, in the *Import* dock set **Import Scr
 
 **Debug keys** (debug builds only; set `PS1.debug_keys = false` to disable):
 F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth, F9 composite.
+
+## Particles
+
+`PS1Particles`: a small CPU particle system drawn with one MultiMesh, made to look like the era:
+big pixels, 15-bit color, colors that **step** through the gradient, choppy updates
+(`update_fps`), vertices snapped to the PS1 grid, **additive** (fire, glows — the PS1 "B+F" mode) or
+**dithered** blending (smoke, mist). Built-in 8x8 sprite sheets (dot, spark, ember, puff) are made
+in code.
+
+![particles](docs/particles.png)
+
+```gdscript
+add_child(PS1Particles.preset("embers"))          # continuous
+PS1Particles.spawn(self, "sparks", hit_position)  # one-shot, frees itself
+```
+Presets: `embers`, `smoke`, `mist`, `dust`, `soul`, `sparks`, `ash`, `motes`, `burst`, `blood`,
+`fog_puff`. Every property is exported, so you can tune them in the Inspector (they preview in the
+editor) or start from a preset in code.
+
+## Audio
+
+`PS1Audio`: buses **Music** and **SFX** (short hardware-like reverb, top end cut like the SPU),
+one-shots with random pitch and a per-sound voice limit, looping 3D sounds and music with crossfade.
+
+```gdscript
+PS1Audio.sound_dir = "res://sfx"
+PS1Audio.play("sword", global_position)   # sword.wav or a random sword_1.wav, sword_2.wav...
+PS1Audio.loop("fire_crackle", $Bonfire)
+PS1Audio.music(load("res://music/boss.ogg"), 1.5)
+PS1Audio.set_reverb(0.85, 0.3)            # crypts
+```
+`PS1DialogBox.blip_sound / move_sound / confirm_sound` give the text box its typewriter blips.
 
 ## Events (RPG Maker style)
 

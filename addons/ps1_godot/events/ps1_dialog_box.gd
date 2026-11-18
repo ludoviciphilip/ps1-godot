@@ -10,6 +10,10 @@ static var accept_actions: Array[StringName] = [&"ui_accept"]
 static var cancel_actions: Array[StringName] = [&"ui_cancel"]
 static var up_actions: Array[StringName] = [&"ui_up"]
 static var down_actions: Array[StringName] = [&"ui_down"]
+## Optional sounds (names for PS1Audio or AudioStreams): typewriter blip, cursor move, confirm.
+static var blip_sound = null
+static var move_sound = null
+static var confirm_sound = null
 
 @export var font_size := 8
 @export var chars_per_second := 45.0
@@ -130,19 +134,26 @@ func _process(dt: float) -> void:
 	if _mode == "text":
 		var total := maxi(_label.get_total_character_count(), 1)
 		if _label.visible_ratio < 1.0:
+			var antes := int(_label.visible_ratio * total)
 			_label.visible_ratio = minf(1.0, _label.visible_ratio + chars_per_second * dt / total)
+			if blip_sound != null and int(_label.visible_ratio * total) / 3 != antes / 3:
+				PS1Audio.play(blip_sound, null, {pitch_random = 0.1, volume_db = -6.0})
 			if _pressed(accept_actions):
 				_label.visible_ratio = 1.0
 		else:
 			_arrow.visible = fmod(Time.get_ticks_msec() / 400.0, 2.0) < 1.4
 			if _pressed(accept_actions) or _pressed(cancel_actions):
+				if confirm_sound != null: PS1Audio.play(confirm_sound)
 				_advance.emit()
 	else:
 		if _pressed(up_actions):
 			_sel = posmod(_sel - 1, _options.size()); _draw_choice()
+			if move_sound != null: PS1Audio.play(move_sound)
 		elif _pressed(down_actions):
 			_sel = posmod(_sel + 1, _options.size()); _draw_choice()
+			if move_sound != null: PS1Audio.play(move_sound)
 		elif _pressed(accept_actions):
+			if confirm_sound != null: PS1Audio.play(confirm_sound)
 			_advance.emit()
 		elif _cancel >= 0 and _pressed(cancel_actions):
 			_sel = _cancel
