@@ -18,6 +18,7 @@ func _ready() -> void:
 	_test_convert()
 	_test_sprite()
 	_test_grid_level()
+	await _test_events()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -256,3 +257,76 @@ func _piece_scene(slot: String, edge: bool) -> PackedScene:
 	ps.pack(n)
 	n.free()
 	return ps
+
+class _Probe extends Node3D:
+	var calls := []
+	func hello(x) -> void:
+		calls.append(x)
+
+func _test_events() -> void:
+	print("PS1Event")
+	PS1Events.reset()
+	var ev := PS1Event.new()
+	ev.name = "Chest"
+	var probe := _Probe.new()
+	probe.name = "Probe"
+	ev.add_child(probe)
+	var closed := Node3D.new(); closed.name = "Closed"; ev.add_child(closed)
+	var open := Node3D.new(); open.name = "Open"; ev.add_child(open)
+	# page 1: interact -> if gold >= 0 then call probe + set $taken = 1 + gold += 5
+	var p1 := PS1EventPage.new()
+	p1.graphic = NodePath("Closed")
+	var call := PS1CmdCall.new(); call.target = NodePath("Probe"); call.method = "hello"; call.args = ["hi"]
+	var taken := PS1CmdSetVar.new(); taken.variable = "$taken"; taken.value = 1
+	var gold := PS1CmdSetVar.new(); gold.variable = "gold"; gold.op = PS1CmdSetVar.Op.ADD; gold.value = 5
+	var cif := PS1CmdIf.new(); cif.condition.variable = "gold"; cif.condition.op = PS1Condition.Op.GREATER_OR_EQUAL; cif.condition.value = 0
+	cif.then_commands = [call, taken]
+	var never := PS1CmdSetVar.new(); never.variable = "never"; never.value = 9
+	cif.else_commands = [never]
+	p1.commands = [cif, gold]
+	# page 2: only after $taken == 1 (no trigger)
+	var p2 := PS1EventPage.new()
+	p2.trigger = PS1EventPage.Trigger.NONE
+	p2.graphic = NodePath("Open")
+	p2.condition = PS1Condition.new(); p2.condition.variable = "$taken"; p2.condition.value = 1
+	ev.pages = [p1, p2]
+	add_child(ev)
+	var actor := Node3D.new()
+	add_child(actor)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	check(ev.page == p1 and closed.visible and not open.visible, "page 1 active, its graphic shown")
+	check(ev.can_interact(actor), "can interact in range")
+	actor.position = Vector3(10, 0, 0)
+	check(not ev.can_interact(actor), "not out of range")
+	actor.position = Vector3.ZERO
+	var started := [0]
+	PS1Events.signals().event_started.connect(func(): started[0] += 1)
+	await ev.run(actor)
+	check(probe.calls == ["hi"], "call method ran (%s)" % [probe.calls])
+	check(PS1Events.get_var("gold") == 5 and PS1Events.get_var("never") == 0, "if/then + add var")
+	check(ev.page == p2 and open.visible and not closed.visible, "local var switched to page 2")
+	check(not ev.can_interact(actor) and started[0] == 1, "page 2 has no trigger; started signal once")
+	# choices through the default dialog box
+	var ch := PS1CmdChoice.new()
+	ch.question = "Pray?"
+	var a := PS1CmdSetVar.new(); a.variable = "prayed"; a.value = 1
+	var b := PS1CmdSetVar.new(); b.variable = "prayed"; b.value = 2
+	ch.branches[0].commands = [a]
+	ch.branches[1].commands = [b]
+	var txt := PS1CmdText.new(); txt.speaker = "Stone"; txt.text = "Here lies..."
+	var p3 := PS1EventPage.new(); p3.commands = [txt, ch]
+	var done := [false]
+	var runner := func(): await ev.run(actor, p3); done[0] = true
+	runner.call()
+	for i in 3: await get_tree().process_frame
+	var box := PS1Events.dialog()
+	check(box.is_open(), "dialog box opened for Show Text")
+	box.debug_confirm()
+	for i in 3: await get_tree().process_frame
+	box.debug_confirm(1)
+	for i in 3: await get_tree().process_frame
+	check(done[0] and PS1Events.get_var("prayed") == 2, "choice picked branch 2")
+	check(ch.describe().contains("[Yes]") and cif.describe() == "If gold >= 0", "describe(): %s | %s" % [ch.describe(), cif.describe()])
+	ev.queue_free()
+	actor.queue_free()

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+- **Events (RPG Maker style)**: `PS1Event` (pages with condition / trigger Interact-Touch-Autorun /
+  graphic / command list), commands Show Text, Show Choices, Conditional Branch, Control Variable
+  (`$local` self switches), Wait, Exit, Comment, Node (show/hide/delete/collision), Play Sound,
+  Call Method; `PS1Command` base for project commands (auto-listed); `PS1Events` variables + signals;
+  default `PS1DialogBox` (typewriter, choices, configurable input actions).
+- **"PS1 Events" editor panel**: page tabs, trigger/condition/prompt/graphic, indented command tree,
+  add menu by category, Inspector editing, delete/move/duplicate, full undo/redo.
+- Events self-test (`--ps1-events-selftest=`) and runtime tests.
+
 ## 0.6.0
 - **Auto walls / ceilings** on `PS1GridLevel` (`auto_wall`, `auto_ceiling`, `auto_floor_slot`;
   `update_auto()`, `rebuild_auto()`) and the painter's **Auto walls** toggle (one undo step with the floor).

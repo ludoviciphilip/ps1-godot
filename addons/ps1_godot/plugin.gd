@@ -33,18 +33,27 @@ const Painter := preload("res://addons/ps1_godot/editor/ps1_level_painter.gd")
 var _painter: Painter
 var _painter_panel: Control
 
+const EventEditor := preload("res://addons/ps1_godot/editor/ps1_event_editor.gd")
+var _events: EventEditor
+var _editing_event := false
+
 func _handles(object: Object) -> bool:
-	return object is PS1GridLevel
+	return object is PS1GridLevel or object is PS1Event
 
 func _edit(object: Object) -> void:
+	_editing_event = object is PS1Event
 	if object is PS1GridLevel:
 		_painter.edit(object)
 	else:
 		_painter.release()
+	if object is PS1Event:
+		_events.edit(object)
+	elif object == null:
+		pass   # keep the event panel while its commands are open in the Inspector
 
 func _make_visible(visible: bool) -> void:
 	if visible:
-		make_bottom_panel_item_visible(_painter_panel)
+		make_bottom_panel_item_visible(_events if _editing_event else _painter_panel)
 	else:
 		_painter.release()
 
@@ -72,6 +81,10 @@ func _enter_tree() -> void:
 	add_child(_painter)
 	_painter_panel = _painter.build_panel()
 	add_control_to_bottom_panel(_painter_panel, "PS1 Pieces")
+	_events = EventEditor.new()
+	_events.plugin = self
+	_events.build()
+	add_control_to_bottom_panel(_events, "PS1 Events")
 	_button = Button.new()
 	_button.text = "PS1 Bake"
 	_button.flat = true
@@ -84,6 +97,9 @@ func _enter_tree() -> void:
 	add_child(_timer)
 
 func _exit_tree() -> void:
+	if _events:
+		remove_control_from_bottom_panel(_events)
+		_events.queue_free()
 	if _painter_panel:
 		remove_control_from_bottom_panel(_painter_panel)
 		_painter_panel.queue_free()
@@ -136,6 +152,9 @@ func _ready() -> void:
 		elif a.begins_with("--ps1-painter-selftest-shot="): shot = a.get_slice("=", 1)
 	if scene != "":
 		_selftest(scene, shot)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--ps1-events-selftest="):
+			_events_selftest(a.get_slice("=", 1), shot)
 
 func _selftest(scene: String, shot: String) -> void:
 	var wait := func(s): await get_tree().create_timer(s).timeout
@@ -260,4 +279,72 @@ func _selftest(scene: String, shot: String) -> void:
 		fails.append("undo: %d pieces, expected %d" % [n2, n0])
 	print("PS1 SELFTEST undo -> %d pieces" % n2)
 	print("PS1 SELFTEST RESULT: ", "PASS" if fails.is_empty() else "FAIL " + str(fails))
+	get_tree().quit()
+
+# ---------------- events panel self-test (developers) ----------------
+# godot -e --path . -- --ps1-events-selftest=res://scene.tscn [--ps1-painter-selftest-shot=C:/x.png]
+# Adds a temporary PS1Event, builds pages/commands through the panel API (nested If + Choices),
+# checks the rows, undoes everything, screenshots, quits without saving.
+
+func _events_selftest(scene: String, shot: String) -> void:
+	var fails: Array[String] = []
+	for i in 10: await get_tree().process_frame
+	EditorInterface.open_scene_from_path(scene)
+	for i in 20: await get_tree().process_frame
+	var root := EditorInterface.get_edited_scene_root()
+	var ev := PS1Event.new()
+	ev.name = "SelftestEvent"
+	root.add_child(ev)
+	ev.owner = root
+	var gfx := Node3D.new(); gfx.name = "Glint"; ev.add_child(gfx); gfx.owner = root
+	EditorInterface.get_selection().clear()
+	EditorInterface.get_selection().add_node(ev)
+	EditorInterface.edit_node(ev)
+	for i in 5: await get_tree().process_frame
+	_events.edit(ev)
+	_events._add_page()
+	if ev.pages.size() != 1: fails.append("add page")
+	var classes := _events.command_classes()
+	var names := classes.map(func(c): return c.menu)
+	print("PS1 EVENTS SELFTEST commands: ", ", ".join(names))
+	if not names.has("Message/Show Text") or not names.has("Flow/Conditional Branch"): fails.append("command list")
+	var t := PS1CmdText.new(); t.speaker = "Old man"; t.text = "Welcome."
+	_events.add_command(t)
+	var cif := PS1CmdIf.new(); cif.condition.variable = "$taken"; cif.condition.value = 0
+	_events._tree.deselect_all()
+	_events.add_command(cif)
+	# insert inside "Then": select its header row (child 0 of the If row)
+	var if_row := _events._tree.get_root().get_child(1)
+	if_row.get_child(0).select(0)
+	var ch := PS1CmdChoice.new(); ch.question = "Take the flask?"
+	_events.add_command(ch)
+	var sv := PS1CmdSetVar.new(); sv.variable = "$taken"
+	# inside the first choice branch
+	_events.refresh()
+	var choice_row := _events._tree.get_root().get_child(1).get_child(0).get_child(0)
+	choice_row.get_child(0).select(0)
+	_events.add_command(sv)
+	_events._set_page("graphic", NodePath("Glint"))
+	_events._set_page("prompt", "Search")
+	var rows := _events.rows()
+	print("PS1 EVENTS SELFTEST rows:\n  " + "\n  ".join(rows))
+	if ev.pages[0].commands.size() != 2: fails.append("top-level commands = %d" % ev.pages[0].commands.size())
+	if cif.then_commands.size() != 1 or cif.then_commands[0] != ch: fails.append("choice not inside Then")
+	if ch.branches[0].commands.size() != 1: fails.append("set var not inside branch")
+	if not rows[0].contains("Text: [Old man] Welcome."): fails.append("row text")
+	make_bottom_panel_item_visible(_events)
+	_events.get_parent().get_parent().size.y = 330
+	for i in 10: await get_tree().process_frame
+	if shot != "":
+		await RenderingServer.frame_post_draw
+		EditorInterface.get_base_control().get_viewport().get_texture().get_image().save_png(shot)
+	var ur := get_undo_redo()
+	var undos := 0
+	var hist := ur.get_history_undo_redo(ur.get_object_history_id(ev))
+	while hist.has_undo() and undos < 20 and ev.pages.size() > 0:
+		hist.undo()
+		undos += 1
+	if ev.pages.size() != 0: fails.append("undo left %d pages" % ev.pages.size())
+	print("PS1 EVENTS SELFTEST undo x%d -> pages=%d" % [undos, ev.pages.size()])
+	print("PS1 EVENTS SELFTEST RESULT: ", "PASS" if fails.is_empty() else "FAIL " + str(fails))
 	get_tree().quit()

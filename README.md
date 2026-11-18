@@ -18,6 +18,7 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | 4/8-bit CLUT textures | `PS1Palette.quantize(tex, 16)` (k-means palette) |
 | Pre-lit geometry (Silent Hill / RE style) | `PS1Bake`: lights + raycast shadows baked into vertex colors, cached to disk |
 | Fixed screen palette | `PS1.set_screen_palette()` / `PS1.palette_from_screen(24)` |
+| Events (RPG Maker style): pages, triggers, text/choices, variables, custom commands | `PS1Event` + "PS1 Events" panel |
 | Level painter (RPG Maker style) | `PS1GridLevel` + "PS1 Pieces" panel: paint pieces on a grid in the 3D viewport, auto-edge walls, layers, undo, "Test here"; starter piece kit included |
 | Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
 | Composite video (TV) look | `PS1.set_composite(1.0)`: chroma bleed, line jitter, grain, vignette |
@@ -190,6 +191,35 @@ Or do it at import time: select the model, in the *Import* dock set **Import Scr
 
 **Debug keys** (debug builds only; set `PS1.debug_keys = false` to disable):
 F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth, F9 composite.
+
+## Events (RPG Maker style)
+
+`PS1Event` is a node with **pages**; each page has a condition (`variable OP value`), a trigger
+(**Interact**, **Touch**, **Autorun**, None), an optional graphic (a child shown only on that page)
+and a **command list**. Select the node and edit it in the **PS1 Events** bottom panel:
+
+![events](docs/events.png)
+
+| Built-in commands | |
+|---|---|
+| Message | Show Text (speaker + typewriter box), Show Choices (one branch per option, cancel option) |
+| Flow | Conditional Branch (then / else), Wait, Exit Event, Comment |
+| Variables | Control Variable (= / += / -=). Switches are variables at 0/1. `$name` = local to the event ("self switch") |
+| Scene | Show / hide / delete a node, enable / disable its collisions |
+| Audio / Advanced | Play Sound, Call Method (any node, awaited if it's a coroutine) |
+
+* The **active page is the last one whose condition holds** (chest: page 1 "give item, `$open = 1`",
+  page 2 "if `$open == 1`", no trigger, graphic = open chest).
+* **Your own commands**: extend `PS1Command` with a `class_name`, export some properties, implement
+  `run(ctx)` (may `await`), `describe()` and `menu_name()` ("Category/Name"). They appear in
+  *Add command* automatically.
+* Nested blocks (If/Choices) show as an indented tree; select a row to edit it in the Inspector,
+  double-click a `◆` row to insert there. Add/delete/move/duplicate and page edits are undoable.
+* Game hookup (a few lines): put the player in group `player`; when the interact button is pressed
+  near a node of group `ps1_interactable` whose `can_interact(player)` is true, call
+  `interact(player)` (`prompt_text()` gives the prompt); freeze the player on
+  `PS1Events.signals().event_started / event_finished`; add your input actions to
+  `PS1DialogBox.accept_actions` (and cancel/up/down). Variables live in `PS1Events.vars` (save it).
 
 ## Level painter
 
