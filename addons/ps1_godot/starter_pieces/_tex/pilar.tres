@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://addons/ps1_godot/shaders/ps1_lit.gdshader" id="1_evhqy"]
+[ext_resource type="Texture2D" path="res://addons/ps1_godot/starter_pieces/_tex/pedra.res" id="2_ntwo5"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_evhqy")
+shader_parameter/albedo_tex = ExtResource("2_ntwo5")
+shader_parameter/albedo_color = Color(0.62, 0.6, 0.58, 1)
+shader_parameter/uv_scale = Vector2(1, 4)
+shader_parameter/emission_color = Color(0, 0, 0, 1)
+shader_parameter/emission_energy = 0.0
+shader_parameter/texture_color_levels = 0.0
+shader_parameter/use_vertex_color = false

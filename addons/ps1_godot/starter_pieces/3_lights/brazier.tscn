@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/ferro.tres" id="1_2osf1"]
+[ext_resource type="Script" path="res://addons/ps1_godot/ps1_sprite.gd" id="2_2oabg"]
+[ext_resource type="Texture2D" path="res://addons/ps1_godot/starter_pieces/_tex/chama.res" id="3_82ys0"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_k713e"]
+top_radius = 0.07
+bottom_radius = 0.15
+height = 0.8
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_jpx6c"]
+top_radius = 0.45
+bottom_radius = 0.22
+height = 0.3
+radial_segments = 8
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_xbv8o"]
+height = 1.1
+radius = 0.4
+
+[node name="Brazier" type="StaticBody3D" unique_id=1677914039]
+metadata/ps1_slot = "prop"
+
+[node name="Pe" type="MeshInstance3D" parent="." unique_id=951267684]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+material_override = ExtResource("1_2osf1")
+mesh = SubResource("CylinderMesh_k713e")
+metadata/ps1_no_cast = true
+
+[node name="Bacia" type="MeshInstance3D" parent="." unique_id=1109018124]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+material_override = ExtResource("1_2osf1")
+mesh = SubResource("CylinderMesh_jpx6c")
+metadata/ps1_no_cast = true
+
+[node name="Colisao" type="CollisionShape3D" parent="." unique_id=931656007]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+shape = SubResource("CylinderShape3D_xbv8o")
+
+[node name="Chama" type="MeshInstance3D" parent="." unique_id=1681272848]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("2_2oabg")
+texture = ExtResource("3_82ys0")
+size = Vector2(0.8, 1)
+lit = false
+hframes = 4
+fps = 10.0
+
+[node name="Luz" type="OmniLight3D" parent="." unique_id=1228791341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+light_color = Color(1, 0.5, 0.2, 1)
+light_energy = 4.5
+omni_range = 10.0
+omni_attenuation = 0.9

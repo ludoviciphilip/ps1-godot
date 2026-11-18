@@ -130,3 +130,20 @@ func _unhandled_input(e: InputEvent) -> void:
 			lv = 8.0 if lv >= 32.0 else lv * 2.0
 			set_global("ps1_color_levels", lv)
 			print("color levels = %s" % lv)
+
+# ---------------- "Test here" (PS1GridLevel painter) ----------------
+
+const _TEST_SPAWN := "user://ps1_test_spawn.json"
+
+## For the game: where the editor asked the player to start ({} = normal start). One-shot:
+## the request is consumed, so the next normal run starts normally.
+##   var t := PS1.take_test_spawn(scene_file_path)
+##   if t: player.global_position = t.position; player.rotation.y = t.yaw
+func take_test_spawn(scene_path: String) -> Dictionary:
+	if not FileAccess.file_exists(_TEST_SPAWN):
+		return {}
+	var d = JSON.parse_string(FileAccess.get_file_as_string(_TEST_SPAWN))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_TEST_SPAWN))
+	if not d is Dictionary or d.get("scene", "") != scene_path or Time.get_unix_time_from_system() - d.get("time", 0.0) > 120.0:
+		return {}
+	return {position = Vector3(d.pos[0], d.pos[1], d.pos[2]), yaw = d.yaw}

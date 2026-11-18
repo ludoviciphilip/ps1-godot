@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://addons/ps1_godot/shaders/ps1_cutout.gdshader" id="1_ry62t"]
+[ext_resource type="Texture2D" path="res://addons/ps1_godot/starter_pieces/_tex/grade.res" id="2_2ivlf"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_ry62t")
+shader_parameter/albedo_tex = ExtResource("2_2ivlf")
+shader_parameter/albedo_color = Color(1, 1, 1, 1)
+shader_parameter/uv_scale = Vector2(3, 4)
+shader_parameter/emission_color = Color(0, 0, 0, 1)
+shader_parameter/emission_energy = 0.0
+shader_parameter/texture_color_levels = 0.0
+shader_parameter/use_vertex_color = false
+shader_parameter/alpha_cut = null

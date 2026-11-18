@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://addons/ps1_godot/shaders/ps1_lit.gdshader" id="1_46p3f"]
+[ext_resource type="Texture2D" path="res://addons/ps1_godot/starter_pieces/_tex/musgo.res" id="2_1yukc"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_46p3f")
+shader_parameter/albedo_tex = ExtResource("2_1yukc")
+shader_parameter/albedo_color = Color(0.5, 0.5, 0.47, 1)
+shader_parameter/uv_scale = Vector2(3, 2)
+shader_parameter/emission_color = Color(0, 0, 0, 1)
+shader_parameter/emission_energy = 0.0
+shader_parameter/texture_color_levels = 0.0
+shader_parameter/use_vertex_color = false

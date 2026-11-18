@@ -3,7 +3,7 @@
 ## PS1 variant. Static geometry gets lighting + shadows for free at runtime; keep moving
 ## characters on lit materials.
 ##   await PS1Bake.bake_scene($Level, Color(0.15, 0.15, 0.2))
-## Skip a mesh:   mesh_instance.set_meta("ps1_no_bake", true)
+## Skip a mesh (or a light that changes at runtime):   node.set_meta("ps1_no_bake", true)
 ## Cutout meshes (grass, fences) never cast baked shadows.
 ## Bake a mesh but don't let it cast shadows (small props near lights, e.g. a sword in a
 ## bonfire right next to the light):   mesh_instance.set_meta("ps1_no_cast", true)
@@ -93,7 +93,9 @@ static func _apply_baked(mi: MeshInstance3D, data: Array) -> void:
 		mi.set_surface_override_material(s, null)
 
 static func _scene_lights(tree: SceneTree) -> Array:
-	return tree.root.find_children("*", "Light3D", true, false).filter(func(l): return l.is_visible_in_tree())
+	# Lights that change at runtime (a bonfire you light) opt out with meta "ps1_no_bake".
+	return tree.root.find_children("*", "Light3D", true, false).filter(
+		func(l): return l.is_visible_in_tree() and not l.has_meta("ps1_no_bake"))
 
 static func _bakeable(root: Node3D) -> Array:
 	var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)

@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/parede.tres" id="1_r5174"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_h3wdv"]
+size = Vector3(2, 1, 2)
+subdivide_width = 3
+subdivide_height = 1
+subdivide_depth = 3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6yuuy"]
+size = Vector3(2, 1, 2)
+
+[node name="Block" type="StaticBody3D" unique_id=1088890900]
+metadata/ps1_slot = "prop"
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=1907458768]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+material_override = ExtResource("1_r5174")
+mesh = SubResource("BoxMesh_h3wdv")
+
+[node name="Colisao0" type="CollisionShape3D" parent="." unique_id=2042995246]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_6yuuy")

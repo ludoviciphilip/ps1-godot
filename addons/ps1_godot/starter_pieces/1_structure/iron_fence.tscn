@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/grade.tres" id="1_qxqhd"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_q71gq"]
+size = Vector3(2, 4, 0.08)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_idqgw"]
+size = Vector3(2, 4, 0.08)
+
+[node name="IronFence" type="StaticBody3D" unique_id=200825440]
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=190862608]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -1)
+material_override = ExtResource("1_qxqhd")
+mesh = SubResource("BoxMesh_q71gq")
+
+[node name="Colisao0" type="CollisionShape3D" parent="." unique_id=628995587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -1)
+shape = SubResource("BoxShape3D_idqgw")

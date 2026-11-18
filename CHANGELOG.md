@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+- **Level painter**: `PS1GridLevel` (a `PS1BakedLevel` with a grid) and the **PS1 Pieces** bottom panel:
+  palette with auto-rendered thumbnails, paint/drag/erase in the 3D viewport, edge pieces snap to the
+  nearest cell edge, layers, rotation, one undo step per stroke, "Hide ceilings", "Test here"
+  (`PS1.take_test_spawn()`). Code API: `place`, `erase`, `pieces_at`, `paint_ascii`.
+- Starter piece kit (`starter_pieces/`) + its generator (`tools/make_starter_pieces.gd`).
+- `demo/grid_level_demo.tscn` (+ `build_grid_demo.gd`).
+- Lights with meta `ps1_no_bake` stay out of the bake (lights that change at runtime).
+- `PS1BakedLevel` is now `@tool` (subclasses can run in the editor).
+- Editor self-test: `godot -e -- --ps1-painter-selftest=SCENE`.
+
 ## 0.4.0
 - `PS1BakedLevel` node + **PS1 Bake** button in the 3D editor toolbar (bakes in a headless
   process, saves to `res://ps1_bake_cache/`); `--ps1-bake-only` / `--ps1-bake-force` flags.

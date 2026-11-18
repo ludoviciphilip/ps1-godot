@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/parede.tres" id="1_votqk"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ijuyh"]
+size = Vector3(0.4, 4, 0.5)
+subdivide_height = 5
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7oca6"]
+size = Vector3(0.4, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ubjwk"]
+size = Vector3(0.4, 4, 0.5)
+subdivide_height = 5
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e44hv"]
+size = Vector3(0.4, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h8asg"]
+size = Vector3(1.2, 1.4, 0.5)
+subdivide_width = 2
+subdivide_height = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3uksm"]
+size = Vector3(1.2, 1.4, 0.5)
+
+[node name="WallDoor" type="StaticBody3D" unique_id=1283396988]
+metadata/ps1_slot = "wall"
+metadata/ps1_edge = true
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=802311597]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 2, -1)
+material_override = ExtResource("1_votqk")
+mesh = SubResource("BoxMesh_ijuyh")
+
+[node name="Colisao0" type="CollisionShape3D" parent="." unique_id=679947659]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 2, -1)
+shape = SubResource("BoxShape3D_7oca6")
+
+[node name="Malha1" type="MeshInstance3D" parent="." unique_id=377209574]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 2, -1)
+material_override = ExtResource("1_votqk")
+mesh = SubResource("BoxMesh_ubjwk")
+
+[node name="Colisao1" type="CollisionShape3D" parent="." unique_id=139458105]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 2, -1)
+shape = SubResource("BoxShape3D_e44hv")
+
+[node name="Malha2" type="MeshInstance3D" parent="." unique_id=833421973]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3, -1)
+material_override = ExtResource("1_votqk")
+mesh = SubResource("BoxMesh_h8asg")
+
+[node name="Colisao2" type="CollisionShape3D" parent="." unique_id=112624922]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3, -1)
+shape = SubResource("BoxShape3D_3uksm")

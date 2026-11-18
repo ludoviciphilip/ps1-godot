@@ -17,6 +17,7 @@ func _ready() -> void:
 	_test_lod()
 	_test_convert()
 	_test_sprite()
+	_test_grid_level()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -200,3 +201,38 @@ func _test_convert() -> void:
 	var sm2 := StandardMaterial3D.new()
 	sm2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	check(PS1Convert.mode_of(PS1Convert.to_ps1(sm2)) == "dither_alpha", "alpha blend -> dither_alpha")
+
+func _test_grid_level() -> void:
+	print("PS1GridLevel")
+	var lvl := PS1GridLevel.new()
+	add_child(lvl)
+	var floor_s := _piece_scene("floor", false)
+	var wall_s := _piece_scene("wall", true)
+	var r := lvl.place(floor_s, Vector3i(2, 0, -1))
+	check(r[0].position == Vector3(4, 0, -2), "cell -> position (cell 2 m)")
+	check(lvl.local_to_cell(Vector3(4.6, 0.2, -2.7)) == Vector3i(2, 0, -1), "position -> cell")
+	r = lvl.place(floor_s, Vector3i(2, 0, -1))
+	check(r[1].size() == 1 and lvl.pieces_at(Vector3i(2, 0, -1)).size() == 1, "same slot replaces")
+	lvl.place(wall_s, Vector3i(2, 0, -1), 0)
+	lvl.place(wall_s, Vector3i(2, 0, -1), 1)
+	check(lvl.pieces_at(Vector3i(2, 0, -1)).size() == 3, "edge pieces: one per edge + floor")
+	var w1: Node3D = lvl.pieces_at(Vector3i(2, 0, -1), "wall:1")[0]
+	check(w1.global_transform * Vector3(0, 0, -1) == Vector3(5, 0, -2).snapped(Vector3.ONE * 0.001) or
+		(w1.global_transform * Vector3(0, 0, -1)).distance_to(Vector3(5, 0, -2)) < 0.01, "rot 1 = east edge")
+	var gone := lvl.erase(Vector3i(2, 0, -1), "wall:0")
+	check(gone.size() == 1 and lvl.pieces_at(Vector3i(2, 0, -1)).size() == 2, "erase one slot")
+	var n := lvl.paint_ascii(PackedStringArray(["#.", ".#"]), {"#": [floor_s], ".": [[wall_s, 2]]}, 1, Vector2i(10, 10))
+	check(n == 4 and lvl.pieces_at(Vector3i(11, 1, 10), "wall:2").size() == 1, "paint_ascii")
+	for g in gone:
+		g.free()
+	lvl.queue_free()
+
+func _piece_scene(slot: String, edge: bool) -> PackedScene:
+	var n := StaticBody3D.new()
+	n.set_meta("ps1_slot", slot)
+	if edge:
+		n.set_meta("ps1_edge", true)
+	var ps := PackedScene.new()
+	ps.pack(n)
+	n.free()
+	return ps

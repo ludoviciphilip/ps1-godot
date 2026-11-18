@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/pilar.tres" id="1_qo01s"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_gxiid"]
+size = Vector3(0.6, 4, 0.6)
+subdivide_height = 5
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_o4k0y"]
+size = Vector3(0.6, 4, 0.6)
+
+[node name="Pillar" type="StaticBody3D" unique_id=2125705069]
+metadata/ps1_slot = "pillar"
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=986293588]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+material_override = ExtResource("1_qo01s")
+mesh = SubResource("BoxMesh_gxiid")
+
+[node name="Colisao0" type="CollisionShape3D" parent="." unique_id=1155971369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_o4k0y")

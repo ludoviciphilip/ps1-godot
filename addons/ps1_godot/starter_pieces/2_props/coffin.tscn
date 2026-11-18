@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/pedra_clara.tres" id="1_sutkc"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_u46ub"]
+size = Vector3(1, 0.75, 2)
+subdivide_width = 1
+subdivide_height = 1
+subdivide_depth = 3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j7bla"]
+size = Vector3(1, 0.75, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0jl5x"]
+size = Vector3(1.15, 0.18, 2.15)
+subdivide_width = 1
+subdivide_depth = 3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_37dcy"]
+size = Vector3(1.15, 0.18, 2.15)
+
+[node name="Coffin" type="StaticBody3D" unique_id=967716076]
+metadata/ps1_slot = "prop"
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=1526514336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
+material_override = ExtResource("1_sutkc")
+mesh = SubResource("BoxMesh_u46ub")
+
+[node name="Colisao0" type="CollisionShape3D" parent="." unique_id=380743218]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
+shape = SubResource("BoxShape3D_j7bla")
+
+[node name="Malha1" type="MeshInstance3D" parent="." unique_id=828426067]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0)
+material_override = ExtResource("1_sutkc")
+mesh = SubResource("BoxMesh_0jl5x")
+
+[node name="Colisao1" type="CollisionShape3D" parent="." unique_id=815984022]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0)
+shape = SubResource("BoxShape3D_37dcy")

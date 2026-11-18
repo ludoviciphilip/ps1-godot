@@ -18,6 +18,7 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | 4/8-bit CLUT textures | `PS1Palette.quantize(tex, 16)` (k-means palette) |
 | Pre-lit geometry (Silent Hill / RE style) | `PS1Bake`: lights + raycast shadows baked into vertex colors, cached to disk |
 | Fixed screen palette | `PS1.set_screen_palette()` / `PS1.palette_from_screen(24)` |
+| Level painter (RPG Maker style) | `PS1GridLevel` + "PS1 Pieces" panel: paint pieces on a grid in the 3D viewport, auto-edge walls, layers, undo, "Test here"; starter piece kit included |
 | Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
 | Composite video (TV) look | `PS1.set_composite(1.0)`: chroma bleed, line jitter, grain, vignette |
 | Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
@@ -190,6 +191,51 @@ Or do it at import time: select the model, in the *Import* dock set **Import Scr
 **Debug keys** (debug builds only; set `PS1.debug_keys = false` to disable):
 F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth, F9 composite.
 
+## Level painter
+
+Build levels by painting pieces on a grid, like RPG Maker, inside the normal Godot editor.
+
+![painter](docs/painter.png)
+
+1. Add a **`PS1GridLevel`** node to your scene (it is a `PS1BakedLevel`, so the lighting of
+   everything you paint is pre-baked) and select it: the **PS1 Pieces** panel opens at the bottom.
+2. Pick a piece and paint in the 3D viewport:
+
+| Input | Action |
+|---|---|
+| LMB / drag | paint (a drag paints every cell it crosses) |
+| Shift+LMB | erase pieces of the same kind (floor, wall, light...) |
+| Ctrl+Shift+LMB | erase everything in the cell |
+| R / Shift+R | rotate the piece |
+| PgUp / PgDn | change layer (floor height, `layer_height`) |
+| Esc | stop painting (back to normal selection) |
+| RMB / MMB | camera, as usual |
+
+* **Walls, doors and wall torches snap to the cell edge nearest the mouse**: no rotating needed.
+* One undo step per stroke. **Hide ceilings** shows inside rooms while you edit (ceilings are never
+  saved hidden). **Test here** saves and runs the scene with the player at the hovered cell: call
+  `PS1.take_test_spawn(scene_file_path)` where your game spawns the player.
+* **Pieces are plain scenes** in the palette folders (`palette_dirs`; sub-folders = categories;
+  thumbnails are rendered automatically, also for scenes made from code). The root's metadata says
+  where a piece sits: `ps1_slot` (`"floor"`, `"wall"`, `"ceiling"`, `"light"`, `"prop"`...: one piece
+  per slot per cell, painting replaces) and `ps1_edge = true` for edge pieces. Gameplay pieces work
+  the same way: an `@tool` script that shows a preview in the editor and spawns the real thing
+  (enemy, checkpoint, door) at runtime.
+* A **starter kit** ships in `addons/ps1_godot/starter_pieces/` (floor, wall, door, pillar,
+  ceiling, stairs, iron fence, block, coffin, wall torch, brazier; cell 2 m, walls 4 m). Rebuild or
+  use it as a template: `addons/ps1_godot/tools/make_starter_pieces.gd`.
+* Levels can be painted **from code** too (procedural layouts, blocking out from a sketch):
+
+```gdscript
+var lvl := $Level as PS1GridLevel
+lvl.place(load("res://pieces/wall.tscn"), Vector3i(3, 0, -2), 1)    # cell, quarter turns
+lvl.erase(Vector3i(3, 0, -2), "wall:1")
+lvl.paint_ascii(PackedStringArray(["#..#", "...."]), {"#": [pillar], ".": [floor]})
+```
+
+![grid level](docs/grid_level.png)
+*`demo/grid_level_demo.tscn` running: painted with the starter kit, lighting baked.*
+
 ## Tips for authentic results
 
 - **Subdivide large surfaces.** Lighting is per-vertex, so a big floor quad won't catch a torch's light, and affine warping gets extreme on big polygons. PS1 games tessellated floors and walls for exactly this reason.
@@ -209,6 +255,7 @@ composite video filter.
 ```
 godot --headless --path . res://tests/test_toolkit.tscn     # bake, palette, LOD, converter
 godot --path . res://tests/lod_visual.tscn                   # visual LOD check
+godot -e --path . -- --ps1-painter-selftest=res://demo/grid_level_demo.tscn   # painter in the real editor
 godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only --ps1-bake-force
 ```
 
@@ -229,6 +276,8 @@ godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only -
 - [x] Sprites / billboards with sprite-sheet animation
 - [ ] Native-resolution CRT pass (scanlines, mask, curvature)
 - [ ] Vertex-color painting helpers (fake AO, gradients)
+- [x] Level painter (`PS1GridLevel`) with starter pieces
+- [ ] Autotile: paint floors and get walls automatically
 - [ ] Asset Library package
 
 ## License

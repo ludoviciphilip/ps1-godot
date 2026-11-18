@@ -1,3 +1,4 @@
+@tool
 ## Put your static level geometry under this node: at runtime it loads the baked lighting
 ## from its cache instantly (or bakes and saves it the first time). Use the "PS1 Bake" button
 ## in the 3D editor toolbar to (re)bake the open scene with one click.

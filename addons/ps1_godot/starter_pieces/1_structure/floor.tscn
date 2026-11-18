@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/piso.tres" id="1_6f2bn"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_d8jd6"]
+size = Vector3(2, 1, 2)
+subdivide_width = 3
+subdivide_depth = 3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_iorxy"]
+size = Vector3(2, 1, 2)
+
+[node name="Floor" type="StaticBody3D" unique_id=1402818699]
+metadata/ps1_slot = "floor"
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=191158825]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+material_override = ExtResource("1_6f2bn")
+mesh = SubResource("BoxMesh_d8jd6")
+
+[node name="Colisao0" type="CollisionShape3D" parent="." unique_id=428887239]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_iorxy")

@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/ferro.tres" id="1_bse2j"]
+[ext_resource type="Script" path="res://addons/ps1_godot/ps1_sprite.gd" id="2_o3slf"]
+[ext_resource type="Texture2D" path="res://addons/ps1_godot/starter_pieces/_tex/chama.res" id="3_r02ui"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_vgmk2"]
+size = Vector3(0.12, 0.5, 0.12)
+
+[node name="WallTorch" type="Node3D" unique_id=620683212]
+metadata/ps1_slot = "light"
+metadata/ps1_edge = true
+
+[node name="Suporte" type="MeshInstance3D" parent="." unique_id=1740031326]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, -0.68)
+material_override = ExtResource("1_bse2j")
+mesh = SubResource("BoxMesh_vgmk2")
+metadata/ps1_no_cast = true
+
+[node name="Chama" type="MeshInstance3D" parent="." unique_id=1165645812]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.32, -0.66)
+script = ExtResource("2_o3slf")
+texture = ExtResource("3_r02ui")
+size = Vector2(0.4, 0.55)
+lit = false
+hframes = 4
+fps = 10.0
+
+[node name="Luz" type="OmniLight3D" parent="." unique_id=1695736295]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -0.2)
+light_color = Color(1, 0.5, 0.2, 1)
+light_energy = 4.0
+omni_range = 9.0
+omni_attenuation = 0.9

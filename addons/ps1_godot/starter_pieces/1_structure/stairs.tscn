@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/piso.tres" id="1_v1i5g"]
+[ext_resource type="Material" path="res://addons/ps1_godot/starter_pieces/_tex/parede.tres" id="2_ygwmy"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_5xlri"]
+size = Vector3(2, 1, 2)
+subdivide_width = 3
+subdivide_depth = 3
+
+[sub_resource type="BoxMesh" id="BoxMesh_3mfi0"]
+size = Vector3(2, 0.25, 0.5)
+subdivide_width = 2
+
+[sub_resource type="BoxMesh" id="BoxMesh_5muw3"]
+size = Vector3(2, 0.5, 0.5)
+subdivide_width = 2
+
+[sub_resource type="BoxMesh" id="BoxMesh_cjg8p"]
+size = Vector3(2, 0.75, 0.5)
+subdivide_width = 2
+
+[sub_resource type="BoxMesh" id="BoxMesh_i38nw"]
+size = Vector3(2, 1, 0.5)
+subdivide_width = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y0jrt"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qmhc6"]
+size = Vector3(2, 0.2, 2.236068)
+
+[node name="Stairs" type="StaticBody3D" unique_id=1549433317]
+metadata/ps1_slot = "floor"
+
+[node name="Malha0" type="MeshInstance3D" parent="." unique_id=1409523168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+material_override = ExtResource("1_v1i5g")
+mesh = SubResource("BoxMesh_5xlri")
+
+[node name="Malha1" type="MeshInstance3D" parent="." unique_id=1165663210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.75)
+material_override = ExtResource("2_ygwmy")
+mesh = SubResource("BoxMesh_3mfi0")
+
+[node name="Malha2" type="MeshInstance3D" parent="." unique_id=1417092665]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0.25)
+material_override = ExtResource("2_ygwmy")
+mesh = SubResource("BoxMesh_5muw3")
+
+[node name="Malha3" type="MeshInstance3D" parent="." unique_id=1217868882]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, -0.25)
+material_override = ExtResource("2_ygwmy")
+mesh = SubResource("BoxMesh_cjg8p")
+
+[node name="Malha4" type="MeshInstance3D" parent="." unique_id=447604084]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -0.75)
+material_override = ExtResource("2_ygwmy")
+mesh = SubResource("BoxMesh_i38nw")
+
+[node name="Base" type="CollisionShape3D" parent="." unique_id=719646070]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_y0jrt")
+
+[node name="Rampa" type="CollisionShape3D" parent="." unique_id=188222908]
+transform = Transform3D(1, 0, 0, 0, 0.8944272, -0.4472136, 0, 0.4472136, 0.8944272, 0, 0.3881966, 0)
+shape = SubResource("BoxShape3D_qmhc6")
