@@ -2,7 +2,7 @@
 ## The camera orbits on its own. TAB = free camera (WASD + mouse, Q/E down/up).
 ## F1-F5: global effects (see PS1 autoload) | F6: baked vertex lighting | F7: 16-color texture palettes
 ## F8: screen palette taken from the current frame (off -> 24 -> 12 colors) | F9: composite video
-## Command line (screenshots): -- --screenshot=PATH [--angle=RAD] [--baked] [--palette] [--dist=M] [--screen-palette=N]
+## Command line (screenshots): -- --screenshot=PATH [--angle=RAD] [--baked] [--palette] [--dist=M] [--screen-palette=N] [--composite] [--crt]
 extends Node3D
 
 var cam: Camera3D
@@ -43,6 +43,8 @@ func _ready() -> void:
 			want_palette = true
 		elif a == "--composite":
 			PS1.set_composite(1.0)
+		elif a == "--crt":
+			PS1.set_crt(1.0)
 		elif a.begins_with("--screen-palette="):
 			_screen_palette = int(a.trim_prefix("--screen-palette="))
 	level = Node3D.new()

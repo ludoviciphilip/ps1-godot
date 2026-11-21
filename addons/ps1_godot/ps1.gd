@@ -1,6 +1,6 @@
 ## Autoload "PS1": applies the post-process to every scene and controls the global effects.
 ## Debug keys (only in debug builds): F1 jitter | F2 affine | F3 dither | F4 resolution | F5 color depth
-## | F9 composite video filter
+## | F9 composite video filter | F10 CRT
 extends CanvasLayer
 
 const RESOLUTIONS := [Vector2i(320, 240), Vector2i(480, 360), Vector2i(640, 480)]
@@ -9,17 +9,27 @@ var _res_index := 0
 
 ## Set to false to disable the F1-F5 debug keys.
 var debug_keys := OS.is_debug_build()
+const GLOBAL_DEFAULTS := {"ps1_snap_resolution": null, "ps1_jitter_enabled": null, "ps1_affine_enabled": null,
+	"ps1_dither_enabled": null, "ps1_color_levels": null, "ps1_palette_size": null, "ps1_composite": 0.0, "ps1_crt": 0.0}
 const POST_SHADER := preload("res://addons/ps1_godot/shaders/ps1_post.gdshader")
 
 ## Current values of the ps1_* shader globals. RenderingServer.global_shader_parameter_get()
 ## only works in the editor, so the toolkit tracks the values itself.
 var _globals := {}
+var _post: ShaderMaterial
+var _base_scale_mode := Window.CONTENT_SCALE_MODE_VIEWPORT
 
 func _ready() -> void:
-	for key in ["ps1_snap_resolution", "ps1_jitter_enabled", "ps1_affine_enabled", "ps1_dither_enabled",
-			"ps1_color_levels", "ps1_palette_size", "ps1_composite"]:
+	# Globals added in newer versions may be missing from older projects: add them at runtime.
+	for key in GLOBAL_DEFAULTS:
 		var entry = ProjectSettings.get_setting("shader_globals/" + key)
-		_globals[key] = entry["value"] if entry is Dictionary else null
+		if entry is Dictionary:
+			_globals[key] = entry["value"]
+		elif GLOBAL_DEFAULTS[key] != null:
+			RenderingServer.global_shader_parameter_add(key, RenderingServer.GLOBAL_VAR_TYPE_FLOAT, GLOBAL_DEFAULTS[key])
+			_globals[key] = GLOBAL_DEFAULTS[key]
+		else:
+			_globals[key] = null
 	layer = 100
 	var rect := ColorRect.new()
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -27,7 +37,11 @@ func _ready() -> void:
 	var m := ShaderMaterial.new()
 	m.shader = POST_SHADER
 	rect.material = m
+	_post = m
 	add_child(rect)
+	_base_scale_mode = get_window().content_scale_mode
+	get_viewport().size_changed.connect(_update_low_res)
+	_update_low_res()
 
 ## Creates a ready-to-use PS1 material (shortcut; see make() for every option).
 func material(tex: Texture2D, color := Color.WHITE, uv_scale := Vector2.ONE,
@@ -74,6 +88,32 @@ static func _has_shader_material(g: GeometryInstance3D) -> bool:
 				return false
 		return mi.mesh.get_surface_count() > 0
 	return false
+
+## CRT pass at the monitor's native resolution: scanlines, aperture grille, curvature
+## (0 = off, 1 = full). While on, the game renders at native resolution and the post-process
+## samples it on the low-res grid, so the picture itself doesn't change (costs more GPU).
+func set_crt(strength: float) -> void:
+	strength = clampf(strength, 0.0, 1.0)
+	var w := get_window()
+	if strength > 0.0 and w.content_scale_mode == Window.CONTENT_SCALE_MODE_VIEWPORT:
+		w.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	elif strength <= 0.0 and w.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS \
+			and _base_scale_mode == Window.CONTENT_SCALE_MODE_VIEWPORT:
+		w.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
+	set_global("ps1_crt", strength)
+	_update_low_res.call_deferred()
+
+## Tweak the CRT look: curvature, scanlines, mask (aperture grille), brightness.
+func crt_params(curvature := 0.08, scanlines := 0.6, mask := 0.25, brightness := 1.35) -> void:
+	_post.set_shader_parameter("crt_curvature", curvature)
+	_post.set_shader_parameter("crt_scanlines", scanlines)
+	_post.set_shader_parameter("crt_mask", mask)
+	_post.set_shader_parameter("crt_brightness", brightness)
+
+## The low-res grid = the canvas size (base resolution widened by stretch aspect "expand").
+func _update_low_res() -> void:
+	if _post:
+		_post.set_shader_parameter("low_res", get_viewport().get_visible_rect().size)
 
 ## Composite video filter (chroma bleed, line jitter, grain, vignette): 0 = off, 1 = full.
 func set_composite(strength: float) -> void:
@@ -133,6 +173,10 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_F2: toggle("ps1_affine_enabled")
 		KEY_F3: toggle("ps1_dither_enabled")
 		KEY_F4: cycle_resolution()
+		KEY_F10:
+			var cr = get_global("ps1_crt")
+			set_crt(0.0 if cr != null and float(cr) > 0.0 else 1.0)
+			print("crt = %s" % get_global("ps1_crt"))
 		KEY_F9:
 			var cv = get_global("ps1_composite")
 			set_composite(0.0 if cv != null and float(cv) > 0.0 else 1.0)

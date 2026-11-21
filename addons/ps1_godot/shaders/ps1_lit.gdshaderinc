@@ -72,7 +72,8 @@ void vertex() {
 }
 
 void fragment() {
-	float b = ps1_bayer(FRAGCOORD.xy);
+	// Dither cell = one low-res pixel, also when the screen renders at native resolution (CRT).
+	float b = ps1_bayer(FRAGCOORD.xy * ps1_snap_resolution.y / VIEWPORT_SIZE.y);
 	if (ps1_fade.y > 0.0 || ps1_fade.w > 0.0) {
 		float d = length(VERTEX);
 		if (ps1_fade.y > 0.0 && smoothstep(ps1_fade.x, ps1_fade.y, d) <= 1.0 - b) {

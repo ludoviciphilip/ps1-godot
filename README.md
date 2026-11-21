@@ -192,7 +192,17 @@ Or do it at import time: select the model, in the *Import* dock set **Import Scr
 | `ps1_color_levels` | `32.0` | Levels per color channel (32 = 15-bit color) |
 
 **Debug keys** (debug builds only; set `PS1.debug_keys = false` to disable):
-F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth, F9 composite.
+F1 jitter, F2 affine, F3 dither, F4 resolution (240p/360p/480p), F5 color depth, F9 composite, F10 CRT.
+
+### CRT
+
+`PS1.set_crt(1.0)` (or F10) adds a CRT at your monitor's **native** resolution: scanlines whose
+width follows brightness, an RGB aperture grille and tube curvature. While it's on, the window
+renders at native resolution and the post-process samples it on the low-res grid, so the PS1
+picture itself is unchanged (it does cost more GPU). Combine with `set_composite()` for the full
+"console on a TV" look; tweak with `PS1.crt_params(curvature, scanlines, mask, brightness)`.
+
+![crt](docs/crt.png)
 
 ## Particles
 
@@ -342,7 +352,7 @@ godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only -
 - [x] One-click bake from the editor toolbar (`PS1BakedLevel`)
 - [x] Composite video filter
 - [x] Sprites / billboards with sprite-sheet animation
-- [ ] Native-resolution CRT pass (scanlines, mask, curvature)
+- [x] Native-resolution CRT pass (scanlines, mask, curvature)
 - [ ] Vertex-color painting helpers (fake AO, gradients)
 - [x] Level painter (`PS1GridLevel`) with starter pieces
 - [x] Auto walls / ceilings: paint floors, walls follow

@@ -21,6 +21,7 @@ func _ready() -> void:
 	await _test_events()
 	await _test_particles()
 	_test_audio()
+	await _test_crt()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -370,3 +371,14 @@ func _test_audio() -> void:
 	PS1Audio.set_reverb(0.9, 0.4)
 	var rv := AudioServer.get_bus_effect(AudioServer.get_bus_index("SFX"), 0) as AudioEffectReverb
 	check(is_equal_approx(rv.room_size, 0.9), "set_reverb")
+
+func _test_crt() -> void:
+	print("CRT")
+	var w := get_window()
+	var before := w.content_scale_mode
+	PS1.set_crt(1.0)
+	await get_tree().process_frame
+	check(w.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS and is_equal_approx(float(PS1.get_global("ps1_crt")), 1.0), "crt on: native resolution")
+	PS1.set_crt(0.0)
+	await get_tree().process_frame
+	check(w.content_scale_mode == before, "crt off: back to the base stretch mode")

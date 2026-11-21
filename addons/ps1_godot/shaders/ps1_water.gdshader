@@ -43,7 +43,7 @@ void vertex() {
 }
 
 void fragment() {
-	ivec2 p = ivec2(FRAGCOORD.xy) % 4;
+	ivec2 p = ivec2(FRAGCOORD.xy * ps1_snap_resolution.y / VIEWPORT_SIZE.y) % 4;
 	float b = (BAYER[p.y * 4 + p.x] + 0.5) / 16.0;
 	if (color.a < b) {
 		discard;

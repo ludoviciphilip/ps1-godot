@@ -10,6 +10,7 @@ const GLOBALS := {
 	"ps1_palette": ["sampler2D", ""],
 	"ps1_palette_size": ["float", 0.0],
 	"ps1_composite": ["float", 0.0],
+	"ps1_crt": ["float", 0.0],
 }
 
 func _enable_plugin() -> void:
