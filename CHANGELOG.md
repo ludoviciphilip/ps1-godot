@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+- Fix: the bake and ambient occlusion no longer error when the level is regenerated or freed while
+  they are still running (they spread over frames); a bake interrupted that way isn't cached.
+
 ## 1.0.0
 - Renamed to **PS1 Maker** (the addon folder stays `addons/ps1_godot/`, so existing projects keep
   working). First Asset Store release; semantic versioning from here on.

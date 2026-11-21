@@ -151,10 +151,15 @@ static func ambient_occlusion(node: Node, radius := 1.2, strength := 0.6, sample
 	# a frame every ~30 ms so loading screens keep moving
 	var count := 0
 	var t0 := Time.get_ticks_msec()
+	var tree: SceneTree = n3.get_tree()
 	for mi in meshes(node):
+		if not is_instance_valid(mi) or not mi.is_inside_tree():
+			continue   # freed while we waited (level regenerated, scene changed)
 		count += paint_mesh(mi, f)
 		if Time.get_ticks_msec() - t0 > PS1Bake.frame_budget_ms:
-			await n3.get_tree().process_frame
+			await tree.process_frame
+			if not is_instance_valid(n3) or not n3.is_inside_tree():
+				return count
 			t0 = Time.get_ticks_msec()
 	return count
 

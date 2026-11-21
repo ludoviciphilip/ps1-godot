@@ -52,10 +52,14 @@ static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Ar
 	progress = 0.0
 	var t0 := Time.get_ticks_msec()
 	for i in meshes.size():
+		if not is_instance_valid(meshes[i]) or not meshes[i].is_inside_tree():
+			continue   # freed while the bake was waiting a frame (level regenerated, scene changed)
 		bake_mesh(meshes[i], ambient, lights, space, to_unlit)
 		if Time.get_ticks_msec() - t0 > frame_budget_ms:
 			progress = float(i) / meshes.size()
 			await tree.process_frame
+			if not is_instance_valid(root) or not root.is_inside_tree():
+				break
 			t0 = Time.get_ticks_msec()
 	progress = 1.0
 	for b in temp:
@@ -86,9 +90,13 @@ static func bake_scene_cached(root: Node3D, ambient: Color, cache_path := "", sh
 	if before_bake.is_valid():
 		await before_bake.call()
 	await bake_scene(root, ambient, shadows, lights)
+	if not is_instance_valid(root) or not root.is_inside_tree():
+		return false
 	var out := PS1BakeCache.new()
 	out.signature = sig
 	for mi in meshes:
+		if not is_instance_valid(mi) or not mi.is_inside_tree():
+			return false   # the level changed during the bake: don't cache a partial result
 		out.meshes[_key(root, mi)] = [mi.mesh, mi.material_override]
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(cache_path.get_base_dir()))
 	var err := ResourceSaver.save(out, cache_path)
