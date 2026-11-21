@@ -25,6 +25,7 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
 | Composite video (TV) look | `PS1.set_composite(1.0)`: chroma bleed, line jitter, grain, vignette |
 | CRT at native resolution | `PS1.set_crt(1.0)`: scanlines, aperture grille, curvature |
+| Procedural levels | `PS1LevelGen`: dungeons, catacombs, caves, mazes, ruins, built from grid pieces (editor button or code) |
 | Vertex paint (fake AO, gradients, grime) | `PS1VertexPaint`, or *Vertex paint* options on `PS1BakedLevel` |
 | Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
 
@@ -205,6 +206,39 @@ picture itself is unchanged (it does cost more GPU). Combine with `set_composite
 "console on a TV" look; tweak with `PS1.crt_params(curvature, scanlines, mask, brightness)`.
 
 ![crt](docs/crt.png)
+
+## Procedural levels
+
+Select a `PS1GridLevel`, press **Generate...** in the *PS1 Pieces* panel, pick a style and a
+size, and watch the live map preview; **Generate** builds it from pieces (one undo step). The
+result is an ordinary painted level: keep editing it by hand, then bake.
+
+| Style | What you get |
+|---|---|
+| Dungeon | rooms joined by straight corridors (A* with turn cost), doorways, pillars, braziers |
+| Catacombs | many small chambers, narrow corridors, burial niches with coffins |
+| Caves | cellular-automata caverns, rock columns |
+| Maze | thin-wall maze with a few open halls; *braid* turns dead ends into loops |
+| Ruins | open ground, roofless broken buildings, colonnades |
+
+Every map is fully connected (checked on 180 maps in the tests), has a **start** at one end and
+an **end** at the far end, and enemy **spawns** away from the start. Pieces come from a
+`PS1GenTheme` (`gen_theme` on the level; empty = starter pieces). Markers for start / end / enemies
+can be your own scenes (a bonfire, a boss, enemies), otherwise `Marker3D`s in the groups
+`ps1_gen_start`, `ps1_gen_end`, `ps1_gen_spawn`.
+
+From code (e.g. a new map on every visit):
+
+```gdscript
+var map := PS1LevelGen.generate({style = PS1LevelGen.Style.CATACOMBS, seed = 7, width = 28, depth = 28})
+map.build($Level, preload("res://my_theme.tres"))   # before $Level enters the tree -> it bakes
+$Player.position = $Level.cell_to_local(Vector3i(map.start.x, 0, map.start.y))
+```
+
+Same seed = same map. Runtime baking of a 32x32 map takes a few seconds (set `shadows = false`
+on the level to halve it). Demo: `demo/procgen_demo.tscn` (1-5 style, R new seed, Tab overview).
+
+![procgen](docs/procgen.png)
 
 ## Vertex paint
 

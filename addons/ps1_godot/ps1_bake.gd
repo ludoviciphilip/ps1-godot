@@ -136,6 +136,9 @@ static func bake_mesh(mi: MeshInstance3D, ambient: Color, lights: Array, space: 
 	var out := ArrayMesh.new()
 	var xf := mi.global_transform
 	var nb := xf.basis.inverse().transposed()
+	# Only the lights whose range reaches this mesh (big levels have dozens of torches).
+	var box := xf * mi.get_aabb()
+	lights = lights.filter(func(l): return _reaches(l, box))
 	for s in src.get_surface_count():
 		var arr := src.surface_get_arrays(s)
 		var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
@@ -169,6 +172,14 @@ static func bake_mesh(mi: MeshInstance3D, ambient: Color, lights: Array, space: 
 	for s in mi.get_surface_override_material_count():
 		mi.set_surface_override_material(s, null)
 	mi.mesh = out
+
+static func _reaches(l: Light3D, box: AABB) -> bool:
+	if not (l is OmniLight3D or l is SpotLight3D):
+		return true
+	var r: float = l.omni_range if l is OmniLight3D else l.spot_range
+	var p := l.global_position
+	var closest := p.clamp(box.position, box.end)
+	return closest.distance_squared_to(p) < r * r
 
 static func _is_cutout(mi: MeshInstance3D) -> bool:
 	if PS1Convert.mode_of(mi.material_override).ends_with("cutout"):

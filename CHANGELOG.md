@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0
+- **Procedural levels** (`PS1LevelGen` + `PS1GenTheme`): Dungeon, Catacombs, Caves, Maze, Ruins;
+  size, seed, rooms, loops, props, lights, enemies; start/end/spawn markers; always connected;
+  ASCII and image previews. Editor: "Generate..." in the PS1 Pieces panel with live preview,
+  one undo step (+ `--ps1-gen-selftest`). `gen_theme` on PS1GridLevel. Demo `procgen_demo.tscn`.
+- Bake: each mesh only evaluates the lights whose range reaches it (same result, faster on big
+  levels: a 32x32 maze went from 31 s to 17 s).
+
 ## 0.9.0
 - **CRT pass at native resolution** (`PS1.set_crt`, F10): beam-width scanlines, aperture grille,
   curvature; the PS1 picture is sampled on the low-res grid so it doesn't change.

@@ -114,6 +114,7 @@ func _exit_tree() -> void:
 		_painter_panel.queue_free()
 	if _painter:
 		_painter.release()
+		_painter.release_generator()
 		_painter.queue_free()
 	if _paint_menu:
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _paint_menu)
@@ -211,6 +212,8 @@ func _ready() -> void:
 			_events_selftest(a.get_slice("=", 1), shot)
 		if a.begins_with("--ps1-paint-selftest="):
 			_paint_selftest(a.get_slice("=", 1))
+		if a.begins_with("--ps1-gen-selftest="):
+			_gen_selftest(a.get_slice("=", 1), shot)
 
 func _selftest(scene: String, shot: String) -> void:
 	var wait := func(s): await get_tree().create_timer(s).timeout
@@ -429,4 +432,44 @@ func _paint_selftest(scene: String) -> void:
 	hist.undo()
 	if mi.mesh != before: fails.append("undo did not restore the mesh")
 	print("PS1 PAINT SELFTEST %s: %d vertices; RESULT: %s" % [mi.name, n, "PASS" if fails.is_empty() else "FAIL " + str(fails)])
+	get_tree().quit()
+
+# godot -e --path . -- --ps1-gen-selftest=res://level.tscn [--ps1-painter-selftest-shot=PNG]
+# Opens the Generate dialog (screenshot), generates every style into the level, undoes back.
+func _gen_selftest(scene: String, shot: String) -> void:
+	for i in 10: await get_tree().process_frame
+	EditorInterface.open_scene_from_path(scene)
+	for i in 20: await get_tree().process_frame
+	var root := EditorInterface.get_edited_scene_root()
+	var lvl: PS1GridLevel = root.find_children("*", "PS1GridLevel", true, false).front() if not root is PS1GridLevel else root
+	EditorInterface.edit_node(lvl)
+	for i in 5: await get_tree().process_frame
+	var fails: Array[String] = []
+	var before := lvl.pieces().size()
+	_painter.open_generator()
+	_painter._gen_dialog.set_options({style = 0, seed = 3, width = 28, depth = 28})
+	for i in 10: await get_tree().process_frame
+	if shot != "":
+		# the dialog may be its own OS window: capture both
+		EditorInterface.get_base_control().get_viewport().get_texture().get_image().save_png(shot)
+		_painter._gen_dialog.get_texture().get_image().save_png(shot.get_basename() + "_dialog.png")
+	if _painter._gen_dialog.map == null or _painter._gen_dialog.map.floor_cells().is_empty():
+		fails.append("dialog preview empty")
+	_painter._gen_dialog.hide()
+	var ur := get_undo_redo()
+	var hist := ur.get_history_undo_redo(ur.get_object_history_id(lvl))
+	var steps := 0
+	for st in PS1LevelGen.STYLE_NAMES.size():
+		var r: Array = _painter.generate({style = st, seed = 3, width = 20, depth = 20, clear = true})
+		steps += 1
+		var now := lvl.pieces().size()
+		print("PS1 GEN SELFTEST %s: +%d -%d -> %d pieces" % [PS1LevelGen.STYLE_NAMES[st], r[0], r[1], now])
+		if r[0] == 0 or now != r[0]:
+			fails.append("%s: level should hold exactly the generated pieces" % PS1LevelGen.STYLE_NAMES[st])
+	for i in steps:
+		hist.undo()
+	if lvl.pieces().size() != before:
+		fails.append("undo x%d: %d pieces, expected %d" % [steps, lvl.pieces().size(), before])
+	print("PS1 GEN SELFTEST undo x%d -> %d pieces (was %d); RESULT: %s" % [steps, lvl.pieces().size(), before,
+		"PASS" if fails.is_empty() else "FAIL " + str(fails)])
 	get_tree().quit()

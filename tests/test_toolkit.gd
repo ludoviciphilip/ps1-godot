@@ -23,6 +23,7 @@ func _ready() -> void:
 	_test_audio()
 	await _test_crt()
 	await _test_vertex_paint()
+	_test_level_gen()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -421,3 +422,39 @@ func _test_vertex_paint() -> void:
 	var baked: Color = floor_.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR][0]
 	check(absf(baked.r - 0.1) < 0.01, "bake multiplies light by paint (%.3f, expected 0.1)" % baked.r)
 	root.queue_free()
+
+func _test_level_gen() -> void:
+	print("PS1LevelGen")
+	var bad := 0
+	var total := 0
+	for st in PS1LevelGen.STYLE_NAMES.size():
+		for sd in 12:
+			for sz in [Vector2i(12, 12), Vector2i(24, 40), Vector2i(48, 48)]:
+				var m := PS1LevelGen.generate({style = st, seed = sd, width = sz.x, depth = sz.y, enemies = 5})
+				var ck := m.check()
+				total += 1
+				var ok: bool = ck.floors > 0 and ck.unreachable.is_empty() and m.is_floor(m.start) and m.is_floor(m.end) \
+					and m.start != m.end and not m.solid(m.start) and not m.solid(m.end)
+				for sp in m.spawns:
+					if not m.is_floor(sp) or m.solid(sp) or sp == m.start:
+						ok = false
+				if not ok:
+					bad += 1
+					if bad < 4:
+						print("    bad: %s seed %d %s: %s" % [PS1LevelGen.STYLE_NAMES[st], sd, sz, ck])
+	check(bad == 0, "%d maps (5 styles x 12 seeds x 3 sizes) connected, start/end/spawns valid (%d bad)" % [total, bad])
+	var a := PS1LevelGen.generate({style = 0, seed = 42})
+	var b := PS1LevelGen.generate({style = 0, seed = 42})
+	var c := PS1LevelGen.generate({style = 0, seed = 43})
+	check(a.ascii() == b.ascii() and a.ascii() != c.ascii(), "same seed = same map, other seed = other map")
+	var lvl := PS1GridLevel.new()
+	lvl.cache_path = "user://test_gen_bake.res"
+	var m := PS1LevelGen.generate({style = PS1LevelGen.Style.CATACOMBS, seed = 1, width = 16, depth = 16})
+	var r: Array = m.build(lvl)
+	var starts: Array = r[0].filter(func(n): return n.is_in_group("ps1_gen_start"))
+	check(r[0].size() > 100 and r[1].is_empty() and starts.size() == 1, "build: %d pieces, one start marker" % r[0].size())
+	var r2: Array = m.build(lvl, null, 0, Vector2i.ZERO, false)
+	check(lvl.pieces().size() == r[0].size(), "building again without clear replaces cell by cell (%d pieces)" % lvl.pieces().size())
+	for n in r2[1]:
+		n.free()
+	lvl.free()

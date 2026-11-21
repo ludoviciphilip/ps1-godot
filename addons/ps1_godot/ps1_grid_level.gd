@@ -28,6 +28,10 @@ extends PS1BakedLevel
 @export var auto_ceiling: PackedScene
 ## Slot that counts as floor for the auto walls.
 @export var auto_floor_slot := "floor"
+@export_group("Generator")
+## Pieces used by "Generate..." (PS1LevelGen). Empty = starter pieces with this level's
+## auto_wall / auto_ceiling.
+@export var gen_theme: PS1GenTheme
 @export_group("")
 
 const _DIRS := [Vector3i(0, 0, -1), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(-1, 0, 0)]

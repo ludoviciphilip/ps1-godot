@@ -76,6 +76,11 @@ func build_panel() -> Control:
 	reload.tooltip_text = "Reload the palette folders (after adding or editing pieces)"
 	reload.pressed.connect(func(): _thumbs.clear(); scan())
 	bar.add_child(reload)
+	var gen := Button.new()
+	gen.text = "Generate..."
+	gen.tooltip_text = "Generate a dungeon, catacombs, caves, a maze or ruins procedurally (undoable).\nPieces come from the level's gen_theme (empty = starter pieces + auto walls)."
+	gen.pressed.connect(open_generator)
+	bar.add_child(gen)
 	var test := Button.new()
 	test.text = "Test here"
 	test.tooltip_text = "Save and run this scene with the player starting at the hovered cell"
@@ -482,6 +487,51 @@ func _commit() -> void:
 		ur.add_undo_reference(n)
 	ur.commit_action(false)
 	_added = []; _removed = []
+
+# ---------------- procedural generation ----------------
+
+const GenDialog := preload("res://addons/ps1_godot/editor/ps1_gen_dialog.gd")
+var _gen_dialog: ConfirmationDialog
+
+func open_generator() -> void:
+	if level == null:
+		return
+	if _gen_dialog == null:
+		_gen_dialog = GenDialog.new()
+		_gen_dialog.generate_requested.connect(func(o): generate(o))
+		EditorInterface.get_base_control().add_child(_gen_dialog)
+	_gen_dialog.popup_centered()
+
+## Generates into the edited level as ONE undo step. Returns [added, removed] counts.
+func generate(options: Dictionary) -> Array:
+	var root := EditorInterface.get_edited_scene_root()
+	var map := PS1LevelGen.generate(options)
+	var theme: PS1GenTheme = level.gen_theme if level.gen_theme else PS1GenTheme.starter(level)
+	var r := map.build(level, theme, int(_layer.value), Vector2i.ZERO, options.get("clear", true), root)
+	var added: Array = r[0]
+	var removed: Array = r[1]
+	var ur := plugin.get_undo_redo()
+	ur.create_action("PS1: generate %s (%d pieces)" % [PS1LevelGen.STYLE_NAMES[map.style], added.size()], UndoRedo.MERGE_DISABLE, level)
+	for n in removed:
+		ur.add_do_method(level, "remove_child", n)
+	for n in added:
+		ur.add_do_method(level, "add_piece", n, root)
+		ur.add_do_reference(n)
+	for n in added:
+		ur.add_undo_method(level, "remove_child", n)
+	for n in removed:
+		ur.add_undo_method(level, "add_piece", n, root)
+		ur.add_undo_reference(n)
+	ur.commit_action(false)
+	apply_xray()
+	print("PS1: generated %s %dx%d seed %d: +%d / -%d pieces" % [PS1LevelGen.STYLE_NAMES[map.style], map.size.x, map.size.y,
+		map.map_seed, added.size(), removed.size()])
+	return [added.size(), removed.size()]
+
+func release_generator() -> void:
+	if _gen_dialog:
+		_gen_dialog.queue_free()
+		_gen_dialog = null
 
 # ---------------- test from here ----------------
 
