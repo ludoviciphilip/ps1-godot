@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0
+- **PS1Gothic**: low-poly gothic/medieval architecture built in code — walls with battlements,
+  towers, spires, gables, pointed doorways (`portal`, walkable collision) and arch moldings, lancet
+  and rose windows with tracery/mullions, buttresses, columns (whole or broken), steps (ramp
+  collision), ruined towers, braziers, pinnacles, and graveyard props (tombstones, crosses, grave
+  swords, dead trees). Subdivided faces for vertex lighting, world-space UVs, named surfaces with
+  one material each, `build()` returns a StaticBody3D with box/cylinder collision.
+- **PS1Backdrop**: panoramas past the far plane — silhouettes that fade into the haze by layer,
+  valley mist with a moonlit `add_mist_sea()`, lit windows from `glow` surfaces, procedural
+  mountain `ridge()`s.
+- Textures: `PS1Textures.ashlar()`, `flagstones()`, `slate_roof()`, `banner()` (cutout).
+- Demo `demo/gothic_demo.tscn`.
+
 ## 1.1.1
 - Fix: crash on quit ("double free") in projects using the settings/pause menus, events or audio:
   the PS1 autoload now empties the toolkit's static registries/caches when the game closes

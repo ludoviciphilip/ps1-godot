@@ -238,6 +238,45 @@ PS1PauseMenu.entries = [["Resume", PS1PauseMenu.RESUME], ["Settings", PS1PauseMe
   what's already translated. Fill the columns, done — events translate themselves, `{variables}` included.
 - Demo: `demo/settings_demo.tscn` (Esc).
 
+## Gothic architecture & panoramas
+
+**PS1Gothic** builds low-poly medieval/gothic architecture in code: curtain walls with
+battlements, polygonal towers, spires, gable roofs, pointed (ogival) doorways and arch moldings,
+lancet and rose windows with stone tracery, buttresses, columns (whole or broken), steps, ruined
+towers, braziers, plus graveyard props (tombstones, crosses, swords stuck in the ground, dead
+trees). Faces are subdivided for vertex lighting and UVs are world-space boxes (`uv_meters`), so
+textures line up across pieces. Shapes go into named surfaces, each with its own material.
+
+```gdscript
+var g := PS1Gothic.new()
+g.wall(Vector3(0, 0, -15), 20.0, 8.0, 1.2)         # wall with merlons
+g.portal(Vector3(0, 0, -15), 5.0, 8.0, 4.0, 1.8)    # pointed doorway through it (walkable)
+g.tower(Vector3(10, 0, -15), 2.8, 14.0)
+g.surface("roof").spire(Vector3(10, 14.8, -15), 3.4, 10.0)
+g.surface("glow").rose(Vector3(0, 6, -14.3), 1.2)
+g.surface("stone").rose_tracery(Vector3(0, 6, -14.3), 1.2)
+level.add_child(g.build({stone = stone_mat, roof = roof_mat, glow = glow_mat}))   # + collision
+```
+
+New textures for it: `PS1Textures.ashlar()`, `flagstones()`, `slate_roof()`, `banner()`.
+
+**PS1Backdrop** is the "new area, look at that view" layer: far silhouettes (a castle on the
+mountain, a cathedral across the valley, mountain ridges) drawn past the camera's far plane, in
+front of the sky. Each layer fades into the haze by distance, its feet sink into a moonlit sea of
+mist, and surfaces named `glow` become lit windows. No lights, no fog, never culled.
+
+```gdscript
+var bd := PS1Backdrop.new()
+bd.haze_color = fog_color
+bd.mist_height = -9.0
+add_child(bd)
+bd.add_mist_sea()
+bd.add_mesh(PS1Backdrop.ridge(3, 1100.0, 150.0), Transform3D(Basis(), Vector3(0, -30, -520)), 0.45)
+bd.add_mesh(castle.mesh(), Transform3D(Basis(), Vector3(0, 8, -125)), 0.15)   # a PS1Gothic mesh
+```
+
+Demo: `demo/gothic_demo.tscn`.
+
 ## Mist, shockwaves and footwork
 
 ```gdscript

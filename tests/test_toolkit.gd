@@ -30,6 +30,8 @@ func _ready() -> void:
 	_test_anim()
 	await _test_mist()
 	await _test_shockwave()
+	_test_gothic()
+	_test_backdrop()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -645,3 +647,64 @@ func _test_shockwave() -> void:
 	for i in 90: await get_tree().physics_frame
 	check(not is_instance_valid(w), "frees itself")
 	for n in [floor_, near, far_, high, out_]: n.queue_free()
+
+func _test_gothic() -> void:
+	var g := PS1Gothic.new()
+	g.wall(Vector3.ZERO, 10.0, 6.0, 1.0)
+	g.tower(Vector3(5, 0, 0), 2.0, 10.0)
+	g.portal(Vector3(0, 0, 3), 5.0, 8.0, 3.0, 2.0, 1.0)
+	g.steps(Vector3(0, 0, 8), 3.0, 5)
+	g.surface("glow")
+	g.lancet(Vector3(0, 2, 0.51), 1.0, 2.0)
+	g.rose(Vector3(0, 5, 0.51), 0.8)
+	var m := g.mesh()
+	check(m.get_surface_count() == 2, "gothic: one surface per name")
+	check(g.surface_names == PackedStringArray(["glow", "stone"]), "gothic: surface names sorted")
+	check(m.surface_get_name(0) == "glow", "gothic: surface named in the mesh")
+	var aabb := m.get_aabb()
+	check(aabb.size.x >= 10.0 and aabb.end.y >= 10.0, "gothic: mesh covers the shapes")
+	# every face of a closed box points outward
+	var b := PS1Gothic.new()
+	b.box(Vector3.ZERO, Vector3(2, 2, 2), 0.0, true)
+	var arr := b.mesh().surface_get_arrays(0)
+	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var n: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
+	var outward := true
+	var wind_ok := true
+	for i in range(0, v.size(), 3):
+		var c := (v[i] + v[i + 1] + v[i + 2]) / 3.0
+		if n[i].dot(c) <= 0.0: outward = false
+		# Godot front faces are clockwise: (b - a) x (c - a) points AGAINST the normal
+		if (v[i + 1] - v[i]).cross(v[i + 2] - v[i]).dot(n[i]) >= 0.0: wind_ok = false
+	check(outward, "gothic: box normals point outward")
+	check(wind_ok, "gothic: front faces wound clockwise")
+	var body := g.build({stone = PS1.material(PS1Textures.ashlar()), glow = PS1.material(PS1Textures.flat(Color.ORANGE))})
+	var shapes := body.find_children("*", "CollisionShape3D", false, false)
+	check(body is StaticBody3D and shapes.size() >= 6, "gothic: build() adds collision shapes")
+	var mi := body.get_child(0) as MeshInstance3D
+	check(mi.get_surface_override_material(0) != mi.get_surface_override_material(1), "gothic: materials per surface")
+	body.free()
+	var tree := PS1Gothic.new()
+	tree.dead_tree(Vector3.ZERO, 5.0, 3)
+	check(tree.mesh().get_aabb().end.y > 3.0, "gothic: dead tree has height")
+	for tex in [PS1Textures.ashlar(), PS1Textures.flagstones(), PS1Textures.slate_roof(), PS1Textures.banner()]:
+		check(tex.get_width() == 64, "gothic: texture generated")
+
+func _test_backdrop() -> void:
+	var bd := PS1Backdrop.new()
+	add_child(bd)
+	var r := PS1Backdrop.ridge(2, 200.0, 40.0)
+	check(r.get_aabb().size.x >= 190.0, "backdrop: ridge spans its length")
+	var g := PS1Gothic.new()
+	g.box(Vector3.ZERO, Vector3(4, 4, 4))
+	g.surface("glow")
+	g.lancet(Vector3(0, 0, 2.05), 1.0, 1.0)
+	var mi := bd.add_mesh(g.mesh(), Transform3D(Basis(), Vector3(0, 0, -100)), 0.3)
+	var m0 := mi.get_surface_override_material(0) as ShaderMaterial
+	var m1 := mi.get_surface_override_material(1) as ShaderMaterial
+	check(m0 != null and m0.get_shader_parameter("emission") == 1.0, "backdrop: glow surface emits")
+	check(m1.get_shader_parameter("emission") == 0.0, "backdrop: stone surface is a silhouette")
+	check(mi.extra_cull_margin > 1000.0, "backdrop: never culled by far plane")
+	var sea := bd.add_mist_sea()
+	check(sea.get_surface_override_material(0) != null, "backdrop: mist sea")
+	bd.free()
