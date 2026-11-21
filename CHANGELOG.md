@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.2
+- Fix: no "Couldn't find the given section bindings" error on the first run (no saved bindings yet).
+
 ## 1.0.1
 - Fix: the bake and ambient occlusion no longer error when the level is regenerated or freed while
   they are still running (they spread over frames); a bake interrupted that way isn't cached.

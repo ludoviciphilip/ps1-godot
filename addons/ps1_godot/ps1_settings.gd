@@ -216,7 +216,7 @@ static func _same(a: InputEvent, b: InputEvent) -> bool:
 	return a != null and b != null and event_to_string(a) == event_to_string(b)
 
 static func _load_binding(b: Dictionary, cf: ConfigFile) -> void:
-	var saved = cf.get_value("bindings", String(b.action), null)
+	var saved = cf.get_value("bindings", String(b.action)) if cf.has_section_key("bindings", String(b.action)) else null
 	if saved is Array and saved.size() == 2:
 		_set_event(b, "kb", string_to_event(saved[0]))
 		_set_event(b, "pad", string_to_event(saved[1]))
