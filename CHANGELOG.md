@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+- **PS1Mist**: soft animated mist (fog walls, fog banks): stacked translucent layers with flowing
+  noise, soft edges and soft contact with walls/floor, opacity in a few dithered steps on the
+  low-res grid (stays clean with the CRT on), optional motes.
+- **PS1Shockwave**: a dust ring that rolls out over the ground from an impact and is also the hit
+  area: `reached(body)` once per body in `target_group` that the front passes on the ground
+  (`min_radius`, `width`, `height`). For boss slams, explosions, falling boulders.
+- **PS1Anim.graft()**: give hand-made upper-body animations real footwork by grafting the legs/hips
+  of another animation of the same rig, time-warped so the key moments line up; per-bone weights,
+  fade in/out back to the original pose. `PS1Anim.lower_body(skeleton)` lists hips + legs.
+
 ## 1.0.3
 - CRT keeps text readable: while it's on, CanvasLayers with `layer >= PS1.crt_ui_layer` (2) — HUD,
   dialog boxes, menus — draw over the tube, sharp (the CRT samples the picture on the low-res

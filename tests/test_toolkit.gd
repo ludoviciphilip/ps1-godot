@@ -27,6 +27,9 @@ func _ready() -> void:
 	await _test_on_signal()
 	_test_settings()
 	_test_locale()
+	_test_anim()
+	await _test_mist()
+	await _test_shockwave()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -584,3 +587,61 @@ func _test_locale() -> void:
 	check(r.added > 0 and r2.added == 0 and txt.begins_with("keys,en,pt,es") and txt.contains("Collected by the CSV test"),
 		"CSV: %d texts collected, second run adds none" % r.added)
 	print("    (%s)" % tr("Collected by the CSV test"))
+
+func _test_anim() -> void:
+	print("PS1Anim")
+	var src := Animation.new(); src.length = 2.0
+	var dst := Animation.new(); dst.length = 1.0
+	var ts := src.add_track(Animation.TYPE_ROTATION_3D); src.track_set_path(ts, "Skel:LeftLeg")
+	src.rotation_track_insert_key(ts, 0.0, Quaternion.IDENTITY)
+	src.rotation_track_insert_key(ts, 2.0, Quaternion(Vector3.RIGHT, PI * 0.5))
+	var hp := src.add_track(Animation.TYPE_POSITION_3D); src.track_set_path(hp, "Skel:Hips")
+	src.position_track_insert_key(hp, 0.0, Vector3(5, 1.0, 5)); src.position_track_insert_key(hp, 2.0, Vector3(5, 0.5, 5))
+	var td := dst.add_track(Animation.TYPE_ROTATION_3D); dst.track_set_path(td, "Skel:LeftLeg")
+	dst.rotation_track_insert_key(td, 0.0, Quaternion.IDENTITY)
+	var hd := dst.add_track(Animation.TYPE_POSITION_3D); dst.track_set_path(hd, "Skel:Hips")
+	dst.position_track_insert_key(hd, 0.0, Vector3(0, 1.0, 0))
+	# dst 0..1 plays src 1..2
+	var n := PS1Anim.graft(dst, src, PackedStringArray(["Hips", "LeftLeg"]), [Vector2(0, 1), Vector2(1, 2)])
+	var q := dst.rotation_track_interpolate(td, 0.0)
+	var hip := dst.position_track_interpolate(hd, 1.0)
+	check(n == 2 and absf(q.get_angle() - PI * 0.25) < 0.05, "graft time-warps the leg (%.2f rad at t=0)" % q.get_angle())
+	check(absf(hip.y - 0.5) < 0.01 and hip.x == 0.0, "root height follows the source, X/Z stay (%s)" % hip)
+	var sk := Skeleton3D.new()
+	for b in ["Hips", "Spine", "Spine1", "LeftUpLeg", "LeftLeg", "RightUpLeg"]:
+		sk.add_bone(b)
+	sk.set_bone_parent(1, 0); sk.set_bone_parent(2, 1); sk.set_bone_parent(3, 0); sk.set_bone_parent(4, 3); sk.set_bone_parent(5, 0)
+	var lb := PS1Anim.lower_body(sk)
+	check(lb.size() == 4 and not "Spine" in lb and "LeftLeg" in lb, "lower_body = hips + legs (%s)" % ",".join(lb))
+	sk.free()
+
+func _test_mist() -> void:
+	print("PS1Mist")
+	var m := PS1Mist.new()
+	m.layers = 3
+	add_child(m)
+	var quads := m.find_children("*", "MeshInstance3D", true, false)
+	check(quads.size() == 3 and m.find_children("*", "PS1Particles", true, false).size() == 1, "3 layers + motes")
+	m.layers = 2
+	await get_tree().process_frame
+	check(m.find_children("*", "MeshInstance3D", true, false).size() == 2, "rebuilds when changed")
+	m.queue_free()
+
+func _test_shockwave() -> void:
+	print("PS1Shockwave")
+	var floor_ := StaticBody3D.new()
+	add_child(floor_)
+	var near := Node3D.new(); near.add_to_group("t_wave"); add_child(near); near.position = Vector3(0.5, 0, 0)
+	var far_ := Node3D.new(); far_.add_to_group("t_wave"); add_child(far_); far_.position = Vector3(4, 0, 0)
+	var high := Node3D.new(); high.add_to_group("t_wave"); add_child(high); high.position = Vector3(0, 2.0, 3)
+	var out_ := Node3D.new(); out_.add_to_group("t_wave"); add_child(out_); out_.position = Vector3(9, 0, 0)
+	var w := PS1Shockwave.spawn(self, Vector3.ZERO, 6.0, 0.5, "t_wave")
+	w.min_radius = 1.5
+	var hits := []
+	w.reached.connect(func(b): hits.append(b))
+	for i in 45: await get_tree().physics_frame
+	check(far_ in hits and not near in hits and not high in hits and not out_ in hits,
+		"reaches 4 m, not inside min_radius, not above it, not beyond 6 m (%d hits)" % hits.size())
+	for i in 90: await get_tree().physics_frame
+	check(not is_instance_valid(w), "frees itself")
+	for n in [floor_, near, far_, high, out_]: n.queue_free()

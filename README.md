@@ -28,6 +28,7 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | On-defeated events, drops, loading screen | `PS1Event` "On signal" pages (+ Event button), `PS1CmdSpawn`, `PS1CmdChance`, `PS1Loader` |
 | Procedural levels | `PS1LevelGen`: dungeons, catacombs, caves, mazes, ruins, built from grid pieces (editor button or code) |
 | Vertex paint (fake AO, gradients, grime) | `PS1VertexPaint`, or *Vertex paint* options on `PS1BakedLevel` |
+| Mist, shockwaves, footwork | `PS1Mist` (soft fog walls/banks), `PS1Shockwave` (dust ring that is also a hit area), `PS1Anim.graft()` (real legs under upper-body animations) |
 | Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
 
 ![demo](https://raw.githubusercontent.com/ludoviciphilip/ps1-godot/main/docs/demo.png)
@@ -236,6 +237,24 @@ PS1PauseMenu.entries = [["Resume", PS1PauseMenu.RESUME], ["Settings", PS1PauseMe
   collects event texts, choices, prompts and every `tr("...")` / `PS1Locale.mark("...")`, keeping
   what's already translated. Fill the columns, done — events translate themselves, `{variables}` included.
 - Demo: `demo/settings_demo.tscn` (Esc).
+
+## Mist, shockwaves and footwork
+
+```gdscript
+var fog := PS1Mist.new()                 # fog wall / fog bank
+fog.size = Vector3(4, 4, 0.7)            # width, height, depth of the layers
+add_child(fog)
+
+# boss slam: a dust ring rolls out and hurts whoever is on the ground when it passes
+var w := PS1Shockwave.spawn(get_tree().current_scene, impact_pos, 8.0, 0.85, "player")
+w.reached.connect(func(b): if b.is_on_floor(): b.take_hit(25))
+
+# a hand-made slash that only animates the torso: graft a real step under it
+var legs := PS1Anim.lower_body(skeleton)
+PS1Anim.graft(ap.get_animation("slash"), ap.get_animation("mixamo_step_slash"), legs,
+	[Vector2(0.0, 0.05), Vector2(0.35, 0.40), Vector2(0.87, 1.05)],   # (slash time, source time)
+	1.0, 30.0, "Hips", {"Hips": 0.3}, 0.08, 0.25)                    # keep most of the hip turn; fade in/out
+```
 
 ## On-defeated events & drops
 
