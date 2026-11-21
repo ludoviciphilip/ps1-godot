@@ -338,7 +338,7 @@ func _test_particles() -> void:
 	var p := PS1Particles.preset("embers")
 	p.update_fps = 1000.0
 	add_child(p)
-	for i in 20: await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout   # tempo real: quadros headless podem durar ~1 ms
 	check(p.alive_count() > 0, "continuous emitter spawns (%d alive)" % p.alive_count())
 	var b := PS1Particles.spawn(self, "sparks", Vector3(3, 1, 0))
 	b.update_fps = 1000.0
