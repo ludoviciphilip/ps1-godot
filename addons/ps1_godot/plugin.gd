@@ -92,6 +92,14 @@ func _enter_tree() -> void:
 	_button.tooltip_text = "Bake the lighting of every PS1BakedLevel in the open scene (saved scene, runs headless)."
 	_button.pressed.connect(_bake_pressed)
 	add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _button)
+	_paint_menu = MenuButton.new()
+	_paint_menu.text = "PS1 Paint"
+	_paint_menu.tooltip_text = "Vertex-color paint on the selected nodes (and everything under them). Undoable.\nFor whole levels prefer the Vertex paint options of PS1BakedLevel (stored in the bake cache)."
+	var pop := _paint_menu.get_popup()
+	for item in PAINT_ITEMS:
+		pop.add_item(item)
+	pop.id_pressed.connect(func(i): _paint_selected(i))
+	add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _paint_menu)
 	_timer = Timer.new()
 	_timer.wait_time = 0.5
 	_timer.timeout.connect(_poll)
@@ -107,9 +115,54 @@ func _exit_tree() -> void:
 	if _painter:
 		_painter.release()
 		_painter.queue_free()
+	if _paint_menu:
+		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _paint_menu)
+		_paint_menu.queue_free()
 	if _button:
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _button)
 		_button.queue_free()
+
+# ---------------- "PS1 Paint" toolbar menu ----------------
+
+const PAINT_ITEMS := ["Ambient occlusion", "Darken bottom (height gradient)", "Grime", "Clear paint"]
+var _paint_menu: MenuButton
+
+## Paints the selected nodes. Returns the number of painted vertices (self-test uses it).
+func _paint_selected(item: int) -> int:
+	var sel := EditorInterface.get_selection().get_top_selected_nodes()
+	var scene_root := EditorInterface.get_edited_scene_root()
+	var targets: Array[MeshInstance3D] = []
+	for n in sel:
+		targets.append_array(PS1VertexPaint.meshes(n))
+	if targets.is_empty():
+		push_warning("PS1 Paint: select nodes with meshes first.")
+		return 0
+	var old := targets.map(func(mi): return mi.mesh)
+	PS1VertexPaint.always_new = true
+	var count := 0
+	for n in sel:
+		match item:
+			0: count += await PS1VertexPaint.ambient_occlusion(n)
+			1:
+				var y0 := INF
+				for mi in PS1VertexPaint.meshes(n):
+					y0 = minf(y0, (mi.global_transform * mi.get_aabb()).position.y)
+				count += PS1VertexPaint.gradient(n, Color(0.45, 0.43, 0.5), Color.WHITE, y0, y0 + 2.5)
+			2: count += PS1VertexPaint.grime(n, 0.2)
+			3: count += PS1VertexPaint.clear(n)
+	PS1VertexPaint.always_new = false
+	var ur := get_undo_redo()
+	ur.create_action("PS1 Paint: " + PAINT_ITEMS[item], UndoRedo.MERGE_DISABLE, scene_root)
+	for i in targets.size():
+		var mi := targets[i]
+		ur.add_do_property(mi, "mesh", mi.mesh)
+		ur.add_undo_property(mi, "mesh", old[i])
+		# meshes inside an instanced piece are only saved if the instance is editable
+		if mi.owner and mi.owner != scene_root and scene_root.is_ancestor_of(mi.owner):
+			scene_root.set_editable_instance(mi.owner, true)
+	ur.commit_action(false)
+	print("PS1 Paint: %s on %d meshes (%d vertices)" % [PAINT_ITEMS[item], targets.size(), count])
+	return count
 
 func _bake_pressed() -> void:
 	var root := EditorInterface.get_edited_scene_root()
@@ -156,6 +209,8 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ps1-events-selftest="):
 			_events_selftest(a.get_slice("=", 1), shot)
+		if a.begins_with("--ps1-paint-selftest="):
+			_paint_selftest(a.get_slice("=", 1))
 
 func _selftest(scene: String, shot: String) -> void:
 	var wait := func(s): await get_tree().create_timer(s).timeout
@@ -348,4 +403,30 @@ func _events_selftest(scene: String, shot: String) -> void:
 	if ev.pages.size() != 0: fails.append("undo left %d pages" % ev.pages.size())
 	print("PS1 EVENTS SELFTEST undo x%d -> pages=%d" % [undos, ev.pages.size()])
 	print("PS1 EVENTS SELFTEST RESULT: ", "PASS" if fails.is_empty() else "FAIL " + str(fails))
+	get_tree().quit()
+
+# godot -e --path . -- --ps1-paint-selftest=res://scene.tscn : paints the first MeshInstance3D
+# via the toolbar menu code, checks the colors, undoes, checks the old mesh is back.
+func _paint_selftest(scene: String) -> void:
+	for i in 10: await get_tree().process_frame
+	EditorInterface.open_scene_from_path(scene)
+	for i in 20: await get_tree().process_frame
+	var root := EditorInterface.get_edited_scene_root()
+	var mi: MeshInstance3D = null
+	for m in root.find_children("*", "MeshInstance3D", true, false):
+		if not m.has_meta("ps1_no_bake") and m.mesh:
+			mi = m
+			break
+	var fails: Array[String] = []
+	var before := mi.mesh
+	EditorInterface.get_selection().clear()
+	EditorInterface.get_selection().add_node(mi)
+	for i in 3: await get_tree().process_frame   # the selection updates on the next frame
+	var n: int = await _paint_selected(1)
+	var cols = mi.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+	if n == 0 or cols == null or mi.mesh == before: fails.append("paint did nothing")
+	var hist := get_undo_redo().get_history_undo_redo(get_undo_redo().get_object_history_id(root))
+	hist.undo()
+	if mi.mesh != before: fails.append("undo did not restore the mesh")
+	print("PS1 PAINT SELFTEST %s: %d vertices; RESULT: %s" % [mi.name, n, "PASS" if fails.is_empty() else "FAIL " + str(fails)])
 	get_tree().quit()

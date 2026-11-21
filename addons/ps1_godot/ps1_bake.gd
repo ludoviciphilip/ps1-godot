@@ -48,7 +48,10 @@ static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Ar
 
 ## Like bake_scene(), but loads the result from cache_path when it is still valid and saves
 ## it after a fresh bake. Returns true if the cache was used.
-static func bake_scene_cached(root: Node3D, ambient: Color, cache_path := "", shadows := true, lights: Array = []) -> bool:
+## extra_sig: anything else that changes the result (e.g. vertex-paint settings).
+## before_bake: awaited only when the cache is stale, right before baking (vertex paint).
+static func bake_scene_cached(root: Node3D, ambient: Color, cache_path := "", shadows := true, lights: Array = [],
+		extra_sig := "", before_bake := Callable()) -> bool:
 	var tree := root.get_tree()
 	if lights.is_empty():
 		lights = _scene_lights(tree)
@@ -56,7 +59,7 @@ static func bake_scene_cached(root: Node3D, ambient: Color, cache_path := "", sh
 		var scene_file := tree.current_scene.scene_file_path if tree.current_scene else ""
 		cache_path = "res://ps1_bake_cache/%s_%s.res" % [scene_file.get_file().get_basename() if scene_file else "scene", root.name]
 	var meshes := _bakeable(root)
-	var sig := _signature(root, meshes, lights, ambient, shadows)
+	var sig := (_signature(root, meshes, lights, ambient, shadows) + extra_sig).md5_text()
 	if ResourceLoader.exists(cache_path):
 		var cache := load(cache_path) as PS1BakeCache
 		if cache and cache.signature == sig:
@@ -65,6 +68,8 @@ static func bake_scene_cached(root: Node3D, ambient: Color, cache_path := "", sh
 				if cache.meshes.has(key):
 					_apply_baked(mi, cache.meshes[key])
 			return true
+	if before_bake.is_valid():
+		await before_bake.call()
 	await bake_scene(root, ambient, shadows, lights)
 	var out := PS1BakeCache.new()
 	out.signature = sig
@@ -108,12 +113,17 @@ static func _signature(root: Node3D, meshes: Array, lights: Array, ambient: Colo
 	var parts := PackedStringArray([str(ambient), str(shadows), "v3"])
 	for mi in meshes:
 		var vcount := 0
+		var paint_sum := 0.0
 		for s in mi.mesh.get_surface_count():
-			vcount += (mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+			var sa: Array = mi.mesh.surface_get_arrays(s)
+			vcount += (sa[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+			if sa[Mesh.ARRAY_COLOR] != null:
+				for c in (sa[Mesh.ARRAY_COLOR] as PackedColorArray):
+					paint_sum += c.r * 1.0 + c.g * 3.0 + c.b * 7.0
 		# node class + texture too: swapping a piece (or its texture) must invalidate the cache,
 		# otherwise baked meshes get applied to the wrong nodes
 		var tex = mi.material_override.get_shader_parameter("albedo_tex") if mi.material_override is ShaderMaterial else null
-		parts.append("%s|%s|%d|%s|%s|%s|%s|%s" % [_key(root, mi), mi.global_transform, vcount,
+		parts.append("%s|%s|%d|%.3f|%s|%s|%s|%s|%s" % [_key(root, mi), mi.global_transform, vcount, paint_sum,
 			PS1Convert.mode_of(mi.material_override), mi.has_meta("ps1_no_cast"), mi.mesh.get_class(), mi.get_class(),
 			tex.resource_path if tex is Resource else ""])
 	for l in lights:
@@ -132,6 +142,8 @@ static func bake_mesh(mi: MeshInstance3D, ambient: Color, lights: Array, space: 
 		var norms := PackedVector3Array()
 		if arr[Mesh.ARRAY_NORMAL] != null:
 			norms = arr[Mesh.ARRAY_NORMAL]
+		# Vertex paint (PS1VertexPaint: AO, gradients, grime) multiplies the baked light.
+		var paint: PackedColorArray = arr[Mesh.ARRAY_COLOR] if arr[Mesh.ARRAY_COLOR] != null else PackedColorArray()
 		var cols := PackedColorArray()
 		cols.resize(verts.size())
 		for i in verts.size():
@@ -141,6 +153,8 @@ static func bake_mesh(mi: MeshInstance3D, ambient: Color, lights: Array, space: 
 			for l in lights:
 				c += _light(l, p, n, space)
 			# Stored at half intensity: the unlit shader multiplies by 2 (PS1-style 2x modulation).
+			if i < paint.size():
+				c = Color(c.r * paint[i].r, c.g * paint[i].g, c.b * paint[i].b)
 			cols[i] = Color(minf(c.r * 0.5, 1.0), minf(c.g * 0.5, 1.0), minf(c.b * 0.5, 1.0), 1.0)
 		arr[Mesh.ARRAY_COLOR] = cols
 		var mat := mi.get_active_material(s)

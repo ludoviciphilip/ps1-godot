@@ -22,6 +22,7 @@ func _ready() -> void:
 	await _test_particles()
 	_test_audio()
 	await _test_crt()
+	await _test_vertex_paint()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -382,3 +383,41 @@ func _test_crt() -> void:
 	PS1.set_crt(0.0)
 	await get_tree().process_frame
 	check(w.content_scale_mode == before, "crt off: back to the base stretch mode")
+
+func _test_vertex_paint() -> void:
+	print("PS1VertexPaint")
+	var root := Node3D.new()
+	add_child(root)
+	# a floor with a wall on it: AO must darken the floor next to the wall, not far away
+	var floor_ := MeshInstance3D.new()
+	var pm := PlaneMesh.new(); pm.size = Vector2(6, 6); pm.subdivide_width = 11; pm.subdivide_depth = 11
+	floor_.mesh = pm
+	floor_.material_override = PS1.make(null, {})
+	root.add_child(floor_)
+	var wall := StaticBody3D.new()
+	var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(6, 3, 0.4); cs.shape = bs
+	wall.add_child(cs); wall.position = Vector3(0, 1.5, -2.0)
+	root.add_child(wall)
+	var copy := MeshInstance3D.new(); copy.mesh = pm; root.add_child(copy)
+	var n: int = await PS1VertexPaint.ambient_occlusion(floor_, 1.5, 0.8)
+	check(n > 100, "AO painted %d vertices" % n)
+	check(copy.mesh == pm and floor_.mesh != pm, "painting made the mesh unique (copy untouched)")
+	var arr := floor_.mesh.surface_get_arrays(0)
+	var near := 1.0
+	var far := 0.0
+	for i in (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size():
+		var v: Vector3 = arr[Mesh.ARRAY_VERTEX][i]
+		var l: float = (arr[Mesh.ARRAY_COLOR][i] as Color).get_luminance()
+		if v.z < -1.6 and absf(v.x) < 2.0: near = minf(near, l)
+		if v.z > 2.0: far = maxf(far, l)
+	check(near < far - 0.15, "AO darker by the wall (%.2f) than in the open (%.2f)" % [near, far])
+	check(floor_.material_override.get_shader_parameter("use_vertex_color") == true, "material shows vertex colors")
+	PS1VertexPaint.clear(floor_)
+	PS1VertexPaint.gradient(floor_, Color(0.2, 0.2, 0.2), Color.WHITE, 0.0, 1.0)
+	check(is_equal_approx((floor_.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR][0] as Color).r, 0.2), "gradient at floor height")
+	# bake multiplies by paint
+	var light := OmniLight3D.new(); light.position = Vector3(0, 2, 2); light.omni_range = 10; root.add_child(light)
+	PS1Bake.bake_mesh(floor_, Color(1, 1, 1), [])
+	var baked: Color = floor_.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR][0]
+	check(absf(baked.r - 0.1) < 0.01, "bake multiplies light by paint (%.3f, expected 0.1)" % baked.r)
+	root.queue_free()

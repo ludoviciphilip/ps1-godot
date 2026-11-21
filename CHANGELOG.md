@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0
+- **CRT pass at native resolution** (`PS1.set_crt`, F10): beam-width scanlines, aperture grille,
+  curvature; the PS1 picture is sampled on the low-res grid so it doesn't change.
+  Dithering in materials/particles/water stays on the low-res grid.
+- **Vertex paint** (`PS1VertexPaint`): raycast ambient occlusion, height gradient, grime, fill,
+  clear; `PS1BakedLevel` *Vertex paint* options applied at bake time and cached; bake multiplies
+  light by paint; "PS1 Paint" toolbar menu (undoable) + editor self-test.
+- `PS1Bake.bake_scene_cached(..., extra_sig, before_bake)`.
+- **Asset Library ready**: icon, LICENSE inside the addon, export-ignore so the download is just
+  the addon; shader globals missing from older projects are added at runtime.
+
 ## 0.8.0
 - **PS1Particles**: CPU particles in one MultiMesh, 15-bit stepped colors, choppy update rate,
   snapped vertices, additive or dithered blending, code-made sprite sheets, 11 presets,

@@ -24,13 +24,15 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | Level painter (RPG Maker style) | `PS1GridLevel` + "PS1 Pieces" panel: paint pieces on a grid in the 3D viewport, auto-edge walls, layers, undo, "Test here"; starter piece kit included |
 | Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
 | Composite video (TV) look | `PS1.set_composite(1.0)`: chroma bleed, line jitter, grain, vignette |
+| CRT at native resolution | `PS1.set_crt(1.0)`: scanlines, aperture grille, curvature |
+| Vertex paint (fake AO, gradients, grime) | `PS1VertexPaint`, or *Vertex paint* options on `PS1BakedLevel` |
 | Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
 
 ![demo](https://raw.githubusercontent.com/ludoviciphilip/ps1-godot/main/docs/demo.png)
 
 ## Install
 
-1. Copy `addons/ps1_godot/` into your project.
+1. In the editor's **AssetLib** tab search for **PS1 Godot** and install it, or copy `addons/ps1_godot/` into your project.
 2. *Project > Project Settings > Plugins*: enable **PS1 Godot**. This registers the `PS1` autoload and the `ps1_*` shader globals.
 3. Restart the editor (shader globals are only picked up on startup).
 4. Recommended project settings (see this repo's `project.godot`):
@@ -204,6 +206,23 @@ picture itself is unchanged (it does cost more GPU). Combine with `set_composite
 
 ![crt](docs/crt.png)
 
+## Vertex paint
+
+Cheap PS1 lighting detail, stored in vertex colors: **ambient occlusion** (raycast, darkens corners
+and floor/wall joints), **height gradient** (darker floors, like pooled darkness) and **grime**.
+Baking multiplies its light by the paint, so they combine.
+
+* **Levels:** set the *Vertex paint* options on `PS1BakedLevel` / `PS1GridLevel`
+  (`ao_strength`, `gradient_bottom`, `grime`...). They're applied when baking and stored in the
+  bake cache, so the scene file doesn't grow and instanced pieces work.
+* **Single meshes:** 3D toolbar > **PS1 Paint** on the selection (undoable), or from code:
+
+```gdscript
+await PS1VertexPaint.ambient_occlusion($Ruins, 1.2, 0.6)
+PS1VertexPaint.gradient($Ruins, Color(0.4, 0.38, 0.45), Color.WHITE, 0.0, 2.5)
+PS1VertexPaint.grime($Ruins, 0.2)
+```
+
 ## Particles
 
 `PS1Particles`: a small CPU particle system drawn with one MultiMesh, made to look like the era:
@@ -353,10 +372,11 @@ godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only -
 - [x] Composite video filter
 - [x] Sprites / billboards with sprite-sheet animation
 - [x] Native-resolution CRT pass (scanlines, mask, curvature)
-- [ ] Vertex-color painting helpers (fake AO, gradients)
+- [x] Vertex-color painting helpers (fake AO, gradients, grime)
 - [x] Level painter (`PS1GridLevel`) with starter pieces
 - [x] Auto walls / ceilings: paint floors, walls follow
-- [ ] Asset Library package
+- [x] Asset Library package
+- [x] Particles, audio, RPG Maker-style events
 
 ## License
 

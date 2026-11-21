@@ -14,6 +14,18 @@ signal baked(from_cache: bool)
 @export var cache_path := ""
 ## Lights to bake. Empty = every visible light in the scene.
 @export var lights: Array[Light3D] = []
+@export_group("Vertex paint")
+## Corners, floor/wall joints and the ground under props get darker (raycast AO, 0 = off).
+@export_range(0.0, 1.0) var ao_strength := 0.0
+@export var ao_radius := 1.2
+@export var ao_tint := Color(0.75, 0.72, 0.85)
+## Height gradient: this color at the level's floor (y of this node), white `gradient_height`
+## meters up. White = off. Darkens wall bases like pooled darkness.
+@export var gradient_bottom := Color.WHITE
+@export var gradient_height := 3.0
+## Per-vertex dirt variation (0 = off).
+@export_range(0.0, 1.0) var grime := 0.0
+@export_group("")
 
 var is_baked := false
 
@@ -28,7 +40,8 @@ func _ready() -> void:
 		var path := resolved_cache_path()
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-	var from_cache := await PS1Bake.bake_scene_cached(self, ambient, resolved_cache_path(), shadows, lights)
+	var from_cache := await PS1Bake.bake_scene_cached(self, ambient, resolved_cache_path(), shadows, lights,
+		_paint_signature(), _paint)
 	is_baked = true
 	baked.emit(from_cache)
 	print("PS1BakedLevel %s: %s (%s)" % [name, "loaded from cache" if from_cache else "baked + saved", resolved_cache_path()])
@@ -43,3 +56,15 @@ func resolved_cache_path() -> String:
 		return cache_path
 	var scene_file := get_tree().current_scene.scene_file_path if get_tree().current_scene else ""
 	return "res://ps1_bake_cache/%s_%s.res" % [scene_file.get_file().get_basename() if scene_file else "scene", name]
+
+func _paint_signature() -> String:
+	return "|paint:%s|%s|%s|%s|%s|%s" % [ao_strength, ao_radius, ao_tint, gradient_bottom, gradient_height, grime]
+
+## Vertex paint applied right before baking (so it's part of the cache, not of the scene file).
+func _paint() -> void:
+	if gradient_bottom != Color.WHITE:
+		PS1VertexPaint.gradient(self, gradient_bottom, Color.WHITE, global_position.y, global_position.y + gradient_height)
+	if grime > 0.0:
+		PS1VertexPaint.grime(self, grime)
+	if ao_strength > 0.0:
+		await PS1VertexPaint.ambient_occlusion(self, ao_radius, ao_strength, 12, ao_tint)
