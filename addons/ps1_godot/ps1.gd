@@ -9,6 +9,11 @@ var _res_index := 0
 
 ## Set to false to disable the F1-F5 debug keys.
 var debug_keys := OS.is_debug_build()
+## With the CRT on, CanvasLayers with layer >= this draw OVER the tube, sharp and readable
+## (HUD, dialog boxes, menus). The CRT samples the picture on the low-res grid, which breaks
+## text drawn at native resolution. Set crt_covers_ui = true to put everything under the tube.
+var crt_ui_layer := 2
+var crt_covers_ui := false
 const GLOBAL_DEFAULTS := {"ps1_snap_resolution": null, "ps1_jitter_enabled": null, "ps1_affine_enabled": null,
 	"ps1_dither_enabled": null, "ps1_color_levels": null, "ps1_palette_size": null, "ps1_composite": 0.0, "ps1_crt": 0.0}
 const POST_SHADER := preload("res://addons/ps1_godot/shaders/ps1_post.gdshader")
@@ -106,6 +111,7 @@ func set_crt(strength: float) -> void:
 			and _base_scale_mode == Window.CONTENT_SCALE_MODE_VIEWPORT:
 		w.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
 	set_global("ps1_crt", strength)
+	layer = 100 if strength <= 0.0 or crt_covers_ui else crt_ui_layer - 1
 	_update_low_res.call_deferred()
 	if not get_window().size_changed.is_connected(_update_low_res):
 		get_window().size_changed.connect(_update_low_res)

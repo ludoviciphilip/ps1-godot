@@ -206,6 +206,10 @@ renders at native resolution and the post-process samples it on the low-res grid
 picture itself is unchanged (it does cost more GPU). Combine with `set_composite()` for the full
 "console on a TV" look; tweak with `PS1.crt_params(curvature, scanlines, mask, brightness)`.
 
+Text stays readable: while the CRT is on, CanvasLayers with `layer >= PS1.crt_ui_layer` (2) —
+HUD, dialog boxes, menus — draw over the tube, sharp. Put world-space 2D that should be filtered
+on layer 0–1, or set `PS1.crt_covers_ui = true` to filter everything.
+
 ![crt](docs/crt.png)
 
 ## Settings, pause menu & translations

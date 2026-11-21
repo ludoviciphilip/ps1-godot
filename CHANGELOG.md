@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+- CRT keeps text readable: while it's on, CanvasLayers with `layer >= PS1.crt_ui_layer` (2) — HUD,
+  dialog boxes, menus — draw over the tube, sharp (the CRT samples the picture on the low-res
+  grid, which broke text drawn at native resolution). `PS1.crt_covers_ui = true` restores the
+  old behavior.
+
 ## 1.0.2
 - Fix: no "Couldn't find the given section bindings" error on the first run (no saved bindings yet).
 
