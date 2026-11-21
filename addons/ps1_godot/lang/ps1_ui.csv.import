@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b8yqqli6b0oer"
+
+[deps]
+
+files=["res://addons/ps1_godot/lang/ps1_ui.en.translation", "res://addons/ps1_godot/lang/ps1_ui.pt.translation", "res://addons/ps1_godot/lang/ps1_ui.es.translation", "res://addons/ps1_godot/lang/ps1_ui.fr.translation", "res://addons/ps1_godot/lang/ps1_ui.de.translation"]
+
+source_file="res://addons/ps1_godot/lang/ps1_ui.csv"
+dest_files=["res://addons/ps1_godot/lang/ps1_ui.en.translation", "res://addons/ps1_godot/lang/ps1_ui.pt.translation", "res://addons/ps1_godot/lang/ps1_ui.es.translation", "res://addons/ps1_godot/lang/ps1_ui.fr.translation", "res://addons/ps1_godot/lang/ps1_ui.de.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

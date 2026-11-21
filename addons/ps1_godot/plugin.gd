@@ -106,6 +106,7 @@ func _enter_tree() -> void:
 	_event_button.tooltip_text = "Add a PS1Event under the selected node.\nOn a monster (a node with a death signal) it's set up as an \"on defeated\" event:\nput drops, messages, variables... in its command list."
 	_event_button.pressed.connect(func(): add_event_to_selected())
 	add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _event_button)
+	add_tool_menu_item("PS1: Update translation CSV", func(): update_translations())
 	_timer = Timer.new()
 	_timer.wait_time = 0.5
 	_timer.timeout.connect(_poll)
@@ -128,9 +129,36 @@ func _exit_tree() -> void:
 	if _event_button:
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _event_button)
 		_event_button.queue_free()
+	remove_tool_menu_item("PS1: Update translation CSV")
 	if _button:
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _button)
 		_button.queue_free()
+
+# ---------------- translations ----------------
+
+## Project > Tools > "PS1: Update translation CSV": collects every event text and tr("...") into
+## the CSV (project settings ps1/locale/csv, languages, source), keeps existing translations and
+## registers the imported .translation files. Also: godot -e --path . -- --ps1-update-translations
+func update_translations() -> Dictionary:
+	var defaults := {"ps1/locale/csv": "res://lang/strings.csv", "ps1/locale/source": "en", "ps1/locale/languages": "en,pt,es"}
+	for k in defaults:
+		if not ProjectSettings.has_setting(k):
+			ProjectSettings.set_setting(k, defaults[k])
+	var csv: String = ProjectSettings.get_setting("ps1/locale/csv")
+	var source: String = ProjectSettings.get_setting("ps1/locale/source")
+	var langs := PackedStringArray(String(ProjectSettings.get_setting("ps1/locale/languages")).replace(" ", "").split(",", false))
+	var report := PS1Locale.update_csv(csv, langs, source)
+	# Godot imports the CSV into <name>.<lang>.translation; list them so they load at startup
+	var trs := PackedStringArray(ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray()))
+	for l in langs:
+		var f := csv.get_basename() + "." + l + ".translation"
+		if not f in trs:
+			trs.append(f)
+	ProjectSettings.set_setting("internationalization/locale/translations", trs)
+	ProjectSettings.save()
+	EditorInterface.get_resource_filesystem().scan()
+	print("PS1 TRANSLATIONS %s: %d texts (+%d new), still to translate: %s, unused: %d" % [csv, report.texts, report.added, report.missing, report.unused])
+	return report
 
 # ---------------- "+ Event" toolbar button ----------------
 
@@ -256,6 +284,11 @@ func _ready() -> void:
 			_events_selftest(a.get_slice("=", 1), shot)
 		if a.begins_with("--ps1-paint-selftest="):
 			_paint_selftest(a.get_slice("=", 1))
+		if a == "--ps1-update-translations":
+			(func():
+				for i in 10: await get_tree().process_frame
+				update_translations()
+				get_tree().quit()).call()
 		if a.begins_with("--ps1-drop-selftest="):
 			_drop_selftest(a.get_slice("=", 1), shot)
 		if a.begins_with("--ps1-gen-selftest="):

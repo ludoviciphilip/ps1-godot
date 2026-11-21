@@ -38,6 +38,13 @@ static func setup() -> void:
 		var mlp := AudioEffectLowPassFilter.new()
 		mlp.cutoff_hz = 12000.0
 		AudioServer.add_bus_effect(AudioServer.get_bus_index("Music"), mlp)
+	if AudioServer.get_bus_index("Voice") == -1:   # dialogue / narration (own volume slider)
+		AudioServer.add_bus()
+		AudioServer.set_bus_name(AudioServer.bus_count - 1, "Voice")
+		AudioServer.set_bus_send(AudioServer.bus_count - 1, "Master")
+	if PS1Settings.is_setup:   # buses created after the settings were applied: apply volumes now
+		for k in ["audio/master", "audio/music", "audio/sfx", "audio/voice"]:
+			PS1Settings.set_value(k, PS1Settings.get_value(k), false)
 	if not is_instance_valid(_host):
 		_host = Node.new()
 		_host.name = "PS1Audio"

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.12.0
+- **PS1Settings**: options as descriptors (`add_option`, `add_binding`, `hide`, `remove_option`),
+  saved to `user://ps1_settings.cfg` and re-applied at startup. Built in: window mode/size, V-Sync,
+  FPS limit, internal resolution, jitter, affine, dithering, color depth, CRT, composite,
+  brightness; master/music/SFX/voice volumes (new `Voice` bus); mouse/stick sensitivity, invert Y;
+  key + gamepad rebinding with conflict swap; language.
+- **PS1SettingsMenu**: ready-made tabbed screen built from the descriptors (keyboard, gamepad,
+  mouse, hold-to-repeat sliders, rebinding, reset per tab).
+- **PS1PauseMenu**: pause menu with your own entries (`RESUME`, `SETTINGS`, callables, sub-pages
+  with `push()`, `toast()`).
+- **PS1Locale**: gettext-style translations from one CSV (key = the original text); event texts,
+  choices and prompts are translated automatically and keep `{variables}`; `PS1Locale.mark()`;
+  *Project > Tools > PS1: Update translation CSV* collects every event text and `tr()` call,
+  keeps existing translations and registers the files (also `--ps1-update-translations`).
+  The toolkit's own UI ships in en/pt/es/fr/de.
+
 ## 0.11.0
 - **On-signal event pages** (RPG Maker "on defeated"): trigger `ON_SIGNAL` with `signal_source`
   (default the parent) + `signal_name`; the signal's Node argument becomes `ctx.source`. Panel:

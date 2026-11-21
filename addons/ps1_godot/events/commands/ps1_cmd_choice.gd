@@ -27,7 +27,7 @@ func blocks() -> Array:
 		out.append(["When [%s]" % branches[i].label, branches[i], "commands"])
 	return out
 func run(ctx: PS1EventContext) -> void:
-	var labels := PackedStringArray(branches.map(func(b): return b.label))
-	var i: int = await PS1Events.dialog().choose(question, labels, cancel_branch)
+	var labels := PackedStringArray(branches.map(func(b): return PS1Locale.t(b.label)))
+	var i: int = await PS1Events.dialog().choose(PS1CmdText.format(PS1Locale.t(question), ctx), labels, cancel_branch)
 	if i >= 0 and i < branches.size():
 		await ctx.run_list(branches[i].commands)

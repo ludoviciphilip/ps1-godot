@@ -18,6 +18,7 @@ const POST_SHADER := preload("res://addons/ps1_godot/shaders/ps1_post.gdshader")
 var _globals := {}
 var _post: ShaderMaterial
 var _base_scale_mode := Window.CONTENT_SCALE_MODE_VIEWPORT
+var _base_size := Vector2i(320, 240)
 
 func _ready() -> void:
 	# Globals added in newer versions may be missing from older projects: add them at runtime.
@@ -40,8 +41,12 @@ func _ready() -> void:
 	_post = m
 	add_child(rect)
 	_base_scale_mode = get_window().content_scale_mode
+	_base_size = get_window().content_scale_size
 	get_viewport().size_changed.connect(_update_low_res)
 	_update_low_res()
+	# Saved settings (PS1Settings): applied after every autoload/main scene _ready, so the game
+	# can register its own options and rebindable actions first (or call setup() itself).
+	(func(): if not PS1Settings.is_setup: PS1Settings.setup()).call_deferred()
 
 ## Creates a ready-to-use PS1 material (shortcut; see make() for every option).
 func material(tex: Texture2D, color := Color.WHITE, uv_scale := Vector2.ONE,
@@ -104,6 +109,18 @@ func set_crt(strength: float) -> void:
 	_update_low_res.call_deferred()
 	if not get_window().size_changed.is_connected(_update_low_res):
 		get_window().size_changed.connect(_update_low_res)
+
+## Internal (rendering) resolution as a multiple of the project's base resolution: 1 = the
+## authentic PS1 grid, 2 = twice as sharp. Vertex snapping follows it.
+func set_internal_resolution(scale: float) -> void:
+	var r := Vector2i(roundi(_base_size.x * scale), roundi(_base_size.y * scale))
+	get_window().content_scale_size = r
+	set_global("ps1_snap_resolution", Vector2(r))
+	_update_low_res.call_deferred()
+
+## Overall brightness (gamma): 1 = as rendered, 1.3 = brighter darks.
+func set_brightness(value: float) -> void:
+	_post.set_shader_parameter("brightness", clampf(value, 0.3, 3.0))
 
 ## Tweak the CRT look: curvature, scanlines, mask (aperture grille), brightness.
 func crt_params(curvature := 0.08, scanlines := 0.6, mask := 0.25, brightness := 1.35) -> void:
@@ -171,12 +188,15 @@ func toggle(param: String) -> void:
 
 func cycle_resolution() -> void:
 	_res_index = (_res_index + 1) % RESOLUTIONS.size()
-	var r: Vector2i = RESOLUTIONS[_res_index]
-	get_window().content_scale_size = r
-	set_global("ps1_snap_resolution", Vector2(r))
-	print("base resolution = %s" % r)
+	set_internal_resolution([1.0, 1.5, 2.0][_res_index])
+	print("base resolution = %s" % get_window().content_scale_size)
 
 func _unhandled_input(e: InputEvent) -> void:
+	if PS1PauseMenu.open_action != &"" and e.is_action_pressed(PS1PauseMenu.open_action) and not e.is_echo() \
+			and PS1PauseMenu.can_open.call():
+		get_viewport().set_input_as_handled()
+		PS1PauseMenu.open()
+		return
 	if not debug_keys or not (e is InputEventKey and e.pressed and not e.echo):
 		return
 	match e.keycode:

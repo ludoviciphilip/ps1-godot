@@ -25,6 +25,8 @@ func _ready() -> void:
 	await _test_vertex_paint()
 	_test_level_gen()
 	await _test_on_signal()
+	_test_settings()
+	_test_locale()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -508,3 +510,77 @@ func _test_on_signal() -> void:
 	for d in get_tree().current_scene.find_children("Loot*", "", false, false):
 		d.queue_free()
 	mon.queue_free()
+
+func _test_settings() -> void:
+	print("PS1Settings")
+	PS1Settings.setup()
+	PS1Settings.set_value("video/jitter", false)
+	check(float(PS1.get_global("ps1_jitter_enabled")) == 0.0, "jitter off applied to the shader global")
+	PS1Settings.set_value("video/jitter", true)
+	PS1Audio.setup()
+	PS1Settings.set_value("audio/music", 50.0)
+	var db := AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music"))
+	check(absf(db - linear_to_db(0.5)) < 0.1, "music 50%% -> %.1f dB" % db)
+	PS1Settings.set_value("audio/sfx", 400.0)
+	check(PS1Settings.get_value("audio/sfx") == 100.0, "ranges are clamped")
+	PS1Settings.set_value("video/brightness", 120.0)
+	var cf := ConfigFile.new()
+	cf.load(PS1Settings.PATH)
+	check(cf.get_value("video", "brightness") == 120.0, "saved to %s" % PS1Settings.PATH)
+	PS1Settings.reset_section("video")
+	check(PS1Settings.get_value("video/brightness") == 100.0, "reset section")
+	# custom option + rebinding with swap
+	var hits := [0]
+	PS1Settings.add_option({key = "game/shake", section = "video", label = "Screen shake", type = "bool", default = true,
+		apply = func(_v): hits[0] += 1})
+	PS1Settings.set_value("game/shake", false)
+	check(hits[0] >= 1 and PS1Settings.get_value("game/shake") == false, "custom option applied")
+	for a in ["t_jump", "t_attack"]:
+		if not InputMap.has_action(a): InputMap.add_action(a)
+		InputMap.action_erase_events(a)
+	var k1 := InputEventKey.new(); k1.physical_keycode = KEY_SPACE
+	var k2 := InputEventKey.new(); k2.physical_keycode = KEY_F
+	InputMap.action_add_event("t_jump", k1)
+	InputMap.action_add_event("t_attack", k2)
+	PS1Settings.add_binding("t_jump", "Jump")
+	PS1Settings.add_binding("t_attack", "Attack")
+	var nk := InputEventKey.new(); nk.physical_keycode = KEY_F
+	PS1Settings.rebind("t_jump", "kb", nk)
+	check(PS1Settings.event_label(PS1Settings.binding("t_jump").kb) != "" and InputMap.action_has_event("t_jump", nk)
+		and PS1Settings.event_to_string(PS1Settings.binding("t_attack").kb) == "key:%d" % KEY_SPACE, "rebind F to jump swaps attack to Space")
+	var j := PS1Settings.string_to_event("axis:5:1")
+	check(j is InputEventJoypadMotion and PS1Settings.event_label(j) == "RT", "gamepad trigger serialized (%s)" % PS1Settings.event_label(j))
+	PS1Settings.reset_section("controls")
+	check(PS1Settings.event_to_string(PS1Settings.binding("t_jump").kb) == "key:%d" % KEY_SPACE, "reset restores bindings")
+	PS1Settings.reset_section("audio")
+	for k in ["game/shake", "bindings/t_jump", "bindings/t_attack"]:
+		PS1Settings.remove_option(k)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(PS1Settings.PATH))
+
+func _test_locale() -> void:
+	print("PS1Locale")
+	var tr_es := Translation.new()
+	tr_es.locale = "es"
+	tr_es.add_message("Open the chest", "Abrir el cofre")
+	tr_es.add_message("Runes: {runes}/3", "Runas: {runes}/3")
+	TranslationServer.add_translation(tr_es)
+	PS1Locale.set_language("es")
+	check(PS1Locale.t("Open the chest") == "Abrir el cofre" and PS1Locale.t("Untranslated") == "Untranslated", "translate + fallback to the original")
+	PS1Events.set_var("runes", 2)
+	check(PS1CmdText.format(PS1Locale.t("Runes: {runes}/3"), null) == "Runas: 2/3", "translated text keeps {variables}")
+	var ev := PS1Event.new()
+	var pg := PS1EventPage.new(); pg.prompt = "Open the chest"
+	ev.pages = [pg]
+	ev.page = pg
+	check(ev.prompt_text() == "Abrir el cofre", "event prompts are translated")
+	ev.free()
+	PS1Locale.set_language("en")
+	TranslationServer.remove_translation(tr_es)
+	var csv := "user://test_strings.csv"
+	if FileAccess.file_exists(csv): DirAccess.remove_absolute(ProjectSettings.globalize_path(csv))
+	var r := PS1Locale.update_csv(csv, ["pt", "es"], "en", ["res://tests"])
+	var r2 := PS1Locale.update_csv(csv, ["pt", "es"], "en", ["res://tests"])
+	var txt := FileAccess.get_file_as_string(csv)
+	check(r.added > 0 and r2.added == 0 and txt.begins_with("keys,en,pt,es") and txt.contains("Collected by the CSV test"),
+		"CSV: %d texts collected, second run adds none" % r.added)
+	print("    (%s)" % tr("Collected by the CSV test"))

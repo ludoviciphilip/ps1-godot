@@ -27,6 +27,8 @@ uniform float crt_curvature = 0.08;
 uniform float crt_scanlines = 0.6;
 uniform float crt_mask = 0.25;
 uniform float crt_brightness = 1.35;
+// Overall brightness (gamma), PS1.set_brightness(): 1 = as rendered.
+uniform float brightness = 1.0;
 
 const float BAYER[16] = float[](
 	0.0, 8.0, 2.0, 10.0,
@@ -137,5 +139,8 @@ void fragment() {
 			c *= e.x * e.y * (1.0 - 0.3 * k * dot(d, d));
 			COLOR = vec4(clamp(c, 0.0, 1.0), 1.0);
 		}
+	}
+	if (brightness != 1.0) {
+		COLOR.rgb = pow(max(COLOR.rgb, vec3(0.0)), vec3(1.0 / brightness));
 	}
 }

@@ -85,7 +85,7 @@ func _ready() -> void:
 	else:
 		_build()
 	if tips.size():
-		_set_tip(tips[randi() % tips.size()])
+		_set_tip(PS1Locale.t(tips[randi() % tips.size()]))
 
 func _build() -> void:
 	var bg := ColorRect.new()
@@ -145,7 +145,7 @@ func _layout() -> void:
 	_tip.position = Vector2(m, _label.position.y - h - 6)
 
 func _title_w() -> float:
-	return _label.get_theme_font("font").get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, _label.get_theme_font_size("font_size")).x
+	return _label.get_theme_font("font").get_string_size(PS1Locale.t(title), HORIZONTAL_ALIGNMENT_LEFT, -1, _label.get_theme_font_size("font_size")).x
 
 func _set_tip(t: String) -> void:
 	if _custom and _custom.has_method("set_tip"):
@@ -186,7 +186,7 @@ func _draw_gem() -> void:
 func _process(dt: float) -> void:
 	_t += dt
 	if _label:
-		_label.text = title + ".".repeat(int(_t * 3.0) % 4)
+		_label.text = PS1Locale.t(title) + ".".repeat(int(_t * 3.0) % 4)
 		_layout()
 		_gem.queue_redraw()
 

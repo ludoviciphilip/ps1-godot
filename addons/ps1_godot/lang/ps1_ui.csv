@@ -1,0 +1,48 @@
+keys,en,pt,es,fr,de
+Video,Video,Vídeo,Vídeo,Vidéo,Grafik
+Audio,Audio,Áudio,Audio,Audio,Audio
+Controls,Controls,Controles,Controles,Commandes,Steuerung
+Language,Language,Idioma,Idioma,Langue,Sprache
+Settings,Settings,Configurações,Configuración,Options,Einstellungen
+Display,Display,Tela,Pantalla,Affichage,Anzeige
+Windowed,Windowed,Janela,Ventana,Fenêtré,Fenster
+Fullscreen,Fullscreen,Tela cheia,Pantalla completa,Plein écran,Vollbild
+Exclusive fullscreen,Exclusive fullscreen,Tela cheia exclusiva,Pantalla completa exclusiva,Plein écran exclusif,Exklusives Vollbild
+Window size,Window size,Tamanho da janela,Tamaño de ventana,Taille de la fenêtre,Fenstergröße
+V-Sync,V-Sync,V-Sync,V-Sync,V-Sync,V-Sync
+FPS limit,FPS limit,Limite de FPS,Límite de FPS,Limite d'IPS,FPS-Limit
+Unlimited,Unlimited,Sem limite,Sin límite,Illimité,Unbegrenzt
+Internal resolution,Internal resolution,Resolução interna,Resolución interna,Résolution interne,Interne Auflösung
+Vertex jitter,Vertex jitter,Tremor dos vértices,Temblor de vértices,Tremblement des sommets,Vertex-Zittern
+Texture warping,Texture warping,Distorção das texturas,Distorsión de texturas,Déformation des textures,Texturverzerrung
+Dithering,Dithering,Pontilhado (dithering),Tramado (dithering),Tramage,Dithering
+Color depth,Color depth,Profundidade de cor,Profundidad de color,Profondeur de couleur,Farbtiefe
+15-bit (PS1),15-bit (PS1),15 bits (PS1),15 bits (PS1),15 bits (PS1),15 Bit (PS1)
+24-bit,24-bit,24 bits,24 bits,24 bits,24 Bit
+CRT filter,CRT filter,Filtro CRT,Filtro CRT,Filtre CRT,CRT-Filter
+TV signal (composite),TV signal (composite),Sinal de TV (composto),Señal de TV (compuesta),Signal TV (composite),TV-Signal (Composite)
+Brightness,Brightness,Brilho,Brillo,Luminosité,Helligkeit
+Master volume,Master volume,Volume geral,Volumen general,Volume général,Gesamtlautstärke
+Music,Music,Música,Música,Musique,Musik
+Sound effects,Sound effects,Efeitos sonoros,Efectos de sonido,Effets sonores,Soundeffekte
+Voices,Voices,Vozes,Voces,Voix,Stimmen
+Mouse sensitivity,Mouse sensitivity,Sensibilidade do mouse,Sensibilidad del ratón,Sensibilité de la souris,Mausempfindlichkeit
+Stick sensitivity,Stick sensitivity,Sensibilidade do analógico,Sensibilidad del stick,Sensibilité du stick,Stick-Empfindlichkeit
+Invert camera Y,Invert camera Y,Inverter câmera (vertical),Invertir cámara (vertical),Inverser la caméra (vertical),Kamera Y invertieren
+Reset to defaults,Reset to defaults,Restaurar padrões,Restablecer valores,Valeurs par défaut,Standard wiederherstellen
+On,On,Ligado,Activado,Activé,An
+Off,Off,Desligado,Desactivado,Désactivé,Aus
+Press a key or button...  (Esc: cancel),Press a key or button...  (Esc: cancel),Aperte uma tecla ou botão...  (Esc: cancelar),Pulsa una tecla o botón...  (Esc: cancelar),Appuyez sur une touche...  (Échap : annuler),Taste drücken...  (Esc: abbrechen)
+Press a gamepad button...  (Esc: cancel),Press a gamepad button...  (Esc: cancel),Aperte um botão do controle...  (Esc: cancelar),Pulsa un botón del mando...  (Esc: cancelar),Appuyez sur un bouton de la manette...  (Échap : annuler),Controller-Taste drücken...  (Esc: abbrechen)
+<  > tabs    v options    back: close,<  > tabs    v options    back: close,<  > abas    v opções    voltar: fechar,<  > pestañas    v opciones    volver: cerrar,<  > onglets    v options    retour : fermer,<  > Reiter    v Optionen    zurück: schließen
+<  > keyboard / gamepad    confirm: change,<  > keyboard / gamepad    confirm: change,<  > teclado / controle    confirmar: trocar,<  > teclado / mando    confirmar: cambiar,<  > clavier / manette    valider : changer,<  > Tastatur / Controller    bestätigen: ändern
+^ v select    <  > change    back: close,^ v select    <  > change    back: close,^ v escolher    <  > alterar    voltar: fechar,^ v elegir    <  > cambiar    volver: cerrar,^ v choisir    <  > modifier    retour : fermer,^ v wählen    <  > ändern    zurück: schließen
+Paused,Paused,Pausado,Pausa,Pause,Pause
+Resume,Resume,Continuar,Continuar,Reprendre,Fortsetzen
+Quit,Quit,Sair,Salir,Quitter,Beenden
+Mouse L,Mouse L,Mouse esq.,Ratón izq.,Souris G,Maus L
+Mouse R,Mouse R,Mouse dir.,Ratón der.,Souris D,Maus R
+Mouse M,Mouse M,Mouse meio,Ratón central,Souris M,Maus M
+Wheel Up,Wheel Up,Roda p/ cima,Rueda arriba,Molette haut,Rad hoch
+Wheel Down,Wheel Down,Roda p/ baixo,Rueda abajo,Molette bas,Rad runter
+NOW LOADING,NOW LOADING,CARREGANDO,CARGANDO,CHARGEMENT,LÄDT

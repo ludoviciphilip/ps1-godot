@@ -1,5 +1,6 @@
 ## Show Text: a text box (speaker optional). Waits for the player to confirm.
 ## {name} / {$local} in the text are replaced by variable values ("Runes: {runes}/3").
+## Text and speaker are translated (PS1Locale) before that.
 @tool
 class_name PS1CmdText
 extends PS1Command
@@ -14,7 +15,7 @@ func color() -> Color: return Color(0.95, 0.95, 0.95)
 func describe() -> String:
 	return "Text: " + ("[%s] " % speaker if speaker != "" else "") + text.replace("\n", " / ")
 func run(ctx: PS1EventContext) -> void:
-	await PS1Events.dialog().show_text(speaker, format(text, ctx))
+	await PS1Events.dialog().show_text(PS1Locale.t(speaker), format(PS1Locale.t(text), ctx))
 
 ## Replaces {variable} with its value.
 static func format(t: String, ctx: PS1EventContext) -> String:

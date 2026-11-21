@@ -208,6 +208,31 @@ picture itself is unchanged (it does cost more GPU). Combine with `set_composite
 
 ![crt](docs/crt.png)
 
+## Settings, pause menu & translations
+
+![settings](docs/settings.png)
+
+```gdscript
+PS1Locale.setup("res://lang/strings.csv")            # en + every translated column
+PS1Settings.add_binding(&"attack", "Attack")         # rebindable (keyboard + gamepad)
+PS1Settings.add_option({key = "game/shake", section = "video", label = "Screen shake",
+	type = "bool", default = true, apply = func(v): shake_enabled = v})
+PS1Settings.setup()                                  # loads user://ps1_settings.cfg and applies it
+
+PS1SettingsMenu.open()                               # title screen "Settings"
+PS1PauseMenu.open_action = &"pause"                  # Esc / Start in game
+PS1PauseMenu.entries = [["Resume", PS1PauseMenu.RESUME], ["Settings", PS1PauseMenu.SETTINGS],
+	["Save", func(m): save(); m.toast("Saved")], ["Quit", PS1PauseMenu.QUIT]]
+```
+
+- Option types: `bool`, `range` (`min`, `max`, `step`, `suffix`), `choice` (`choices` = `[[value, label], ...]`).
+  Values: `PS1Settings.get_value(key)`; changes: `PS1Settings.signals().changed`.
+- Camera code reads `PS1Settings.mouse_sensitivity()`, `stick_sensitivity()`, `invert_y()`.
+- Translations: write texts in your own language; *Project > Tools > PS1: Update translation CSV*
+  collects event texts, choices, prompts and every `tr("...")` / `PS1Locale.mark("...")`, keeping
+  what's already translated. Fill the columns, done — events translate themselves, `{variables}` included.
+- Demo: `demo/settings_demo.tscn` (Esc).
+
 ## On-defeated events & drops
 
 A page with trigger **On signal** runs when a node emits a signal: by default the event's

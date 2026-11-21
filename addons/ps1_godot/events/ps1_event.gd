@@ -112,7 +112,7 @@ func can_interact(actor: Node) -> bool:
 	return actor is Node3D and (actor as Node3D).global_position.distance_to(global_position) <= interact_radius
 
 func prompt_text() -> String:
-	return page.prompt if page else ""
+	return PS1Locale.t(page.prompt) if page else ""
 
 func interact(actor: Node) -> void:
 	if can_interact(actor):
