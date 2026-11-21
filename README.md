@@ -25,6 +25,7 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 | Sprites (trees, fire, particles) | `PS1Sprite`: billboards with jitter, alpha test and sprite-sheet animation |
 | Composite video (TV) look | `PS1.set_composite(1.0)`: chroma bleed, line jitter, grain, vignette |
 | CRT at native resolution | `PS1.set_crt(1.0)`: scanlines, aperture grille, curvature |
+| On-defeated events, drops, loading screen | `PS1Event` "On signal" pages (+ Event button), `PS1CmdSpawn`, `PS1CmdChance`, `PS1Loader` |
 | Procedural levels | `PS1LevelGen`: dungeons, catacombs, caves, mazes, ruins, built from grid pieces (editor button or code) |
 | Vertex paint (fake AO, gradients, grime) | `PS1VertexPaint`, or *Vertex paint* options on `PS1BakedLevel` |
 | Sky dome and water | `PS1Sky` (gradient into fog, clouds, stars, moon), `PS1Water` (waves, scrolling affine layers, dithered transparency) |
@@ -206,6 +207,41 @@ picture itself is unchanged (it does cost more GPU). Combine with `set_composite
 "console on a TV" look; tweak with `PS1.crt_params(curvature, scanlines, mask, brightness)`.
 
 ![crt](docs/crt.png)
+
+## On-defeated events & drops
+
+A page with trigger **On signal** runs when a node emits a signal: by default the event's
+**parent**. Select a monster and press **+ Event** (3D toolbar): if it has a death signal
+(`died`, `defeated`, `on_death`, ...) you get an `OnDefeated` event ready, RPG Maker style. Fill
+its command list with anything: drops, text, variables, conditions...
+
+| Command | Use |
+|---|---|
+| *Scene/Spawn Scene (drop)* | instance a scene where the monster fell (or at the event / player / a node), with count, scatter and a loot bounce |
+| *Flow/Random Chance* | run the nested commands with N% probability (drop rates), optional *Else* |
+| *Scene/Node: Move to source* | move an existing node (e.g. a key that must persist) to where the monster fell |
+| *Show Text* | now expands `{variable}` / `{$local}`: "Runes: {runes}/3" |
+
+The page runs on every emission; use page conditions / variables for "only once". A drop is
+usually a small `PS1Event` scene itself ("Touch" -> give item -> *Node: Delete* this event).
+![on defeated](docs/on_defeated.png)
+
+Tip: if your monsters are spawned at runtime, give the spawner a signal that forwards the
+monster's death and put the event under the spawner (it survives respawns).
+
+## Loading screen
+
+```gdscript
+await PS1Loader.change_scene("res://levels/crypt.tscn")
+```
+
+Loads on a thread behind a PS1 "NOW LOADING" screen (spinning gem, progress bar, tips) and only
+fades out when the new scene is really ready: every `PS1BakedLevel` has baked (runtime bakes of
+generated maps now yield every ~30 ms, so the screen never freezes) and the group `ps1_loading`
+is empty (add your own waits). Customize `PS1Loader.title`, `tips`, colors, `background`,
+`min_time`, or set `screen_scene` to your own screen. `PS1Loader.run_job(callable)` shows it
+for any long job; `PS1Loader.is_loading` lets the game freeze input meanwhile.
+Demo: `demo/loader_demo.tscn`.
 
 ## Procedural levels
 

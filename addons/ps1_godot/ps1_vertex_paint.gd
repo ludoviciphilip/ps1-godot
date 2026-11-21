@@ -62,6 +62,13 @@ static func _enable_vertex_color(mi: MeshInstance3D) -> void:
 static func paint(node: Node, f: Callable) -> int:
 	var count := 0
 	for mi in meshes(node):
+		count += paint_mesh(mi, f)
+	return count
+
+## paint() for one mesh.
+static func paint_mesh(mi: MeshInstance3D, f: Callable) -> int:
+	var count := 0
+	if true:
 		var m := own_mesh(mi)
 		var xf := mi.global_transform
 		var nb := xf.basis.inverse().transposed()
@@ -130,7 +137,7 @@ static func ambient_occlusion(node: Node, radius := 1.2, strength := 0.6, sample
 	var q := PhysicsRayQueryParameters3D.new()
 	q.hit_back_faces = false
 	q.collision_mask = mask
-	return paint(node, func(p, n, old):
+	var f := func(p, n, old):
 		var basis: Basis = Basis(Quaternion(Vector3.UP, n)) if n.dot(Vector3.UP) > -0.999 else Basis(Vector3.RIGHT, PI)
 		var occ := 0.0
 		for d in dirs:
@@ -140,7 +147,16 @@ static func ambient_occlusion(node: Node, radius := 1.2, strength := 0.6, sample
 			if hit:
 				occ += 1.0 - (hit.position - q.from).length() / radius
 		var a := clampf(occ / dirs.size() * 2.0 * strength, 0.0, 1.0)
-		return _mix(old, Color.WHITE.lerp(tint * (1.0 - a * 0.5), a), Blend.MULTIPLY))
+		return _mix(old, Color.WHITE.lerp(tint * (1.0 - a * 0.5), a), Blend.MULTIPLY)
+	# a frame every ~30 ms so loading screens keep moving
+	var count := 0
+	var t0 := Time.get_ticks_msec()
+	for mi in meshes(node):
+		count += paint_mesh(mi, f)
+		if Time.get_ticks_msec() - t0 > PS1Bake.frame_budget_ms:
+			await n3.get_tree().process_frame
+			t0 = Time.get_ticks_msec()
+	return count
 
 ## Evenly spread cosine-weighted directions around +Y (deterministic: no noise between runs).
 static func _hemisphere(n: int) -> Array[Vector3]:

@@ -4,6 +4,8 @@ extends RefCounted
 
 var event: PS1Event
 var actor: Node
+## What triggered an ON_SIGNAL page (the defeated monster...); null otherwise.
+var source: Node
 var stopped := false
 
 func run_list(list: Array) -> void:
@@ -28,3 +30,9 @@ func node(path: NodePath) -> Node:
 	if path.is_empty():
 		return event
 	return event.get_node_or_null(path)
+
+## Where things happen for this run: the source (signal events), else the event.
+func source_position() -> Vector3:
+	if is_instance_valid(source) and source is Node3D:
+		return (source as Node3D).global_position
+	return event.global_position

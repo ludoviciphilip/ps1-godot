@@ -100,6 +100,12 @@ func _enter_tree() -> void:
 		pop.add_item(item)
 	pop.id_pressed.connect(func(i): _paint_selected(i))
 	add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _paint_menu)
+	_event_button = Button.new()
+	_event_button.text = "+ Event"
+	_event_button.flat = true
+	_event_button.tooltip_text = "Add a PS1Event under the selected node.\nOn a monster (a node with a death signal) it's set up as an \"on defeated\" event:\nput drops, messages, variables... in its command list."
+	_event_button.pressed.connect(func(): add_event_to_selected())
+	add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _event_button)
 	_timer = Timer.new()
 	_timer.wait_time = 0.5
 	_timer.timeout.connect(_poll)
@@ -119,9 +125,47 @@ func _exit_tree() -> void:
 	if _paint_menu:
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _paint_menu)
 		_paint_menu.queue_free()
+	if _event_button:
+		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _event_button)
+		_event_button.queue_free()
 	if _button:
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _button)
 		_button.queue_free()
+
+# ---------------- "+ Event" toolbar button ----------------
+
+var _event_button: Button
+
+## Adds a PS1Event under the selected node (undoable) and selects it. If the node has a death
+## signal the page is ON_SIGNAL on it ("on defeated"). Returns the event.
+func add_event_to_selected() -> PS1Event:
+	var root := EditorInterface.get_edited_scene_root()
+	if root == null:
+		return null
+	var sel := EditorInterface.get_selection().get_top_selected_nodes()
+	var parent: Node = sel[0] if sel.size() and sel[0] is Node3D else root
+	var ev := PS1Event.new()
+	var page := PS1EventPage.new()
+	var death := PS1Event.death_signal_of(parent) if parent != root else ""
+	if death != "":
+		ev.name = "OnDefeated"
+		page.trigger = PS1EventPage.Trigger.ON_SIGNAL
+		page.signal_name = StringName(death)
+		page.prompt = ""
+	else:
+		ev.name = "Event"
+	ev.pages = [page]
+	var ur := get_undo_redo()
+	ur.create_action("PS1: add event " + ev.name, UndoRedo.MERGE_DISABLE, root)
+	ur.add_do_method(parent, "add_child", ev, true)
+	ur.add_do_method(ev, "set_owner", root)
+	ur.add_do_reference(ev)
+	ur.add_undo_method(parent, "remove_child", ev)
+	ur.commit_action()
+	EditorInterface.get_selection().clear()
+	EditorInterface.get_selection().add_node(ev)
+	EditorInterface.edit_node(ev)
+	return ev
 
 # ---------------- "PS1 Paint" toolbar menu ----------------
 
@@ -212,6 +256,8 @@ func _ready() -> void:
 			_events_selftest(a.get_slice("=", 1), shot)
 		if a.begins_with("--ps1-paint-selftest="):
 			_paint_selftest(a.get_slice("=", 1))
+		if a.begins_with("--ps1-drop-selftest="):
+			_drop_selftest(a.get_slice("=", 1), shot)
 		if a.begins_with("--ps1-gen-selftest="):
 			_gen_selftest(a.get_slice("=", 1), shot)
 
@@ -472,4 +518,53 @@ func _gen_selftest(scene: String, shot: String) -> void:
 		fails.append("undo x%d: %d pieces, expected %d" % [steps, lvl.pieces().size(), before])
 	print("PS1 GEN SELFTEST undo x%d -> %d pieces (was %d); RESULT: %s" % [steps, lvl.pieces().size(), before,
 		"PASS" if fails.is_empty() else "FAIL " + str(fails)])
+	get_tree().quit()
+
+# godot -e --path . -- --ps1-drop-selftest=res://scene.tscn
+# Adds a node with a "died" signal, "+ Event" on it (must become ON_SIGNAL "died"), adds commands
+# through the panel, checks the panel shows the signal, undoes.
+func _drop_selftest(scene: String, shot: String) -> void:
+	for i in 10: await get_tree().process_frame
+	EditorInterface.open_scene_from_path(scene)
+	for i in 20: await get_tree().process_frame
+	var root := EditorInterface.get_edited_scene_root()
+	var fails: Array[String] = []
+	var mon := Node3D.new()
+	mon.name = "Monster"
+	var gd := GDScript.new()
+	gd.source_code = "extends Node3D\nsignal died(who)\n"
+	gd.reload()
+	mon.set_script(gd)
+	root.add_child(mon)
+	mon.owner = root
+	EditorInterface.get_selection().clear()
+	EditorInterface.get_selection().add_node(mon)
+	for i in 3: await get_tree().process_frame
+	var ev := add_event_to_selected()
+	for i in 5: await get_tree().process_frame
+	if ev == null or ev.get_parent() != mon or ev.pages[0].trigger != PS1EventPage.Trigger.ON_SIGNAL or ev.pages[0].signal_name != &"died":
+		fails.append("+Event did not make an on-died event")
+	_events.edit(ev)
+	_events.refresh()
+	if not _events._signal.visible or _events._signal.get_item_text(_events._signal.selected) != "died":
+		fails.append("panel does not show the signal")
+	var ch := PS1CmdChance.new()
+	_events.add_command(ch)
+	var sp := PS1CmdSpawn.new()
+	_events.add_command(sp)
+	var total: int = ev.pages[0].commands.size() + ch.then_commands.size()
+	if total != 2:
+		fails.append("commands not added (%d)" % total)
+	make_bottom_panel_item_visible(_events)
+	for i in 10: await get_tree().process_frame
+	if shot != "":
+		EditorInterface.get_base_control().get_viewport().get_texture().get_image().save_png(shot)
+	print("PS1 DROP SELFTEST rows: ", _events.rows())
+	var ur := get_undo_redo()
+	var hist := ur.get_history_undo_redo(ur.get_object_history_id(root))
+	for i in 3: hist.undo()
+	if ev.get_parent() != null:
+		fails.append("undo did not remove the event")
+	mon.free()
+	print("PS1 DROP SELFTEST RESULT: %s" % ("PASS" if fails.is_empty() else "FAIL " + str(fails)))
 	get_tree().quit()

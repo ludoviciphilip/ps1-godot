@@ -24,6 +24,7 @@ func _ready() -> void:
 	await _test_crt()
 	await _test_vertex_paint()
 	_test_level_gen()
+	await _test_on_signal()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -306,12 +307,14 @@ func _test_events() -> void:
 	check(not ev.can_interact(actor), "not out of range")
 	actor.position = Vector3.ZERO
 	var started := [0]
-	PS1Events.signals().event_started.connect(func(): started[0] += 1)
+	var on_start := func(): started[0] += 1
+	PS1Events.signals().event_started.connect(on_start)
 	await ev.run(actor)
 	check(probe.calls == ["hi"], "call method ran (%s)" % [probe.calls])
 	check(PS1Events.get_var("gold") == 5 and PS1Events.get_var("never") == 0, "if/then + add var")
 	check(ev.page == p2 and open.visible and not closed.visible, "local var switched to page 2")
 	check(not ev.can_interact(actor) and started[0] == 1, "page 2 has no trigger; started signal once")
+	PS1Events.signals().event_started.disconnect(on_start)
 	# choices through the default dialog box
 	var ch := PS1CmdChoice.new()
 	ch.question = "Pray?"
@@ -458,3 +461,50 @@ func _test_level_gen() -> void:
 	for n in r2[1]:
 		n.free()
 	lvl.free()
+
+func _test_on_signal() -> void:
+	print("PS1Event on signal (drops)")
+	var mon := Node3D.new()
+	var gd := GDScript.new()
+	gd.source_code = "extends Node3D\nsignal died(who)\nfunc kill():\n\tdied.emit(self)\n"
+	gd.reload()
+	mon.set_script(gd)
+	mon.position = Vector3(5, 0, -3)
+	add_child(mon)
+	check(PS1Event.death_signal_of(mon) == "died", "death signal detected on the monster")
+	var loot := Node3D.new()
+	loot.name = "Loot"
+	var ps := PackedScene.new()
+	ps.pack(loot)
+	loot.free()
+	var ev := PS1Event.new()
+	var page := PS1EventPage.new()
+	page.trigger = PS1EventPage.Trigger.ON_SIGNAL
+	page.signal_name = &"died"
+	var kills := PS1CmdSetVar.new(); kills.variable = "test_kills"; kills.op = PS1CmdSetVar.Op.ADD
+	var spawn := PS1CmdSpawn.new(); spawn.scene = ps; spawn.bounce = false
+	var always := PS1CmdChance.new(); always.percent = 100.0; always.then_commands = [spawn]
+	var never := PS1CmdChance.new(); never.percent = 0.0; never.has_else = true
+	var flag := PS1CmdSetVar.new(); flag.variable = "test_else"; flag.value = 1
+	never.else_commands = [flag]
+	page.commands = [kills, always, never]
+	ev.pages = [page]
+	ev.position = Vector3(-1, 0, 0)   # the event is NOT where the monster dies
+	mon.add_child(ev)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	mon.global_position = Vector3(7, 0, -4)   # it walked before dying
+	mon.kill()
+	await get_tree().process_frame
+	var drops := get_tree().current_scene.find_children("Loot*", "", false, false)
+	check(PS1Events.get_var("test_kills") == 1 and PS1Events.get_var("test_else") == 1, "on-defeated page ran (var + chance else)")
+	check(drops.size() == 1 and drops[0].global_position.distance_to(Vector3(7, 0, -4)) < 0.01, "drop spawned where the monster fell")
+	mon.kill()
+	await get_tree().process_frame
+	check(PS1Events.get_var("test_kills") == 2, "runs again on the next death (conditions decide 'once')")
+	var t := PS1CmdText.new()
+	PS1Events.set_var("runes", 2)
+	check(PS1CmdText.format("Runes: {runes}/3", null) == "Runes: 2/3", "{variables} in text")
+	for d in get_tree().current_scene.find_children("Loot*", "", false, false):
+		d.queue_free()
+	mon.queue_free()

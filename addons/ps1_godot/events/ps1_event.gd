@@ -1,6 +1,7 @@
 ## RPG Maker style event: pages (condition + trigger + command list), edited in the
 ## "PS1 Events" bottom panel. Triggers: INTERACT (the game calls interact()), TOUCH (actor in the
-## "player" group enters the box), AUTORUN (when the page becomes active).
+## "player" group enters the box), AUTORUN (when the page becomes active), ON_SIGNAL (a node
+## emits a signal, e.g. the parent monster's "died": an "on defeated" event).
 ## Game hookup (once): put the player in the "player" group, call `interact(player)` when the
 ## interact button is pressed near a node of group "ps1_interactable" whose can_interact() is true,
 ## and freeze the player on PS1Events.signals().event_started / event_finished.
@@ -41,6 +42,43 @@ func _ready() -> void:
 	add_child(_area)
 	_area.body_entered.connect(_on_body)
 	_update_page.call_deferred()
+	_connect_signals.call_deferred()
+
+## ON_SIGNAL pages: listen to their source nodes (each signal once, whatever its argument count).
+func _connect_signals() -> void:
+	var done := {}
+	for i in pages.size():
+		var p := pages[i]
+		if p == null or p.trigger != PS1EventPage.Trigger.ON_SIGNAL or p.signal_name == &"":
+			continue
+		var src := get_node_or_null(p.signal_source)
+		if src == null or not src.has_signal(p.signal_name):
+			push_warning("PS1Event %s: no signal '%s' on %s" % [name, p.signal_name, p.signal_source])
+			continue
+		var key := "%s|%s" % [src.get_instance_id(), p.signal_name]
+		if done.has(key):
+			continue
+		done[key] = true
+		var argc := 0
+		for sig in src.get_signal_list():
+			if sig.name == p.signal_name:
+				argc = sig.args.size()
+		var sname: StringName = p.signal_name
+		var f: Callable
+		match argc:
+			0: f = func(): _on_signal(src, sname, null)
+			1: f = func(a): _on_signal(src, sname, a)
+			2: f = func(a, _b): _on_signal(src, sname, a)
+			3: f = func(a, _b, _c): _on_signal(src, sname, a)
+			_: f = func(a, _b, _c, _d): _on_signal(src, sname, a)
+		src.connect(sname, f)
+
+func _on_signal(src: Node, sname: StringName, arg) -> void:
+	if page == null or page.trigger != PS1EventPage.Trigger.ON_SIGNAL or page.signal_name != sname:
+		return
+	if get_node_or_null(page.signal_source) != src:
+		return
+	run(null, page, arg if arg is Node else src)
 
 ## Key of a "$local" variable: unique per scene + node path.
 func local_key(name: String) -> String:
@@ -84,8 +122,8 @@ func _on_body(body: Node) -> void:
 	if page and page.trigger == PS1EventPage.Trigger.TOUCH and body.is_in_group(actor_group) and not running:
 		run(body)
 
-## Runs the active page (or `with_page`). Awaitable.
-func run(actor: Node = null, with_page: PS1EventPage = null) -> void:
+## Runs the active page (or `with_page`). Awaitable. source = what triggered it (signal pages).
+func run(actor: Node = null, with_page: PS1EventPage = null, source: Node = null) -> void:
 	var p := with_page if with_page else page
 	if p == null or running:
 		return
@@ -94,6 +132,7 @@ func run(actor: Node = null, with_page: PS1EventPage = null) -> void:
 	var ctx := PS1EventContext.new()
 	ctx.event = self
 	ctx.actor = actor
+	ctx.source = source
 	await ctx.run_list(p.commands)
 	running = false
 	PS1Events._finished()
@@ -111,7 +150,11 @@ func _refresh_editor() -> void:
 	var l := Label3D.new()
 	l.set_meta("ps1_event_marker", true)
 	l.set_meta("ps1_no_bake", true)
-	l.text = "EV " + name + ("\n%d page(s)" % pages.size() if pages.size() != 1 else "")
+	var sig := ""
+	for p in pages:
+		if p and p.trigger == PS1EventPage.Trigger.ON_SIGNAL:
+			sig = "\non %s" % p.signal_name
+	l.text = "EV " + name + ("\n%d page(s)" % pages.size() if pages.size() != 1 else "") + sig
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	l.no_depth_test = true
 	l.font_size = 40
@@ -132,3 +175,26 @@ func _refresh_editor() -> void:
 	box.material_override = m
 	box.position.y = 0.03
 	add_child(box, false, Node.INTERNAL_MODE_BACK)
+
+## Signals of `node` worth listening to (script signals first), e.g. for the editor dropdown.
+static func signals_of(node: Node) -> PackedStringArray:
+	var out := PackedStringArray()
+	if node == null:
+		return out
+	if node.get_script():
+		for sig in (node.get_script() as Script).get_script_signal_list():
+			if not sig.name in out:
+				out.append(sig.name)
+	for sig in node.get_signal_list():
+		if not sig.name in out and sig.name in ["body_entered", "area_entered", "tree_exiting", "visibility_changed", "animation_finished", "timeout", "finished"]:
+			out.append(sig.name)
+	return out
+
+## Best guess for an "on defeated" signal of `node` ("" if none).
+static func death_signal_of(node: Node) -> String:
+	for s in signals_of(node):
+		var l := s.to_lower()
+		for k in ["defeat", "died", "death", "die", "killed", "dead", "morreu", "derrot", "morte"]:
+			if l.contains(k):
+				return s
+	return ""

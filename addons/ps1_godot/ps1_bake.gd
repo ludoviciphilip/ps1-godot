@@ -16,6 +16,10 @@
 class_name PS1Bake
 
 const SHADOW_LAYER := 1 << 19   # temporary collision layer used for the shadow rays
+## Baking yields a frame every this many milliseconds, so a loading screen keeps animating.
+static var frame_budget_ms := 30
+## 0..1 while baking (PS1Loader shows it).
+static var progress := 1.0
 
 ## Bakes every MeshInstance3D under root. lights = [] uses every visible Light3D in the scene.
 static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Array = [], to_unlit := true) -> void:
@@ -26,7 +30,11 @@ static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Ar
 	var temp: Array[Node] = []
 	var space: PhysicsDirectSpaceState3D = null
 	if shadows:
+		var t1 := Time.get_ticks_msec()
 		for mi in meshes:
+			if Time.get_ticks_msec() - t1 > frame_budget_ms:
+				await tree.process_frame
+				t1 = Time.get_ticks_msec()
 			# Cutout meshes (grass, fences) would cast solid rectangles: the rays can't see alpha.
 			if mi.has_meta("ps1_no_cast") or _is_cutout(mi):
 				continue
@@ -41,8 +49,15 @@ static func bake_scene(root: Node3D, ambient: Color, shadows := true, lights: Ar
 		await tree.physics_frame
 		await tree.physics_frame
 		space = root.get_world_3d().direct_space_state
-	for mi in meshes:
-		bake_mesh(mi, ambient, lights, space, to_unlit)
+	progress = 0.0
+	var t0 := Time.get_ticks_msec()
+	for i in meshes.size():
+		bake_mesh(meshes[i], ambient, lights, space, to_unlit)
+		if Time.get_ticks_msec() - t0 > frame_budget_ms:
+			progress = float(i) / meshes.size()
+			await tree.process_frame
+			t0 = Time.get_ticks_msec()
+	progress = 1.0
 	for b in temp:
 		b.queue_free()
 

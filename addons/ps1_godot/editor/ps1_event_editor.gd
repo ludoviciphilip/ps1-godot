@@ -17,6 +17,8 @@ var _cond_var: LineEdit
 var _cond_op: OptionButton
 var _cond_val: SpinBox
 var _prompt: LineEdit
+var _signal: OptionButton
+var _signal_lbl: Label
 var _graphic: OptionButton
 var _tree: Tree
 var _add: MenuButton
@@ -53,10 +55,16 @@ func build() -> void:
 	_page_box.add_child(row)
 	row.add_child(_lbl("Trigger"))
 	_trigger = OptionButton.new()
-	for t in ["Interact", "Touch", "Autorun", "None"]:
+	for t in PS1EventPage.TRIGGER_NAMES:
 		_trigger.add_item(t)
 	_trigger.item_selected.connect(func(i): _set_page("trigger", i))
 	row.add_child(_trigger)
+	_signal_lbl = _lbl("signal")
+	row.add_child(_signal_lbl)
+	_signal = OptionButton.new()
+	_signal.tooltip_text = "Signal of the source node (signal_source, default the parent) that runs this page.\nE.g. a monster's death signal = \"on defeated\" event."
+	_signal.item_selected.connect(func(i): _set_page("signal_name", StringName(_signal.get_item_text(i)) if _signal.get_item_text(i) != "(choose)" else &""))
+	row.add_child(_signal)
 	row.add_child(VSeparator.new())
 	_cond_on = CheckBox.new(); _cond_on.text = "Condition"
 	_cond_on.toggled.connect(_cond_toggled)
@@ -161,6 +169,21 @@ func refresh() -> void:
 		else:
 			_cond_var.text = ""
 		_prompt.text = p.prompt
+		var on_sig := p.trigger == PS1EventPage.Trigger.ON_SIGNAL
+		_signal.visible = on_sig
+		_signal_lbl.visible = on_sig
+		if on_sig:
+			_signal.clear()
+			_signal.add_item("(choose)")
+			var names := PS1Event.signals_of(event.get_node_or_null(p.signal_source))
+			if p.signal_name != &"" and not String(p.signal_name) in names:
+				names.append(String(p.signal_name))
+			for n in names:
+				_signal.add_item(n)
+				if n == String(p.signal_name):
+					_signal.selected = _signal.item_count - 1
+			if p.signal_name == &"":
+				_signal.selected = 0
 		_graphic.clear()
 		_graphic.add_item("(none)")
 		for c in event.get_children():

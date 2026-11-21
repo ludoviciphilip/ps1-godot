@@ -61,6 +61,7 @@ static func defaults() -> Dictionary:
 		ceiling = null,     # null = style default (ruins are open)
 		braid = 0.15,       # maze: share of dead ends opened into loops
 		fill = 0.46,        # caves: initial rock density
+		start_near = null,  # Vector2i: put the start as close as possible to this cell
 	}
 
 static func generate(options := {}) -> PS1LevelGen:
@@ -536,10 +537,11 @@ func _ends() -> void:
 	var cells := floor_cells()
 	if cells.is_empty():
 		return
+	var near = _o.get("start_near")
 	if rooms.size() >= 2 and style != Style.MAZE:
 		# start in a room at one end of the map, end in the room farthest away from it
 		var any := _center(rooms[_rng.randi() % rooms.size()])
-		var far := _farthest(any)
+		var far := _farthest(any) if near == null else Vector2i(near)
 		var d := distances(far)
 		var sr := _room_near(far)
 		start = _center(rooms[sr])
@@ -552,6 +554,9 @@ func _ends() -> void:
 	else:
 		# the two ends of the longest walk
 		var a := _farthest(cells[_rng.randi() % cells.size()])
+		if near != null:
+			cells.sort_custom(func(x, y): return x.distance_squared_to(near) < y.distance_squared_to(near))
+			a = cells[0]
 		start = a
 		end = _farthest(a)
 

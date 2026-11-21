@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.11.0
+- **On-signal event pages** (RPG Maker "on defeated"): trigger `ON_SIGNAL` with `signal_source`
+  (default the parent) + `signal_name`; the signal's Node argument becomes `ctx.source`. Panel:
+  signal dropdown. 3D toolbar **+ Event**: adds an event under the selection, pre-set to the
+  node's death signal. Editor self-test `--ps1-drop-selftest`.
+- Commands: **Spawn Scene (drop)**, **Random Chance**, Node **Move to source**; Show Text expands
+  `{variables}`.
+- **PS1Loader**: threaded scene loading behind a PS1 loading screen that waits for runtime bakes
+  and the `ps1_loading` group; `run_job()`; customizable; demo `loader_demo.tscn`.
+- Bake and ambient occlusion yield every `PS1Bake.frame_budget_ms` (worst frame of a runtime
+  bake 2.6 s -> 0.36 s); `PS1Bake.progress`.
+- PS1LevelGen option `start_near`.
+- Tests: fixed a crash at exit (a test lambda stayed connected to the static event signals).
+
 ## 0.10.0
 - **Procedural levels** (`PS1LevelGen` + `PS1GenTheme`): Dungeon, Catacombs, Caves, Maze, Ruins;
   size, seed, rooms, loops, props, lights, enemies; start/end/spawn markers; always connected;
