@@ -170,7 +170,7 @@ func add_event_to_selected() -> PS1Event:
 	var root := EditorInterface.get_edited_scene_root()
 	if root == null:
 		return null
-	var sel := EditorInterface.get_selection().get_top_selected_nodes()
+	var sel: Array = EditorInterface.get_selection().get_top_selected_nodes()
 	var parent: Node = sel[0] if sel.size() and sel[0] is Node3D else root
 	var ev := PS1Event.new()
 	var page := PS1EventPage.new()
@@ -202,7 +202,7 @@ var _paint_menu: MenuButton
 
 ## Paints the selected nodes. Returns the number of painted vertices (self-test uses it).
 func _paint_selected(item: int) -> int:
-	var sel := EditorInterface.get_selection().get_top_selected_nodes()
+	var sel: Array = EditorInterface.get_selection().get_top_selected_nodes()
 	var scene_root := EditorInterface.get_edited_scene_root()
 	var targets: Array[MeshInstance3D] = []
 	for n in sel:

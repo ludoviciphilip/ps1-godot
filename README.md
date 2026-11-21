@@ -1,6 +1,6 @@
 # PS1 Godot
 
-A small, drop-in toolkit for making **PlayStation 1-style 3D games in Godot 4** (tested on 4.7).
+A small, drop-in toolkit for making **PlayStation 1-style 3D games in Godot 4** (Godot 4.5 or newer; tested on 4.5, 4.6 and 4.7).
 
 It reproduces the hardware quirks that make PS1 games look the way they do, without getting in the way of modern gameplay code:
 

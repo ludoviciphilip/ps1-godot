@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.12.0
+- Works on Godot 4.5+ (test suite and editor self-tests pass on 4.5.1, 4.6 and 4.7.1).
 - **PS1Settings**: options as descriptors (`add_option`, `add_binding`, `hide`, `remove_option`),
   saved to `user://ps1_settings.cfg` and re-applied at startup. Built in: window mode/size, V-Sync,
   FPS limit, internal resolution, jitter, affine, dithering, color depth, CRT, composite,
