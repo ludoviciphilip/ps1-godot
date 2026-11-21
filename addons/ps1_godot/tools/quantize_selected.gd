@@ -13,5 +13,5 @@ func _run() -> void:
 			var out := PS1Palette.quantize(tex, COLORS, DITHER)
 			var dst: String = path.get_basename() + "_%dc.png" % COLORS
 			out.get_image().save_png(ProjectSettings.globalize_path(dst))
-			print("PS1 Godot: ", dst)
+			print("PS1 Maker: ", dst)
 	EditorInterface.get_resource_filesystem().scan()

@@ -42,7 +42,7 @@ Write your game in your own language, run *Project > Tools > PS1: Update transla
 - Demo scenes for every feature
 - Full documentation in the README
 
-**Install:** add the addon, enable **PS1 Godot** in *Project Settings > Plugins*, restart the editor. Recommended project settings are in the README.
+**Install:** add the addon, enable **PS1 Maker** in *Project Settings > Plugins*, restart the editor. Recommended project settings are in the README.
 
 ## Tags (first 5 are the ones shown)
 ps1, psx, retro, shaders, level-editor, procedural-generation, rpg-maker, low-poly, events, 3d

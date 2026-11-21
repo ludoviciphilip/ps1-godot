@@ -1,4 +1,4 @@
-# PS1 Godot
+# PS1 Maker
 
 A small, drop-in toolkit for making **PlayStation 1-style 3D games in Godot 4** (Godot 4.5 or newer; tested on 4.5, 4.6 and 4.7).
 
@@ -34,8 +34,8 @@ It reproduces the hardware quirks that make PS1 games look the way they do, with
 
 ## Install
 
-1. In the editor's **AssetLib** tab search for **PS1 Godot** and install it, or copy `addons/ps1_godot/` into your project.
-2. *Project > Project Settings > Plugins*: enable **PS1 Godot**. This registers the `PS1` autoload and the `ps1_*` shader globals.
+1. In the editor's **AssetLib** tab search for **PS1 Maker** and install it, or copy `addons/ps1_godot/` into your project.
+2. *Project > Project Settings > Plugins*: enable **PS1 Maker**. This registers the `PS1` autoload and the `ps1_*` shader globals.
 3. Restart the editor (shader globals are only picked up on startup).
 4. Recommended project settings (see this repo's `project.godot`):
    - `display/window/size/viewport_width/height = 320 x 240`, `stretch/mode = viewport`, `stretch/aspect = expand`
@@ -450,6 +450,13 @@ godot --path . res://tests/lod_visual.tscn                   # visual LOD check
 godot -e --path . -- --ps1-painter-selftest=res://demo/grid_level_demo.tscn   # painter in the real editor
 godot --headless --path . res://tests/baked_level_test.tscn -- --ps1-bake-only --ps1-bake-force
 ```
+
+## Versioning
+
+PS1 Maker follows [semantic versioning](https://semver.org) from 1.0.0 on: minor versions add
+features, patch versions fix bugs, and anything that breaks existing projects waits for 2.0.
+(The addon folder stays `addons/ps1_godot/` and the repository `ps1-godot` from the
+pre-1.0 days, so older projects keep working.)
 
 ## Roadmap
 

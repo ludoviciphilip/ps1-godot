@@ -23,7 +23,7 @@ func _enable_plugin() -> void:
 			changed = true
 	if changed:
 		ProjectSettings.save()
-		push_warning("PS1 Godot: shader globals added. Restart the editor so they take effect.")
+		push_warning("PS1 Maker: shader globals added. Restart the editor so they take effect.")
 
 func _disable_plugin() -> void:
 	remove_autoload_singleton("PS1")

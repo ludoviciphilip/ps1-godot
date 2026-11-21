@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+- Renamed to **PS1 Maker** (the addon folder stays `addons/ps1_godot/`, so existing projects keep
+  working). First Asset Store release; semantic versioning from here on.
+- Requires Godot 4.5+.
+
 ## 0.12.0
 - Works on Godot 4.5+ (test suite and editor self-tests pass on 4.5.1, 4.6 and 4.7.1).
 - **PS1Settings**: options as descriptors (`add_option`, `add_binding`, `hide`, `remove_option`),

@@ -1,4 +1,4 @@
-## PS1 Godot demo: a ruined courtyard with a bonfire, showing every toolkit feature.
+## PS1 Maker demo: a ruined courtyard with a bonfire, showing every toolkit feature.
 ## The camera orbits on its own. TAB = free camera (WASD + mouse, Q/E down/up).
 ## F1-F5: global effects (see PS1 autoload) | F6: baked vertex lighting | F7: 16-color texture palettes
 ## F8: screen palette taken from the current frame (off -> 24 -> 12 colors) | F9: composite video
