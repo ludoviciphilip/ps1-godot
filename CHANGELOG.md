@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+- Fix: crash on quit ("double free") in projects using the settings/pause menus, events or audio:
+  the PS1 autoload now empties the toolkit's static registries/caches when the game closes
+  (`PS1.release_statics()`).
+
 ## 1.1.0
 - **PS1Mist**: soft animated mist (fog walls, fog banks): stacked translucent layers with flowing
   noise, soft edges and soft contact with walls/floor, opacity in a few dithered steps on the

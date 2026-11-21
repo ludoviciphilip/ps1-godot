@@ -53,6 +53,36 @@ func _ready() -> void:
 	# can register its own options and rebindable actions first (or call setup() itself).
 	(func(): if not PS1Settings.is_setup: PS1Settings.setup()).call_deferred()
 
+## On quit: empty the toolkit's static caches/registries. Static vars outlive every node, and
+## Callables, nodes and resources left in them were destroyed in the wrong order at exit
+## ("double free" crash on quit, seen in exported games).
+func _exit_tree() -> void:
+	release_statics()
+
+static func release_statics() -> void:
+	PS1Settings.options.clear()
+	PS1Settings._bindings.clear()
+	PS1Settings._values.clear()
+	PS1Settings._signals = null
+	PS1Locale._signals = null
+	PS1Locale._loaded.clear()
+	PS1PauseMenu.can_open = Callable()
+	PS1PauseMenu.entries.clear()
+	PS1PauseMenu.current = null
+	PS1Events._signals = null
+	PS1Events._dialog = null
+	PS1Events.vars.clear()
+	PS1DialogBox.blip_sound = null
+	PS1DialogBox.move_sound = null
+	PS1DialogBox.confirm_sound = null
+	PS1Audio._cache.clear()
+	PS1Audio._voices.clear()
+	PS1Audio._host = null
+	PS1Audio._music.clear()
+	PS1Audio._music_stream = null
+	PS1Convert._cache.clear()
+	PS1Particles._sheets.clear()
+
 ## Creates a ready-to-use PS1 material (shortcut; see make() for every option).
 func material(tex: Texture2D, color := Color.WHITE, uv_scale := Vector2.ONE,
 		emission := Color.BLACK, emission_energy := 0.0, double_sided := false) -> ShaderMaterial:
