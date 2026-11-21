@@ -124,7 +124,10 @@ void fragment() {
 			float s1 = mix(0.22, 0.40, dot(c1, vec3(0.3, 0.59, 0.11)));
 			vec3 beam = c0 * exp(-fy * fy / (2.0 * s0 * s0)) + c1 * exp(-(1.0 - fy) * (1.0 - fy) / (2.0 * s1 * s1));
 			vec3 flat_ = mix(c0, c1, step(0.5, fy));
-			vec3 c = mix(flat_, beam * crt_brightness, crt_scanlines * k);
+			// Scanlines need ~3 real pixels per line; below that they turn into moire: fade them out.
+			float px_per_line = (1.0 / SCREEN_PIXEL_SIZE.y) / low_res.y;
+			float scan = crt_scanlines * k * smoothstep(2.0, 3.5, px_per_line);
+			vec3 c = mix(flat_, beam * crt_brightness, scan);
 			// Aperture grille: RGB phosphor stripes on the real screen pixels.
 			int m = int(FRAGCOORD.x) % 3;
 			vec3 mk = vec3(m == 0 ? 1.15 : 0.8, m == 1 ? 1.15 : 0.8, m == 2 ? 1.15 : 0.8);

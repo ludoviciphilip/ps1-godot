@@ -102,6 +102,8 @@ func set_crt(strength: float) -> void:
 		w.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
 	set_global("ps1_crt", strength)
 	_update_low_res.call_deferred()
+	if not get_window().size_changed.is_connected(_update_low_res):
+		get_window().size_changed.connect(_update_low_res)
 
 ## Tweak the CRT look: curvature, scanlines, mask (aperture grille), brightness.
 func crt_params(curvature := 0.08, scanlines := 0.6, mask := 0.25, brightness := 1.35) -> void:
@@ -111,9 +113,18 @@ func crt_params(curvature := 0.08, scanlines := 0.6, mask := 0.25, brightness :=
 	_post.set_shader_parameter("crt_brightness", brightness)
 
 ## The low-res grid = the canvas size (base resolution widened by stretch aspect "expand").
+## Projects that don't render at a low base resolution (stretch mode disabled) get the snap grid
+## (e.g. 240 lines) so the CRT always has a console-like signal to draw.
 func _update_low_res() -> void:
-	if _post:
-		_post.set_shader_parameter("low_res", get_viewport().get_visible_rect().size)
+	if not _post:
+		return
+	var low := get_viewport().get_visible_rect().size
+	if _base_scale_mode == Window.CONTENT_SCALE_MODE_DISABLED:
+		var snap = get_global("ps1_snap_resolution")
+		var h: float = snap.y if snap is Vector2 else 240.0
+		var win := Vector2(get_window().size)
+		low = Vector2(roundf(h * win.x / maxf(win.y, 1.0)), h)
+	_post.set_shader_parameter("low_res", low)
 
 ## Composite video filter (chroma bleed, line jitter, grain, vignette): 0 = off, 1 = full.
 func set_composite(strength: float) -> void:
