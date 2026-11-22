@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.3
+- PS1Gothic `sewer()`: bridges get stone curbs and an invisible railing on both sides (crossing
+  at an angle could drop you into the channel).
+
 ## 1.3.2
 - PS1Gothic `sewer()`: iron grates close both ends of the channel (`end_grates`, on by default,
   `grate_surface` for their material). Before, you could walk from the connected rooms straight

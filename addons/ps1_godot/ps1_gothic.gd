@@ -448,6 +448,13 @@ func sewer(start: Vector3, length: float, width := 8.0, height := 4.5, channel_w
 		box(Vector3(x, y - 0.15, z0 - bz), Vector3(channel_w + 0.6, 0.3, 1.8), 0.0, true)
 		cuts.append(bz - 1.0)
 		cuts.append(bz + 1.0)
+		# low stone curbs on both sides of the bridge + invisible railing over the water, so
+		# crossing at an angle can't drop you in
+		for sz in [-1.0, 1.0]:
+			var ez: float = z0 - bz + sz * 0.8
+			box(Vector3(x, y + 0.15, ez), Vector3(channel_w + 0.2, 0.3, 0.2), 0.0, true, false)
+			var rs := BoxShape3D.new(); rs.size = Vector3(channel_w + 0.4, rail_height, 0.25)
+			_shapes.append([xform * Transform3D(Basis(), Vector3(x, y + rail_height * 0.5, ez + sz * 0.12)), rs])
 	cuts.append(length)
 	for k in range(0, cuts.size(), 2):
 		var a: float = cuts[k]
