@@ -311,7 +311,19 @@ Preset: `gargoyle()`.
 baked from keyed poses (a pose says "point the forearm *that way*", in model space, so you
 don't fight Euler angles). Preset `archer()`: hood, cloak, quiver and a longbow whose string is
 pulled to the cheek; `shoot` emits `released` at the release frame. Animations: `idle`, `walk`,
-`walk_back`, `run`, `shoot`, `bash`, `hit`, `die`; add your own with `add_animation()`.
+`walk_back`, `run`, `shoot`, `bash`, `hit`, `die`, `spew`, `claw`, `hang`, `drop`; add your own
+with `add_animation()`.
+
+### Sewer grotesques (1.6)
+
+| Preset | What it is | Animations worth knowing |
+|---|---|---|
+| `PS1Creature.leech()` | legless segmented body, `head_style = "maw"` (round toothed mouth) | `attack` (lunge), `slam` |
+| `PS1Biped.drowned()` | bald, bloated, `belly = 1.0` | `spew` (rear back, heave, hold), `claw` |
+| `PS1Biped.hanged()` | gaunt, `arm_length = 1.45`, long fingers, sack hood | `hang` (loop), `drop`, `claw` |
+
+`PS1Particles.preset("bile")` is the vomit jet that goes with `spew`; `"splash"` is for anything
+breaking a water surface. `PS1Water.glow_color` tints the fake reflection (green for sewers).
 
 **PS1Projectile**: arrows and bolts that fly with gravity, point along the flight and stick in
 walls. `PS1Projectile.aim()` solves the arc to reach a target. Damage stays in your game: put

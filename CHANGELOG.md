@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.0
+- New creature presets: `PS1Creature.leech()` (legless segmented body, new `head_style = "maw"`:
+  a round mouth ringed with teeth), `PS1Biped.drowned()` (bloated, bald, huge belly) and
+  `PS1Biped.hanged()` (gaunt, too-long arms with long fingers, sack hood).
+- PS1Biped: `belly` and `arm_length` exports; unarmed idle pose (weapon "none"); four new
+  default animations: `spew` (rear back, heave and hold — vomit/breath attacks), `claw` (both
+  arms over the head and raked down), `hang` (dangling from the ceiling by the hands, loop) and
+  `drop` (let go, fall, land in a crouch). `add_animation()` now only replaces the animation of
+  the same name; the other defaults stay.
+- PS1Particles presets: `bile` (a jet of sick; set `direction`, or `rate` for a stream) and
+  `splash` (something breaking a water surface).
+- PS1Water: `glow_color` / `glow_energy` (the fake reflection was hard-coded sky blue, which
+  turned sewer water blue).
+- Creature demo shows the three new presets.
+
 ## 1.5.2
 - PS1Navigation: bodies no longer get stuck on door jambs. `agent_radius` 0.25 -> 0.32 (paths
   keep off the walls; 1.2 m arches still connect), `steer()` aims at the farthest waypoint the

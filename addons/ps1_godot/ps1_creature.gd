@@ -32,7 +32,8 @@ extends Node3D
 @export var human_limbs := false
 @export_group("Head")
 ## "snout" (rodent/beast), "face" (pale human mask), "none".
-@export_enum("snout", "face", "none") var head_style := "snout"
+## "maw" = a round lamprey mouth ringed with teeth (leeches, worms).
+@export_enum("snout", "face", "maw", "none") var head_style := "snout"
 @export var head_size := 0.27
 @export var ears := true
 @export var eye_color := Color(1.0, 0.3, 0.12)
@@ -133,6 +134,31 @@ static func gargoyle() -> PS1Creature:
 	c.body_color = Color(0.95, 0.95, 1.0)
 	c.limb_color = Color(0.85, 0.86, 0.9)
 	c.wing_color = Color(0.72, 0.72, 0.76)
+	return c
+
+## Giant leech: a long glossy segmented body, no legs, a round mouth full of teeth. Lunges
+## with "attack", rears and crashes with "slam".
+static func leech() -> PS1Creature:
+	var c := PS1Creature.new()
+	c.body_length = 3.0
+	c.body_radius = 0.42
+	c.body_squash = 0.95
+	c.segments = 7
+	c.leg_pairs = 0
+	c.leg_length = 0.04
+	c.leg_radius = 0.09
+	c.head_style = "maw"
+	c.head_size = 0.4
+	c.ears = false
+	c.eye_color = Color(0.9, 0.85, 0.5)
+	c.tail_length = 0.0
+	c.tail_segments = 0
+	c.gait_period = 1.1
+	var skin := PS1Textures.skin(Color(0.36, 0.3, 0.24), 61)
+	c.body_texture = skin
+	c.limb_texture = PS1Textures.skin(Color(0.55, 0.38, 0.33), 62)
+	c.body_color = Color(0.9, 0.95, 0.85)
+	c.limb_color = Color(1.0, 0.9, 0.85)
 	return c
 
 ## Rat king: `n` giant rats whose tails are knotted together, moving as one mass.
@@ -296,17 +322,29 @@ func build() -> void:
 					ge.box(Vector3(s * hs * 0.33, hs * 0.2, -hs * 0.62), Vector3(hs * 0.16, hs * 0.12, hs * 0.1), 0.0, true, false)
 				gt.box(Vector3(-hs * 0.04, -hs * 0.16, -hs * 1.36), Vector3(hs * 0.07, hs * 0.2, hs * 0.05), 0.0, true, false)
 				gt.box(Vector3(hs * 0.04, -hs * 0.16, -hs * 1.36), Vector3(hs * 0.07, hs * 0.2, hs * 0.05), 0.0, true, false)
+			elif head_style == "maw":   # blunt cylinder head, the whole front is a mouth
+				gh.spindle(Vector3(0, 0, -hs * 0.3), hs * 1.1, hs * 0.85, hs * 0.95, hs * 0.9, 8, 0.85, 0.0)
+				for s: float in [-1.0, 1.0]:   # tiny pale eyes on top
+					ge.box(Vector3(s * hs * 0.32, hs * 0.38, -hs * 0.45), Vector3(hs * 0.08, hs * 0.06, hs * 0.08), 0.0, true, false)
+				var mouth_r := hs * 0.62
+				for i in 10:   # the dark disc of the mouth and a ring of hooked teeth
+					var a0 := TAU * i / 10.0
+					var a1 := TAU * (i + 1) / 10.0
+					var ctr := Vector3(0, 0, -hs * 0.86)
+					gd.tri(ctr + Vector3(0, 0, hs * 0.05), ctr + Vector3(cos(a1), sin(a1) * 0.85, 0) * mouth_r, ctr + Vector3(cos(a0), sin(a0) * 0.85, 0) * mouth_r)
+					var tb := ctr + Vector3(cos(a0 + 0.3), sin(a0 + 0.3) * 0.85, -0.01) * mouth_r * 0.92
+					gt.limb(tb, tb.lerp(ctr, 0.45) + Vector3(0, 0, hs * 0.08), hs * 0.06, hs * 0.01, 3)
 			else:   # face: a pale human mask, too smooth, with black eye holes
 				gh.spindle(Vector3(0, 0, -hs * 0.35), hs * 1.1, hs * 0.85, hs * 0.92, hs * 0.55, 7, 1.2, 0.1)
 				for s: float in [-1.0, 1.0]:
 					gd.box(Vector3(s * hs * 0.3, hs * 0.22, -hs * 0.93), Vector3(hs * 0.26, hs * 0.16, hs * 0.08), 0.0, true, false)
 					ge.box(Vector3(s * hs * 0.3, hs * 0.22, -hs * 0.95), Vector3(hs * 0.06, hs * 0.06, hs * 0.06), 0.0, true, false)
-			_mesh_node(head, gh, m_body if head_style == "snout" else m_limb)
+			_mesh_node(head, gh, m_body if head_style != "face" else m_limb)
 			_mesh_node(head, ge, m_eye, "Eyes")
 			if not gt._st.is_empty():
 				_mesh_node(head, gt, m_teeth, "Teeth")
-			if head_style == "face":
-				_mesh_node(head, gd, m_dark, "Sockets")
+			if head_style == "face" or head_style == "maw":
+				_mesh_node(head, gd, m_dark, "Sockets" if head_style == "face" else "Mouth")
 			if horns > 0.0:
 				var gho := PS1Gothic.new()
 				gho.uv_meters = 0.3
@@ -323,6 +361,9 @@ func build() -> void:
 			if head_style == "snout":
 				gj.spindle(Vector3(0, 0, -hs * 0.45), hs * 1.0, hs * 0.4, hs * 0.32, hs * 0.1, 5, 0.6, 0.1)
 				_mesh_node(jaw, gj, m_body)
+			elif head_style == "maw":   # no jaw: the lips flare open (small rim under the mouth)
+				gj.box(Vector3(0, -hs * 0.05, -hs * 0.82), Vector3(hs * 0.7, hs * 0.12, hs * 0.1), 0.0, true, false)
+				_mesh_node(jaw, gj, m_limb)
 			else:   # a mouth that opens far too wide
 				gj.spindle(Vector3(0, -hs * 0.05, -hs * 0.45), hs * 0.6, hs * 0.5, hs * 0.55, hs * 0.4, 6, 0.6, 0.05)
 				_mesh_node(jaw, gj, m_limb)

@@ -324,6 +324,16 @@ static func preset(name: String) -> PS1Particles:
 			p.spread = 55; p.speed_min = 1.5; p.speed_max = 3.5; p.gravity = Vector3(0, -12, 0)
 			p.size_start = 0.16; p.size_end = 0.10; p.texture_name = "dot"; p.update_fps = 30
 			p.colors = _grad([Color(0.6, 0.02, 0.02), Color(0.35, 0.0, 0.0), Color(0.2, 0.0, 0.0, 0.0)])
+		"bile":       # a jet of sick (point `direction` where it goes; one-shot, or set rate for a stream)
+			p.one_shot = true; p.burst_count = 36; p.amount = 48; p.lifetime = 0.8; p.auto_free = true; p.blend = Blend.DITHER
+			p.direction = Vector3(0, 0.15, -1); p.spread = 16; p.speed_min = 3.0; p.speed_max = 5.5; p.gravity = Vector3(0, -9, 0)
+			p.size_start = 0.14; p.size_end = 0.26; p.texture_name = "puff"; p.update_fps = 24
+			p.colors = _grad([Color(0.72, 0.75, 0.3), Color(0.5, 0.55, 0.18, 0.9), Color(0.3, 0.32, 0.1, 0.0)])
+		"splash":     # something breaking a water surface: droplets up and around
+			p.one_shot = true; p.burst_count = 28; p.amount = 32; p.lifetime = 0.7; p.auto_free = true; p.blend = Blend.DITHER
+			p.shape = Shape.SPHERE; p.shape_radius = 0.4; p.spread = 40; p.speed_min = 2.0; p.speed_max = 4.0; p.gravity = Vector3(0, -12, 0)
+			p.size_start = 0.1; p.size_end = 0.05; p.texture_name = "dot"; p.update_fps = 30
+			p.colors = _grad([Color(0.75, 0.82, 0.78), Color(0.45, 0.55, 0.5, 0.8), Color(0.3, 0.38, 0.34, 0.0)])
 		"fog_puff":   # crossing a fog wall
 			p.one_shot = true; p.burst_count = 26; p.amount = 32; p.lifetime = 1.2; p.auto_free = true
 			p.shape = Shape.BOX; p.shape_extents = Vector3(0.8, 1.2, 0.1); p.direction = Vector3(0, 0.2, 1); p.spread = 60

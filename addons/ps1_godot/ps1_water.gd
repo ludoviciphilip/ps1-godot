@@ -21,6 +21,16 @@ extends MeshInstance3D
 	set(v):
 		wave_height = v
 		_param("wave_height", v)
+## Faint self-glow (a fake sky/fog reflection that keeps night water readable). Tint it to the
+## room: bluish under the sky, sick green in a sewer, 0 energy for black water.
+@export var glow_color := Color(0.25, 0.32, 0.45):
+	set(v):
+		glow_color = v
+		_param("emission_color", v)
+@export var glow_energy := 0.35:
+	set(v):
+		glow_energy = v
+		_param("emission_energy", v)
 @export var texture: Texture2D:
 	set(v):
 		texture = v
@@ -39,9 +49,8 @@ func _ready() -> void:
 	_param("color", color)
 	_param("wave_height", wave_height)
 	_param("uv_scale", size / 2.0)
-	# A faint glow of the sky/fog color keeps night water readable (fake reflection).
-	_param("emission_color", Color(0.25, 0.32, 0.45))
-	_param("emission_energy", 0.35)
+	_param("emission_color", glow_color)
+	_param("emission_energy", glow_energy)
 	_rebuild()
 
 func _param(k: String, v) -> void:
