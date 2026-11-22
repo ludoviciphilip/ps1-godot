@@ -523,6 +523,10 @@ func room(center: Vector3, size: Vector3, doors: Array = [], door_h := 4.5, ceil
 			var lc := wall_c + (Vector3(mid, door_h + (h - door_h) * 0.5, 0) if along_x else Vector3(0, door_h + (h - door_h) * 0.5, mid))
 			if h - door_h > 0.05:
 				box(lc, Vector3(lw, h - door_h, 0.6) if along_x else Vector3(0.6, h - door_h, lw))
+			# threshold: floor under the doorway (the wall is outside the room's floor), or two
+			# rooms joined at a door leave a gap you fall into
+			var tc := wall_c + (Vector3(mid, -0.25, 0) if along_x else Vector3(0, -0.25, mid))
+			box(tc, Vector3(lw, 0.5, 0.62) if along_x else Vector3(0.62, 0.5, lw), 0.0, false)
 		spans.append([t, end])
 		for sp in spans:
 			var a: float = sp[0]

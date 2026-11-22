@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.4
+- Fix: PS1Gothic `room()` doorways had no floor under the wall thickness: two rooms joined at
+  a door left a gap the player fell into. Doors now get a threshold slab.
+
 ## 1.3.3
 - PS1Gothic `sewer()`: bridges get stone curbs and an invisible railing on both sides (crossing
   at an angle could drop you into the channel).
