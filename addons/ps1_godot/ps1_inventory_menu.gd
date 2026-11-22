@@ -16,6 +16,8 @@ var use_item: Callable
 var kinds: Array = [PS1Item.Kind.WEAPON, PS1Item.Kind.SHIELD, PS1Item.Kind.ARMOR, PS1Item.Kind.RING,
 	PS1Item.Kind.CONSUMABLE, PS1Item.Kind.KEY, PS1Item.Kind.MISC]
 var title := "Inventory"
+## Slots that can be swapped but never left empty (e.g. ["weapon"]).
+var required_slots: Array = []
 ## Sound played on equip (a PS1Audio name; missing = silent).
 var ok_sound := "ui_ok"
 
@@ -134,6 +136,8 @@ func activate() -> void:
 	var it := list[sel]
 	if it.slot != "":
 		if inventory.is_equipped(it.id):
+			if it.slot in required_slots:
+				return
 			inventory.unequip(it.slot)
 		else:
 			inventory.equip(it.id)

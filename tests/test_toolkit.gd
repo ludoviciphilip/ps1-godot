@@ -900,6 +900,9 @@ func _test_inventory() -> void:
 	check(menu.current_list().size() == 1 and menu.current_list()[0].id == "sword", "inventory menu: first tab lists weapons")
 	menu.activate()
 	check(inv2.equipped_item("weapon").id == "sword", "inventory menu: accept equips")
+	menu.required_slots = ["weapon"]
+	menu.activate()
+	check(inv2.equipped_item("weapon") != null, "inventory menu: required slot can't be emptied")
 	menu.free()
 
 func _test_fx() -> void:

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+- PS1InventoryMenu: `required_slots` (slots that can be swapped but never left empty, e.g. the
+  only weapon).
+
 ## 1.5.0
 - **PS1Navigation**: runtime navmesh for code-built levels (bakes the static colliders),
   `steer()` that walks straight when clear and follows the path around walls (with a stuck
