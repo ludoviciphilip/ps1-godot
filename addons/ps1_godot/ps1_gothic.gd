@@ -547,6 +547,7 @@ func tombstone(base: Vector3, width := 0.6, height := 0.9, rot_y := 0.0, lean :=
 	var old := xform
 	xform = xform * Transform3D(Basis(Vector3.UP, rot_y) * Basis(Vector3.RIGHT, lean), base)
 	box(Vector3(0, height * 0.4, 0), Vector3(width, height * 0.8, 0.16), 0.0, false, false)
+	_solid(Vector3(0, height * 0.5, 0), Vector3(width, height, 0.3))
 	var pts := 5
 	for i in pts:
 		var a0 := PI * i / pts
@@ -568,6 +569,7 @@ func cross(base: Vector3, height := 1.3, rot_y := 0.0, lean := 0.0, thick := 0.1
 	xform = xform * Transform3D(Basis(Vector3.UP, rot_y) * Basis(Vector3.RIGHT, lean), base)
 	box(Vector3(0, height * 0.5, 0), Vector3(thick, height, thick), 0.0, false, false)
 	box(Vector3(0, height * 0.72, 0), Vector3(height * 0.55, thick, thick), 0.0, true, false)
+	_solid(Vector3(0, height * 0.5, 0), Vector3(maxf(thick, 0.3), height, maxf(thick, 0.3)))
 	xform = old
 	return self
 
@@ -579,8 +581,19 @@ func grave_sword(base: Vector3, rot_y := 0.0, lean := 0.0, length := 1.1) -> PS1
 	box(Vector3(0, length * 0.72, 0), Vector3(0.36, 0.05, 0.06), 0.0, true, false)
 	box(Vector3(0, length * 0.84, 0), Vector3(0.045, length * 0.2, 0.045), 0.0, false, false)
 	box(Vector3(0, length * 0.96, 0), Vector3(0.08, 0.06, 0.08), 0.0, true, false)
+	_solid(Vector3(0, length * 0.5, 0), Vector3(0.36, length, 0.3))
 	xform = old
 	return self
+
+## Collision box (in the current `xform`) for props whose visible parts don't collide.
+## `props_collide = false` turns it off for every prop (tombstones, crosses, grave swords).
+var props_collide := true
+
+func _solid(center: Vector3, size: Vector3) -> void:
+	if not props_collide:
+		return
+	var bs := BoxShape3D.new(); bs.size = size
+	_shapes.append([xform * Transform3D(Basis(), center), bs])
 
 ## Leafless, gnarled tree: tapered trunk and branches that split `depth` times. Deterministic
 ## per seed. Use a bark material.

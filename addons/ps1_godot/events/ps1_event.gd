@@ -122,6 +122,14 @@ func _on_body(body: Node) -> void:
 	if page and page.trigger == PS1EventPage.Trigger.TOUCH and body.is_in_group(actor_group) and not running:
 		run(body)
 
+## An event freed while running (a command changed the scene, the level was regenerated) never
+## gets to finish its coroutine: release the global "event running" count here, or the game
+## stays frozen in "event mode" forever (pause menu refusing to open, player locked).
+func _exit_tree() -> void:
+	if running and not Engine.is_editor_hint():
+		running = false
+		PS1Events._finished()
+
 ## Runs the active page (or `with_page`). Awaitable. source = what triggered it (signal pages).
 func run(actor: Node = null, with_page: PS1EventPage = null, source: Node = null) -> void:
 	var p := with_page if with_page else page
@@ -134,6 +142,8 @@ func run(actor: Node = null, with_page: PS1EventPage = null, source: Node = null
 	ctx.actor = actor
 	ctx.source = source
 	await ctx.run_list(p.commands)
+	if not running:
+		return   # released by _exit_tree (a command changed scene / freed the event)
 	running = false
 	PS1Events._finished()
 	finished.emit()

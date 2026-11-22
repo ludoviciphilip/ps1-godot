@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1
+- Fix: an event freed while running (a command changed the scene, e.g. a cave-in that sends the
+  player to another area) left `PS1Events.running` stuck at 1, so games that block the pause menu
+  during events never opened it again. PS1Event now releases the count in `_exit_tree`.
+- PS1Gothic: tombstones, crosses and grave swords now have collision (`props_collide = false`
+  turns it off).
+
 ## 1.3.0
 - **PS1Creature**: procedural low-poly creatures with baked animations (idle, walk, run, attack,
   slam, spin, hit, die) in a regular AnimationPlayer. Segmented bodies, leg pairs, human-arm legs,

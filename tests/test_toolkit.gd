@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_backdrop()
 	_test_creature()
 	await _test_collapse()
+	await _test_event_freed()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -749,3 +750,25 @@ func _test_collapse() -> void:
 	check(shakes[0] > 0, "collapse: shakes")
 	check(c.get_child_count() == 6, "collapse: rubble stays")
 	c.free()
+
+## An event freed mid-run (scene change) must release PS1Events.running.
+func _test_event_freed() -> void:
+	var ev := PS1Event.new()
+	var pg := PS1EventPage.new()
+	pg.trigger = PS1EventPage.Trigger.NONE
+	var w := PS1CmdWait.new(); w.seconds = 5.0
+	pg.commands = [w]
+	ev.pages = [pg]
+	add_child(ev)
+	var before := PS1Events.running
+	ev.run(null, pg)
+	check(PS1Events.running == before + 1, "events: running while the page runs")
+	ev.free()
+	check(PS1Events.running == before, "events: freed event releases the running count")
+	var g := PS1Gothic.new()
+	g.tombstone(Vector3.ZERO)
+	g.cross(Vector3(2, 0, 0))
+	g.grave_sword(Vector3(4, 0, 0))
+	var b := g.build({stone = PS1.material(PS1Textures.ashlar())})
+	check(b.find_children("*", "CollisionShape3D", false, false).size() == 3, "gothic: graveyard props collide")
+	b.free()
