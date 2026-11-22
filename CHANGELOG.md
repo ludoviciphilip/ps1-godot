@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0
+- **PS1Navigation**: runtime navmesh for code-built levels (bakes the static colliders),
+  `steer()` that walks straight when clear and follows the path around walls (with a stuck
+  detector), `can_see()`, `reachable()`, `rebake()`.
+- **PS1Inventory / PS1Item / PS1InventoryMenu**: items as Resources with free-form `stats`,
+  counts, equipment slots, signals, save dictionaries, and a menu page in the toolkit's style.
+- **PS1FX** + **PS1Aura**: ground sweep arcs (`sweep()`) and glowing weapon auras (`aura()`,
+  level-driven, with sparks and an optional light). New shaders `ps1_sweep` and `ps1_aura`.
+- PS1Gothic: `heater_shield()`.
+
 ## 1.4.0
 - **PS1Biped**: procedural low-poly humanoid with a baked AnimationPlayer; poses are keyed as
   limb directions in model space. Preset `archer()` (bow with a live string, quiver, nocked

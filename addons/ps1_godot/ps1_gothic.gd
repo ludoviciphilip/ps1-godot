@@ -640,6 +640,41 @@ func rampart(start: Vector3, length: float, width := 4.0, drop := 8.0, parapet :
 
 # ------------------------------------------------------------------ props
 
+## Heater shield (flat-topped, pointed bottom), facing +Z, centered on `center`, slightly bowed.
+## Surfaces: "wood" (the face and back), "rim" (iron edge), "boss" (central emblem) — give them
+## materials in build(). Size in meters.
+func heater_shield(center: Vector3, width := 0.56, height := 0.72, bow := 0.06, segments := 7) -> PS1Gothic:
+	var hw := width * 0.5
+	var outline := PackedVector2Array([Vector2(-hw, height * 0.42), Vector2(hw, height * 0.42)])
+	for i in range(1, segments + 1):   # right side curving down to the point
+		var u := float(i) / segments
+		outline.append(Vector2(hw * cos(u * PI * 0.5) * (1.0 - 0.1 * u), height * 0.42 - u * height))
+	for i in range(segments - 1, 0, -1):
+		var u := float(i) / segments
+		outline.append(Vector2(-hw * cos(u * PI * 0.5) * (1.0 - 0.1 * u), height * 0.42 - u * height))
+	var z_of := func(p: Vector2) -> float: return bow * (1.0 - (p.x / hw) * (p.x / hw))
+	var c := center + Vector3(0, 0, bow)
+	var old := _cur
+	surface("wood")
+	for i in outline.size():
+		var a := outline[i]; var b := outline[(i + 1) % outline.size()]
+		var A3 := center + Vector3(a.x, a.y, z_of.call(a)); var B3 := center + Vector3(b.x, b.y, z_of.call(b))
+		tri_away(c - Vector3(0, 0, 1.0), c, A3, B3)                                   # face (+Z)
+		tri_away(c + Vector3(0, 0, 1.0), c - Vector3(0, 0, 0.03), A3 - Vector3(0, 0, 0.03), B3 - Vector3(0, 0, 0.03))   # back
+	surface("rim")
+	for i in outline.size():
+		var a := outline[i]; var b := outline[(i + 1) % outline.size()]
+		limb(center + Vector3(a.x, a.y, z_of.call(a) - 0.012), center + Vector3(b.x, b.y, z_of.call(b) - 0.012), 0.022, 0.022, 4)
+	surface("boss")
+	var e := center + Vector3(0, height * 0.05, bow + 0.012)
+	for i in 8:   # a round boss with a cross on it
+		var a0 := TAU * i / 8.0; var a1 := TAU * (i + 1) / 8.0
+		tri_away(e - Vector3(0, 0, 1.0), e + Vector3(0, 0, 0.03), e + Vector3(cos(a0), sin(a0), 0) * width * 0.14, e + Vector3(cos(a1), sin(a1), 0) * width * 0.14)
+	box(e + Vector3(0, 0, 0.01), Vector3(width * 0.08, height * 0.62, 0.02), 0.0, true, false)
+	box(e + Vector3(0, height * 0.12, 0.01), Vector3(width * 0.7, width * 0.08, 0.02), 0.0, true, false)
+	_cur = old
+	return self
+
 ## Gothic pier: plinth, octagonal shaft, capital. `broken` > 0 cuts it at that fraction with a
 ## slanted break (ruins).
 func column(base: Vector3, radius: float, height: float, broken := 0.0) -> PS1Gothic:

@@ -333,6 +333,44 @@ statue or slides a wall (`PS1CmdAnimate.animate()` from code).
 you from falling, merlons on the outer side, gaps for stairs and balconies), `belfry()`,
 `bell()` and `lathe()` (any surface of revolution).
 
+## Navigation, inventory and combat effects
+
+**Navigation for code-built levels.** Levels made with PS1Gothic / the level painter don't ship a
+navmesh, so `PS1Navigation` bakes one at runtime from the static colliders and steers bodies
+around walls (straight line when the way is clear, navmesh path when it isn't, with a stuck
+detector that falls back to the path):
+
+```gdscript
+PS1Navigation.bake(level_root)                     # once, after building the level
+var dir := PS1Navigation.steer(self, player.global_position)   # every frame, in an enemy
+PS1Navigation.can_see(self, eyes, target, 1)       # line of sight against the level
+```
+
+Tune the static `agent_radius` (default 0.25 so 1.2 m arches stay open), `agent_height`,
+`max_climb`, `max_slope` and `cell` before baking; `PS1Navigation.enabled = false` turns it off
+for A/B tests. `rebake(region)` refreshes it after doors open or walls fall.
+
+**Inventory and equipment.** `PS1Item` (a Resource: id, name, description, kind, slot, icon,
+stackable, `stats` dictionary, optional model) and `PS1Inventory` (counts + equipped slots,
+`changed` / `equipped` / `unequipped` signals, `to_dict()` / `from_dict()` for saves).
+`PS1InventoryMenu` browses it in the same style as the other menus — push it as a pause-menu
+page or open it on its own layer:
+
+```gdscript
+var inv := PS1Inventory.new()
+inv.register(PS1Item.make("short_sword", "Short Sword", PS1Item.Kind.WEAPON, {stats = {damage = 1.0}}))
+inv.register(PS1Item.make("oak_shield", "Oak Shield", PS1Item.Kind.SHIELD, {stats = {block_cost = 0.6}}))
+inv.add("short_sword"); inv.equip("short_sword")
+var mult: float = inv.stat("weapon", "damage", 1.0)
+pause_menu.push(PS1InventoryMenu.create(inv))
+```
+
+**Combat effects.** `PS1FX.sweep()` draws a glowing arc on the ground that runs around a point
+(sword sweeps, a 360° spin attack, area telegraphs); `PS1FX.aura(mesh)` adds a `PS1Aura` shell
+around a mesh — set `level` 0..1 for a charging weapon (glow → sparks → light on the
+surroundings with `light_energy`). Both are additive, 5-bit and dithered like the rest.
+`PS1Gothic.heater_shield()` builds a small heater shield (surfaces `wood`, `rim`, `boss`).
+
 ## Mist, shockwaves and footwork
 
 ```gdscript

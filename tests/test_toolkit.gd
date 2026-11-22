@@ -36,6 +36,10 @@ func _ready() -> void:
 	await _test_collapse()
 	await _test_event_freed()
 	_test_sequence()
+	_test_inventory()
+	_test_fx()
+	_test_shield()
+	_test_navigation()
 	await _test_projectile()
 	_test_biped()
 	await _test_animate()
@@ -863,3 +867,92 @@ func _test_animate() -> void:
 	await tw.finished
 	check(absf(n.position.y - 2.0) < 0.01, "animate: move_by")
 	n.free()
+
+func _test_inventory() -> void:
+	var inv := PS1Inventory.new()
+	var changes := [0]
+	inv.changed.connect(func(): changes[0] += 1)
+	inv.register(PS1Item.make("sword", "Sword", PS1Item.Kind.WEAPON, {stats = {damage = 1.2}}))
+	inv.register(PS1Item.make("axe", "Axe", PS1Item.Kind.WEAPON, {stats = {damage = 1.5}}))
+	inv.register(PS1Item.make("buckler", "Buckler", PS1Item.Kind.SHIELD))
+	inv.register(PS1Item.make("herb", "Herb", PS1Item.Kind.CONSUMABLE, {max_stack = 5}))
+	check(inv.item("sword").slot == "weapon" and inv.item("buckler").slot == "shield" and inv.item("herb").stackable,
+		"inventory: make() fills slot/stackable from the kind")
+	check(not inv.equip("sword"), "inventory: can't equip what you don't carry")
+	inv.add("sword"); inv.add("sword")
+	check(inv.count("sword") == 1, "inventory: equipment doesn't stack")
+	check(inv.add("herb", 9) == 5 and inv.count("herb") == 5, "inventory: stack capped at max_stack")
+	check(inv.equip("sword") and float(inv.stat("weapon", "damage")) == 1.2, "inventory: equip + stat")
+	inv.add("axe")
+	inv.equip("axe")
+	check(inv.equipped_item("weapon").id == "axe" and not inv.is_equipped("sword"), "inventory: equip swaps the slot")
+	check(inv.carried(PS1Item.Kind.WEAPON).size() == 2, "inventory: carried() by kind")
+	inv.remove("axe")
+	check(inv.equipped_item("weapon") == null, "inventory: removing the last one unequips it")
+	var d := inv.to_dict()
+	var inv2 := PS1Inventory.new()
+	for id in inv.items: inv2.register(inv.items[id])
+	inv2.from_dict(d)
+	check(inv2.count("herb") == 5 and inv2.count("sword") == 1 and inv2.count("axe") == 0, "inventory: to_dict/from_dict")
+	check(changes[0] > 0, "inventory: changed signal")
+	var menu := PS1InventoryMenu.create(inv2)
+	add_child(menu)
+	check(menu.current_list().size() == 1 and menu.current_list()[0].id == "sword", "inventory menu: first tab lists weapons")
+	menu.activate()
+	check(inv2.equipped_item("weapon").id == "sword", "inventory menu: accept equips")
+	menu.free()
+
+func _test_fx() -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var sw := PS1FX.sweep(root, Vector3(1, 0, 2), 3.0, 0.3, Color.WHITE, TAU, 0.0, true, 0.2)
+	check(sw.is_inside_tree() and (sw.mesh as QuadMesh).size == Vector2(6, 6), "fx: sweep quad sized to the radius")
+	check(is_equal_approx(sw.global_position.x, 1.0) and is_equal_approx(sw.global_position.z, 2.0), "fx: sweep centered")
+	var blade := MeshInstance3D.new()
+	blade.mesh = BoxMesh.new()
+	root.add_child(blade)
+	var aura := PS1FX.aura(blade, Color(0.5, 0.8, 1.0), 0.05, 1.5)
+	check(aura.get_parent() == blade and not aura.visible, "fx: aura starts hidden")
+	aura.level = 1.0
+	check(aura.visible and aura._light != null and is_equal_approx(aura._light.light_energy, 1.5), "fx: aura level shows it and drives the light")
+	aura.level = 0.0
+	check(not aura.visible, "fx: aura level 0 hides it")
+	root.free()
+
+func _test_shield() -> void:
+	var g := PS1Gothic.new().heater_shield(Vector3.ZERO, 0.5, 0.6, 0.05)
+	var m := g.mesh()
+	check(Array(g.surface_names) == ["boss", "rim", "wood"], "gothic: heater_shield surfaces (%s)" % [g.surface_names])
+	var ab := m.get_aabb()
+	check(absf(ab.size.x - 0.5) < 0.06 and absf(ab.size.y - 0.6) < 0.06, "gothic: heater_shield size (%s)" % ab.size)
+
+func _test_navigation() -> void:
+	# a floor with a wall in the middle: the path must go around it
+	var root := Node3D.new()
+	add_child(root)
+	var g := PS1Gothic.new()
+	g.box(Vector3(0, -0.25, 0), Vector3(20, 0.5, 20), 0.0, true)
+	g.box(Vector3(0, 1.5, -1.0), Vector3(0.5, 3.0, 14.0), 0.0, true)
+	root.add_child(g.build({}, true))
+	var region := PS1Navigation.bake(root)
+	var n := PS1Navigation.polygon_count(region)
+	check(n > 0, "navigation: baked (%d polygons)" % n)
+	# the baked mesh has to leave a gap at the wall (no polygon crossing x = 0 inside it)
+	var nm := region.navigation_mesh
+	var crosses := false
+	for i in nm.get_polygon_count():
+		var xs := []
+		var inside := true
+		for vi in nm.get_polygon(i):
+			var v: Vector3 = nm.vertices[vi]
+			xs.append(v.x)
+			if v.z < -7.5 or v.z > 5.5: inside = false
+		if inside and xs.min() < -0.3 and xs.max() > 0.3:
+			crosses = true
+	check(not crosses, "navigation: no walkable polygon goes through the wall")
+	var body := CharacterBody3D.new()
+	root.add_child(body)
+	body.global_position = Vector3(-4, 0.1, 0)
+	check(not PS1Navigation.can_see(body, Vector3(-4, 1, 0), Vector3(4, 1, 0), 1), "navigation: wall blocks line of sight")
+	check(PS1Navigation.can_see(body, Vector3(-4, 1, 0), Vector3(-4, 1, 8), 1), "navigation: open line of sight")
+	root.free()
