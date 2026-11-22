@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0
+- **PS1Creature**: procedural low-poly creatures with baked animations (idle, walk, run, attack,
+  slam, spin, hit, die) in a regular AnimationPlayer. Segmented bodies, leg pairs, human-arm legs,
+  snout or face heads, tails, ring clusters. Presets `rat()`, `crawler()`, `rat_king()`.
+- **PS1Collapse** + event command **Scene/Collapse**: cave-ins with falling rocks, dust, rubble and
+  camera shake (group `ps1_shake`).
+- PS1Gothic: `sewer()`, `room()`, `rock()`, `spindle()`, `limb()`, `quad_away()/quad_toward()`.
+- Textures: `PS1Textures.fur()`, `skin()`.
+- Fix: vertex paint (AO, gradients) dropped the per-surface materials of multi-material meshes
+  (PS1Gothic pieces lost their textures after baking with `ao_strength`).
+- Demo `demo/creature_demo.tscn`.
+
 ## 1.2.0
 - **PS1Gothic**: low-poly gothic/medieval architecture built in code — walls with battlements,
   towers, spires, gables, pointed doorways (`portal`, walkable collision) and arch moldings, lancet

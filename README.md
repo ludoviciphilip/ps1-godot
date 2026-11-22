@@ -277,6 +277,30 @@ bd.add_mesh(castle.mesh(), Transform3D(Basis(), Vector3(0, 8, -125)), 0.15)   # 
 
 Demo: `demo/gothic_demo.tscn`.
 
+## Creatures, cave-ins and sewers
+
+**PS1Creature** builds low-poly creatures from a body plan (body segments, leg pairs, head,
+tail, several bodies in a ring) and bakes their animations into a normal AnimationPlayer:
+`idle`, `walk`, `run`, `attack` (lunge/bite), `slam` (rear up and smash), `spin`, `hit`, `die`.
+Any enemy AI that plays animations just works. Presets: `rat()`, `crawler()` (pale segmented
+body on human arms, wearing a face), `rat_king(n)` (n rats knotted by the tails).
+
+```gdscript
+var rat := PS1Creature.rat()
+add_child(rat)
+rat.animation_player().play("walk")
+var bite_hitbox_origin := rat.heads()[0]   # nodes named "Head" / "Jaw"
+```
+
+**PS1Collapse** (and the event command *Scene/Collapse*): rocks rain from the ceiling over an
+area, land with dust and stay as rubble, while every node in group `ps1_shake` gets
+`ps1_shake(strength)`. `await PS1Collapse.spawn(self, pos, 8.0, 3.0).finished`.
+
+**PS1Gothic** also builds sewers and rooms: `sewer()` (channel between walkways, barrel vault,
+stone bridges, invisible railings so nobody falls in), `room()` (walls with door gaps and
+lintels), `rock()`, `spindle()`/`limb()` for organic shapes, and `quad_away()`/`quad_toward()`
+to get the winding right without thinking about it.
+
 ## Mist, shockwaves and footwork
 
 ```gdscript

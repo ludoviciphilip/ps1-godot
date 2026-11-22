@@ -255,3 +255,36 @@ static func banner(cloth := Color(0.35, 0.05, 0.06), trim := Color(0.55, 0.42, 0
 			img.set_pixel(x, y, _quant(Color(c.r, c.g, c.b), 12.0))
 			img.set_pixel(x, y, Color(img.get_pixel(x, y), 1.0))
 	return ImageTexture.create_from_image(img)
+
+## Matted fur (rats, wolves): streaky strands in a dark base color.
+static func fur(base := Color(0.25, 0.21, 0.18), seed_ := 61) -> ImageTexture:
+	var img := _img()
+	var n := _noise(seed_, 0.06)
+	var streak := _noise(seed_ + 1, 0.9)
+	for y in 64:
+		for x in 64:
+			var v := 0.5 + 0.5 * n.get_noise_2d(x, y)
+			var st := 0.5 + 0.5 * streak.get_noise_2d(x * 0.25, y * 2.0)
+			var c := base * (0.55 + 0.45 * v + 0.35 * (st - 0.5))
+			if st > 0.82:
+				c = c * 0.55   # clumps
+			img.set_pixel(x, y, _quant(c, 12.0))
+	return ImageTexture.create_from_image(img)
+
+## Pale, sickly skin with veins and blotches (undead, grotesque creatures).
+static func skin(base := Color(0.62, 0.56, 0.5), seed_ := 71) -> ImageTexture:
+	var img := _img()
+	var n := _noise(seed_, 0.08)
+	var veins := _noise(seed_ + 3, 0.18)
+	veins.fractal_type = FastNoiseLite.FRACTAL_RIDGED
+	for y in 64:
+		for x in 64:
+			var v := 0.5 + 0.5 * n.get_noise_2d(x, y)
+			var r := 0.5 + 0.5 * veins.get_noise_2d(x, y)
+			var c := base * (0.75 + 0.35 * v)
+			if r > 0.86:
+				c = c.lerp(Color(0.35, 0.22, 0.3), 0.6)
+			if v < 0.22:
+				c = c.lerp(Color(0.3, 0.32, 0.2), 0.5)   # rot
+			img.set_pixel(x, y, _quant(c, 12.0))
+	return ImageTexture.create_from_image(img)

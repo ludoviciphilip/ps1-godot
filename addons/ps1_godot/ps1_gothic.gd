@@ -75,6 +75,67 @@ func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, n: Vector3) -> vo
 		st.set_uv(_uv(p, n))
 		st.add_vertex(p)
 
+## Quad/triangle wound so its front faces AWAY from `center` (organic shapes, where working out
+## the winding by hand is error-prone).
+func quad_away(center: Vector3, a: Vector3, b: Vector3, c: Vector3, d: Vector3, subdivide := false) -> void:
+	var n := (b - a).cross(d - a)
+	if n.dot((a + b + c + d) * 0.25 - center) < 0.0:
+		quad(b, a, d, c, subdivide)
+	else:
+		quad(a, b, c, d, subdivide)
+
+## Same, facing TOWARD `center` (insides: vaults, tunnels, rooms seen from within).
+func quad_toward(center: Vector3, a: Vector3, b: Vector3, c: Vector3, d: Vector3, subdivide := false) -> void:
+	var n := (b - a).cross(d - a)
+	if n.dot((a + b + c + d) * 0.25 - center) > 0.0:
+		quad(b, a, d, c, subdivide)
+	else:
+		quad(a, b, c, d, subdivide)
+
+func tri_away(center: Vector3, a: Vector3, b: Vector3, c: Vector3) -> void:
+	if (b - a).cross(c - a).dot((a + b + c) / 3.0 - center) < 0.0:
+		tri(a, c, b)
+	else:
+		tri(a, b, c)
+
+## Low-poly spindle (body part) along -Z from z = +length/2 (back) to -length/2 (front):
+## radii at back, middle and front (the ends are rounded off); `squash` flattens it vertically.
+func spindle(center: Vector3, length: float, r_back: float, r_mid: float, r_front: float, sides := 6, squash := 1.0, tip := 0.15) -> PS1Gothic:
+	var zs := [length * 0.5, length * 0.27, 0.0, -length * 0.27, -length * 0.5]
+	var rs := [r_back * 0.62, r_back, r_mid, lerpf(r_mid, r_front, 0.55), r_front]
+	var ring := func(k: int, i: int) -> Vector3:
+		var a := TAU * i / sides + PI / sides
+		return center + Vector3(cos(a) * rs[k], sin(a) * rs[k] * squash, zs[k])
+	for k in zs.size() - 1:
+		for i in sides:
+			var j := (i + 1) % sides
+			var axis := center + Vector3(0, 0, (zs[k] + zs[k + 1]) * 0.5)
+			quad_away(axis, ring.call(k, i), ring.call(k, j), ring.call(k + 1, j), ring.call(k + 1, i))
+	var n := zs.size() - 1
+	var back := center + Vector3(0, 0, length * 0.5 + tip * length * 0.5)
+	var front := center + Vector3(0, 0, -length * 0.5 - tip * length)
+	for i in sides:
+		var j := (i + 1) % sides
+		tri_away(center + Vector3(0, 0, length * 0.4), back, ring.call(0, i), ring.call(0, j))
+		tri_away(center + Vector3(0, 0, -length * 0.4), front, ring.call(n, j), ring.call(n, i))
+	return self
+
+## Tapered limb between two points (legs, arms, tails, horns), `sides`-gon cross-section.
+func limb(a: Vector3, b: Vector3, r_a: float, r_b: float, sides := 5) -> PS1Gothic:
+	var d := (b - a).normalized()
+	var side := d.cross(Vector3.UP if absf(d.y) < 0.95 else Vector3.RIGHT).normalized()
+	var up := side.cross(d).normalized()
+	for i in sides:
+		var a0 := TAU * i / sides; var a1 := TAU * (i + 1) / sides
+		var o0 := side * cos(a0) + up * sin(a0); var o1 := side * cos(a1) + up * sin(a1)
+		quad_away((a + b) * 0.5, a + o0 * r_a, a + o1 * r_a, b + o1 * r_b, b + o0 * r_b)
+	for i in sides:
+		var a0 := TAU * i / sides; var a1 := TAU * (i + 1) / sides
+		var o0 := side * cos(a0) + up * sin(a0); var o1 := side * cos(a1) + up * sin(a1)
+		tri_away((a + b) * 0.5, b + d * r_b, b + o0 * r_b, b + o1 * r_b)
+		tri_away((a + b) * 0.5, a - d * r_a, a + o1 * r_a, a + o0 * r_a)
+	return self
+
 func tri(a: Vector3, b: Vector3, c: Vector3) -> void:
 	var A := xform * a; var B := xform * b; var C := xform * c
 	_tri(_tool(), A, B, C, (B - A).cross(C - A).normalized())
@@ -333,6 +394,121 @@ func brazier(base: Vector3, height := 1.0, radius := 0.45) -> PS1Gothic:
 		quad(b0 + r0[i], b0 + r0[j], b1 + r1[j], b1 + r1[i], false)   # inside
 	var cs := CylinderShape3D.new(); cs.radius = radius * 0.6; cs.height = height
 	_shapes.append([xform * Transform3D(Basis(), base + Vector3.UP * height * 0.5), cs])
+	return self
+
+## Irregular rock / rubble chunk (jittered octahedron-ish blob), deterministic per seed.
+func rock(center: Vector3, size: Vector3, seed_ := 1, collide := false) -> PS1Gothic:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var ring := 6
+	var pts := []
+	for i in ring:
+		var a := TAU * i / ring + rng.randf_range(-0.3, 0.3)
+		pts.append(center + Vector3(cos(a) * size.x * 0.5 * rng.randf_range(0.7, 1.0),
+			rng.randf_range(-0.15, 0.15) * size.y, sin(a) * size.z * 0.5 * rng.randf_range(0.7, 1.0)))
+	var top := center + Vector3(rng.randf_range(-0.15, 0.15) * size.x, size.y * 0.5, rng.randf_range(-0.15, 0.15) * size.z)
+	var bot := center + Vector3(0, -size.y * 0.45, 0)
+	for i in ring:
+		var a: Vector3 = pts[i]; var b: Vector3 = pts[(i + 1) % ring]
+		tri_away(center, top, a, b)
+		tri_away(center, bot, b, a)
+	if collide:
+		var bs := BoxShape3D.new(); bs.size = size * 0.8
+		_shapes.append([xform * Transform3D(Basis(), center), bs])
+	return self
+
+## Sewer tunnel along -Z from `start` (walkway level): a sunken channel (`channel_w` wide,
+## `channel_d` deep) between two walkways, side walls and a barrel vault. `bridges` are
+## distances from the start where a stone slab crosses the channel; elsewhere an invisible
+## railing keeps characters from dropping into it (no jump needed to get out). Put water on
+## top of the channel floor (e.g. a PS1Water at start.y - channel_d + 0.35).
+func sewer(start: Vector3, length: float, width := 8.0, height := 4.5, channel_w := 1.8, channel_d := 1.0,
+		bridges := PackedFloat32Array(), rail_height := 1.4, vault_segments := 6) -> PS1Gothic:
+	var hw := width * 0.5
+	var hc := channel_w * 0.5
+	var z0 := start.z
+	var z1 := start.z - length
+	var zc := (z0 + z1) * 0.5
+	var y := start.y
+	var x := start.x
+	for sx in [-1.0, 1.0]:
+		box(Vector3(x + sx * (hc + (hw - hc) * 0.5), y - 0.25, zc), Vector3(hw - hc, 0.5, length), 0.0, false)
+		# stone curb along the channel
+		box(Vector3(x + sx * (hc + 0.15), y + 0.1, zc), Vector3(0.3, 0.2, length), 0.0, false, false)
+	box(Vector3(x, y - channel_d - 0.25, zc), Vector3(channel_w, 0.5, length), 0.0, false)
+	for sx in [-1.0, 1.0]:
+		quad_toward(Vector3(x, y - channel_d * 0.5, zc), Vector3(x + sx * hc, y - channel_d, z0), Vector3(x + sx * hc, y - channel_d, z1),
+			Vector3(x + sx * hc, y, z1), Vector3(x + sx * hc, y, z0), true)
+	# bridges + railings between them
+	var cuts := [0.0]
+	for bz in bridges:
+		box(Vector3(x, y - 0.15, z0 - bz), Vector3(channel_w + 0.6, 0.3, 1.8), 0.0, true)
+		cuts.append(bz - 1.0)
+		cuts.append(bz + 1.0)
+	cuts.append(length)
+	for k in range(0, cuts.size(), 2):
+		var a: float = cuts[k]
+		var b: float = cuts[k + 1]
+		if b - a < 0.2:
+			continue
+		for sx in [-1.0, 1.0]:
+			var bs := BoxShape3D.new(); bs.size = Vector3(0.2, rail_height, b - a)
+			_shapes.append([xform * Transform3D(Basis(), Vector3(x + sx * (hc + 0.1), y + rail_height * 0.5, z0 - (a + b) * 0.5)), bs])
+	var spring := height - hw * 0.6
+	for sx in [-1.0, 1.0]:
+		box(Vector3(x + sx * (hw + 0.3), y + spring * 0.5, zc), Vector3(0.6, spring, length))
+	var prev := Vector3(x - hw, y + spring, 0)
+	for i in range(1, vault_segments + 1):
+		var a := PI - PI * i / vault_segments
+		var p := Vector3(x + cos(a) * hw, y + spring + sin(a) * hw * 0.6, 0)
+		quad_toward(Vector3(x, y + spring - 1.0, zc), Vector3(prev.x, prev.y, z0), Vector3(p.x, p.y, z0), Vector3(p.x, p.y, z1), Vector3(prev.x, prev.y, z1), true)
+		prev = p
+	return self
+
+## Closed room seen from inside: floor, flat ceiling and walls (0.6 m thick) with door gaps.
+## `center` is the floor center; `size` = (width x, height, depth z). `doors` items are
+## Vector3(side, offset, width): side 0 = north (-Z), 1 = east, 2 = south, 3 = west; offset
+## along the wall from its middle. Doors are `door_h` tall (lintel above).
+func room(center: Vector3, size: Vector3, doors: Array = [], door_h := 4.5, ceiling := true) -> PS1Gothic:
+	var w := size.x; var h := size.y; var d := size.z
+	box(center + Vector3(0, -0.25, 0), Vector3(w, 0.5, d), 0.0, false)
+	if ceiling:
+		box(center + Vector3(0, h + 0.25, 0), Vector3(w, 0.5, d), 0.0, true)
+	for side in 4:
+		var along_x := side % 2 == 0
+		var length := w if along_x else d
+		var wall_c: Vector3
+		match side:
+			0: wall_c = center + Vector3(0, 0, -d * 0.5 - 0.3)
+			1: wall_c = center + Vector3(w * 0.5 + 0.3, 0, 0)
+			2: wall_c = center + Vector3(0, 0, d * 0.5 + 0.3)
+			3: wall_c = center + Vector3(-w * 0.5 - 0.3, 0, 0)
+		var gaps := []
+		for dr in doors:
+			if int(dr.x) == side:
+				gaps.append([dr.y - dr.z * 0.5, dr.y + dr.z * 0.5])
+		gaps.sort_custom(func(a, b): return a[0] < b[0])
+		var t := -length * 0.5 - (0.6 if along_x else 0.0)
+		var end := length * 0.5 + (0.6 if along_x else 0.0)
+		var spans := []
+		for g in gaps:
+			spans.append([t, g[0]])
+			t = g[1]
+			# lintel over the door
+			var mid: float = (g[0] + g[1]) * 0.5
+			var lw: float = g[1] - g[0]
+			var lc := wall_c + (Vector3(mid, door_h + (h - door_h) * 0.5, 0) if along_x else Vector3(0, door_h + (h - door_h) * 0.5, mid))
+			if h - door_h > 0.05:
+				box(lc, Vector3(lw, h - door_h, 0.6) if along_x else Vector3(0.6, h - door_h, lw))
+		spans.append([t, end])
+		for sp in spans:
+			var a: float = sp[0]
+			var b: float = sp[1]
+			if b - a < 0.05:
+				continue
+			var m := (a + b) * 0.5
+			var c := wall_c + (Vector3(m, h * 0.5, 0) if along_x else Vector3(0, h * 0.5, m))
+			box(c, Vector3(b - a, h, 0.6) if along_x else Vector3(0.6, h, b - a))
 	return self
 
 ## Ruined tower stump: like tower() but the top is broken into uneven chunks.

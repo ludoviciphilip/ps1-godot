@@ -42,7 +42,10 @@ static func own_mesh(mi: MeshInstance3D) -> ArrayMesh:
 	for s in src.get_surface_count():
 		var prim := (src as ArrayMesh).surface_get_primitive_type(s) if src is ArrayMesh else Mesh.PRIMITIVE_TRIANGLES
 		out.add_surface_from_arrays(prim, src.surface_get_arrays(s))
-		out.surface_set_material(s, src.surface_get_material(s))
+		# per-surface overrides on the MeshInstance3D (PS1Gothic.build, multi-material meshes)
+		# would be dropped when the mesh is swapped: carry them into the new mesh
+		var ov := mi.get_surface_override_material(s) if s < mi.get_surface_override_material_count() else null
+		out.surface_set_material(s, ov if ov else src.surface_get_material(s))
 		if src is ArrayMesh:
 			out.surface_set_name(s, (src as ArrayMesh).surface_get_name(s))
 	out.set_meta("ps1_painted_owner", mi.get_instance_id())

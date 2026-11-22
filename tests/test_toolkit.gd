@@ -32,6 +32,8 @@ func _ready() -> void:
 	await _test_shockwave()
 	_test_gothic()
 	_test_backdrop()
+	_test_creature()
+	await _test_collapse()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -684,6 +686,12 @@ func _test_gothic() -> void:
 	var mi := body.get_child(0) as MeshInstance3D
 	check(mi.get_surface_override_material(0) != mi.get_surface_override_material(1), "gothic: materials per surface")
 	body.free()
+	# vertex paint keeps per-surface materials of built pieces
+	var painted := g.build({stone = PS1.material(PS1Textures.ashlar()), glow = PS1.material(PS1Textures.flat(Color.ORANGE))}, false) as MeshInstance3D
+	add_child(painted)
+	PS1VertexPaint.fill(painted, Color(0.5, 0.5, 0.5))
+	check(painted.get_active_material(0) != null and painted.get_active_material(1) != null, "gothic: vertex paint keeps surface materials")
+	painted.free()
 	var tree := PS1Gothic.new()
 	tree.dead_tree(Vector3.ZERO, 5.0, 3)
 	check(tree.mesh().get_aabb().end.y > 3.0, "gothic: dead tree has height")
@@ -708,3 +716,36 @@ func _test_backdrop() -> void:
 	var sea := bd.add_mist_sea()
 	check(sea.get_surface_override_material(0) != null, "backdrop: mist sea")
 	bd.free()
+
+func _test_creature() -> void:
+	for c in [PS1Creature.rat(), PS1Creature.crawler(), PS1Creature.rat_king(5)]:
+		add_child(c)
+		var ap: AnimationPlayer = c.animation_player()
+		check(ap != null, "creature: has an AnimationPlayer")
+		for a in ["idle", "walk", "run", "attack", "slam", "spin", "hit", "die"]:
+			check(ap.has_animation(a), "creature: animation %s" % a)
+		check(c.heads().size() == c.cluster, "creature: one head per body")
+		ap.play("attack")
+		ap.seek(0.45, true)
+		var head: Node3D = c.heads()[0]
+		check(head.global_position.z < -0.2, "creature: head is in front (faces -Z)")
+		c.free()
+	var g := PS1Gothic.new()
+	g.sewer(Vector3.ZERO, 20.0, 8.0, 4.5, 1.8, 1.0, PackedFloat32Array([10.0]))
+	g.room(Vector3(0, 0, -26), Vector3(10, 6, 12), [Vector3(2, 0, 8), Vector3(0, 0, 4)])
+	var body := g.build({stone = PS1.material(PS1Textures.ashlar())})
+	check(body.find_children("*", "CollisionShape3D", false, false).size() > 10, "gothic: sewer/room colliders")
+	body.free()
+
+func _test_collapse() -> void:
+	var c := PS1Collapse.new()
+	c.duration = 0.4
+	c.rocks = 6
+	c.ceiling = 1.0
+	var shakes := [0]
+	c.rumble.connect(func(_s): shakes[0] += 1)
+	add_child(c)
+	await get_tree().create_timer(2.5).timeout
+	check(shakes[0] > 0, "collapse: shakes")
+	check(c.get_child_count() == 6, "collapse: rubble stays")
+	c.free()
