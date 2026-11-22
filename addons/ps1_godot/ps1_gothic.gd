@@ -552,6 +552,92 @@ func ruined_tower(base: Vector3, radius: float, height: float, seed_ := 1, sides
 			-atan2(b.z - a.z, b.x - a.x), false, false)
 	return self
 
+## Surface of revolution around the vertical axis through `base`: `profile` points are
+## (radius, height), bottom to top; faces outward (double_sided adds the inside, for bells,
+## cups and domes seen from below).
+func lathe(base: Vector3, profile: PackedVector2Array, sides := 8, double_sided := false) -> PS1Gothic:
+	for k in profile.size() - 1:
+		var p0 := profile[k]; var p1 := profile[k + 1]
+		for i in sides:
+			var a0 := TAU * i / sides; var a1 := TAU * (i + 1) / sides
+			var q := [base + Vector3(cos(a0) * p0.x, p0.y, sin(a0) * p0.x), base + Vector3(cos(a1) * p0.x, p0.y, sin(a1) * p0.x),
+				base + Vector3(cos(a1) * p1.x, p1.y, sin(a1) * p1.x), base + Vector3(cos(a0) * p1.x, p1.y, sin(a0) * p1.x)]
+			var axis := base + Vector3(0, (p0.y + p1.y) * 0.5, 0)
+			if (q[0] - q[3]).length() < 0.0001 and (q[1] - q[2]).length() < 0.0001:
+				continue
+			quad_away(axis, q[0], q[1], q[2], q[3])
+			if double_sided:
+				quad_toward(axis, q[0], q[1], q[2], q[3])
+	return self
+
+## Church bell hanging from `top` (the crown), mouth down: flared bronze shell (open, seen from
+## below too), crown loop and a clapper inside. ~`height` tall, mouth `radius`.
+func bell(top: Vector3, radius := 0.6, height := 1.1, sides := 10) -> PS1Gothic:
+	var r := radius; var h := height
+	var prof := PackedVector2Array([Vector2(r, 0.0), Vector2(r * 0.9, h * 0.1), Vector2(r * 0.66, h * 0.35),
+		Vector2(r * 0.58, h * 0.7), Vector2(r * 0.5, h * 0.9), Vector2(r * 0.28, h), Vector2(0.0, h * 1.02)])
+	var base := top - Vector3(0, h, 0)
+	lathe(base, prof, sides, true)
+	# lip ring
+	lathe(base, PackedVector2Array([Vector2(r * 1.04, -0.03), Vector2(r * 1.04, h * 0.05), Vector2(r * 0.92, h * 0.1)]), sides)
+	# crown (yoke) and clapper
+	box(top + Vector3(0, 0.08, 0), Vector3(r * 0.5, 0.16, 0.12), 0.0, true, false)
+	limb(top - Vector3(0, h * 0.1, 0), base + Vector3(0, h * 0.05, 0), 0.035, 0.03, 4)
+	spindle(base + Vector3(0, h * 0.05, 0), r * 0.32, r * 0.14, r * 0.17, r * 0.12, 6, 1.0, 0.1)
+	return self
+
+## Belfry: four corner piers on a plinth with a pyramid roof; the bell hangs from a beam in the
+## middle (`hang` = where; put a bell() there, or a separate node to swing it). Footprint `size`.
+func belfry(base: Vector3, size := 3.2, height := 4.2, rot_y := 0.0) -> Vector3:
+	var b := Basis(Vector3.UP, rot_y)
+	var h := size * 0.5 - 0.25
+	box(base + Vector3(0, 0.15, 0), Vector3(size, 0.3, size), rot_y)
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			box(base + b * Vector3(sx * h, 0.3 + (height - 0.3) * 0.5, sz * h), Vector3(0.45, height - 0.3, 0.45), rot_y)
+	box(base + Vector3(0, height + 0.2, 0), Vector3(size + 0.3, 0.4, size + 0.3), rot_y, true, false)
+	box(base + b * Vector3(0, height - 0.15, 0), Vector3(size - 0.4, 0.22, 0.25), rot_y, true, false)   # beam
+	spire(base + Vector3(0, height + 0.4, 0), (size + 0.4) * 0.72, size * 0.9, 4, PI / 4.0 + rot_y)
+	return base + Vector3(0, height - 0.26, 0)
+
+## Wall walk (adarve) on top of a curtain wall: walkway `width` wide running from `start`
+## along -Z (turn it with `xform`), `length` long, walking surface at start.y. The wall body
+## drops `drop` meters below. Parapets on both sides (`parapet` tall, blocks the player: no
+## falling off) with merlons on the OUTER side (+X when `outer_right`, else -X). `gaps` =
+## [Vector3(side, z_from, z_to)] openings in a parapet (side -1 = -X, 1 = +X), z measured
+## from start along the walk (0..length), for stairs, balconies and doors.
+func rampart(start: Vector3, length: float, width := 4.0, drop := 8.0, parapet := 1.1, outer_right := true, gaps: Array = []) -> PS1Gothic:
+	var hw := width * 0.5
+	var z0 := start.z; var z1 := start.z - length
+	var zc := (z0 + z1) * 0.5
+	# walkway slab and the wall body under it
+	box(Vector3(start.x, start.y - 0.25, zc), Vector3(width + 1.2, 0.5, length))
+	box(Vector3(start.x, start.y - 0.5 - (drop - 0.5) * 0.5, zc), Vector3(width + 1.2, drop - 0.5, length), 0.0, false, false)
+	for side in [-1.0, 1.0]:
+		var x: float = start.x + side * (hw + 0.3)
+		var cuts := []
+		for g in gaps:
+			if signf(float(g.x)) == side:
+				cuts.append([g.y, g.z])
+		cuts.sort_custom(func(a, b): return a[0] < b[0])
+		var t := 0.0
+		var spans := []
+		for c in cuts:
+			spans.append([t, c[0]]); t = c[1]
+		spans.append([t, length])
+		for sp in spans:
+			var a: float = sp[0]; var b2: float = sp[1]
+			if b2 - a < 0.1:
+				continue
+			var m := start.z - (a + b2) * 0.5
+			box(Vector3(x, start.y + parapet * 0.5, m), Vector3(0.6, parapet, b2 - a))
+			var outer: bool = (side > 0.0) == outer_right
+			if outer:
+				var xf_old := xform
+				crenels(Vector3(x, start.y + parapet, m), b2 - a, 0.75, 0.5, 0.75, 0.6, PI / 2.0)
+				xform = xf_old
+	return self
+
 # ------------------------------------------------------------------ props
 
 ## Gothic pier: plinth, octagonal shaft, capital. `broken` > 0 cuts it at that fraction with a

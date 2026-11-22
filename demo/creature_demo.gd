@@ -1,4 +1,4 @@
-## PS1Creature showcase: giant rat, crawler and rat king side by side.
+## PS1Creature / PS1Biped showcase: giant rat, crawler, rat king, gargoyle and hooded archer.
 ## Run: godot --path . res://demo/creature_demo.tscn [-- --anim=walk --t=0.2 --shot=PATH]
 extends Node3D
 
@@ -30,21 +30,23 @@ func _ready() -> void:
 		if a.begins_with("--shot="): shot = a.trim_prefix("--shot=")
 		if a.begins_with("--yaw="): yaw = float(a.trim_prefix("--yaw="))
 		if a.begins_with("--only="): only = int(a.trim_prefix("--only="))
-	var list := [PS1Creature.rat(), PS1Creature.crawler(), PS1Creature.rat_king()]
+	var list := [PS1Creature.rat(), PS1Creature.crawler(), PS1Creature.rat_king(), PS1Creature.gargoyle(), PS1Biped.archer()]
 	for i in list.size():
-		var c: PS1Creature = list[i]
+		var c: Node3D = list[i]
 		if only >= 0 and i != only:
 			continue
-		c.position = Vector3(-3.2 + i * 3.4, 0, 0) if only < 0 else Vector3.ZERO
+		c.position = Vector3(-6.4 + i * 3.2, 0, 0) if only < 0 else Vector3.ZERO
 		c.rotation_degrees.y = yaw
 		add_child(c)
-		var ap := c.animation_player()
+		var ap: AnimationPlayer = c.animation_player()
+		if not ap.has_animation(anim):
+			continue
 		ap.play(anim)
 		ap.seek(t, true)
 		ap.pause()
 	var cam := Camera3D.new()
-	cam.position = Vector3(0.3, 2.2, 5.6) if only < 0 else Vector3(0, 1.4, 3.2 + only * 0.6)
-	cam.rotation_degrees.x = -18
+	cam.position = Vector3(0.0, 2.6, 8.5) if only < 0 else (Vector3(0, 1.4, 3.2 + only * 0.6) if only < 3 else Vector3(0, 1.0, 3.6))
+	cam.rotation_degrees.x = -18 if only < 3 else -6
 	cam.fov = 60
 	add_child(cam)
 	if shot != "":

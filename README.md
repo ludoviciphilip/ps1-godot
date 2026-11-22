@@ -283,7 +283,7 @@ Demo: `demo/gothic_demo.tscn`.
 tail, several bodies in a ring) and bakes their animations into a normal AnimationPlayer:
 `idle`, `walk`, `run`, `attack` (lunge/bite), `slam` (rear up and smash), `spin`, `hit`, `die`.
 Any enemy AI that plays animations just works. Presets: `rat()`, `crawler()` (pale segmented
-body on human arms, wearing a face), `rat_king(n)` (n rats knotted by the tails).
+body on human arms, wearing a face), `rat_king(n)` (n rats knotted by the tails), `gargoyle()`.
 
 ```gdscript
 var rat := PS1Creature.rat()
@@ -300,6 +300,38 @@ area, land with dust and stay as rubble, while every node in group `ps1_shake` g
 stone bridges, invisible railings so nobody falls in), `room()` (walls with door gaps and
 lintels), `rock()`, `spindle()`/`limb()` for organic shapes, and `quad_away()`/`quad_toward()`
 to get the winding right without thinking about it.
+
+## Gargoyles, archers and puzzles
+
+**PS1Creature** got wings and horns (`wing_span`, `horns`) and three more animations: `perch`
+(a statue's pose), `wake` (breaking free of it) and `pounce` (a long leap with the wings open).
+Preset: `gargoyle()`.
+
+**PS1Biped** is the same idea for humanoids: rigid low-poly parts on a node rig, animations
+baked from keyed poses (a pose says "point the forearm *that way*", in model space, so you
+don't fight Euler angles). Preset `archer()`: hood, cloak, quiver and a longbow whose string is
+pulled to the cheek; `shoot` emits `released` at the release frame. Animations: `idle`, `walk`,
+`walk_back`, `run`, `shoot`, `bash`, `hit`, `die`; add your own with `add_animation()`.
+
+**PS1Projectile**: arrows and bolts that fly with gravity, point along the flight and stick in
+walls. `PS1Projectile.aim()` solves the arc to reach a target. Damage stays in your game: put
+your hitbox on it and call `stop()` when it hits someone.
+
+```gdscript
+var a := PS1Projectile.arrow()
+get_tree().current_scene.add_child(a)
+a.launch(hand.global_position, player.global_position + Vector3(0, 1.1, 0), 28.0)
+```
+
+**PS1Sequence** is an ordered-sequence puzzle (bells, levers, braziers): `step("id")` answers
+CORRECT / SOLVED / WRONG / DONE, keeps the progress in an event variable (saved with the game)
+and sets `solved_variable` when done, so doors can open on it. From events: *Puzzle/Sequence
+Step*, with one command list per answer. *Scene/Animate Node* swings a bell, shakes, turns a
+statue or slides a wall (`PS1CmdAnimate.animate()` from code).
+
+**PS1Gothic** new pieces: `rampart()` (wall walk on top of a curtain wall, parapets that keep
+you from falling, merlons on the outer side, gaps for stairs and balconies), `belfry()`,
+`bell()` and `lathe()` (any surface of revolution).
 
 ## Mist, shockwaves and footwork
 

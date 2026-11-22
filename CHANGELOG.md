@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+- **PS1Biped**: procedural low-poly humanoid with a baked AnimationPlayer; poses are keyed as
+  limb directions in model space. Preset `archer()` (bow with a live string, quiver, nocked
+  arrow; `released` signal), `ghoul()`.
+- **PS1Projectile**: arrows/bolts with gravity that stick in walls; `aim()` solves the arc.
+- **PS1Sequence** + event command *Puzzle/Sequence Step*: ordered-sequence puzzles with saved
+  progress and a solved variable.
+- Event command *Scene/Animate Node* (`PS1CmdAnimate`): swing, shake, rotate by, move by.
+- PS1Creature: `wing_span`, `horns`, animations `perch`, `wake`, `pounce`; preset `gargoyle()`.
+- PS1Gothic: `rampart()`, `belfry()`, `bell()`, `lathe()`.
+
 ## 1.3.4
 - Fix: PS1Gothic `room()` doorways had no floor under the wall thickness: two rooms joined at
   a door left a gap the player fell into. Doors now get a threshold slab.

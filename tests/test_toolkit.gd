@@ -35,6 +35,10 @@ func _ready() -> void:
 	_test_creature()
 	await _test_collapse()
 	await _test_event_freed()
+	_test_sequence()
+	await _test_projectile()
+	_test_biped()
+	await _test_animate()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -719,12 +723,13 @@ func _test_backdrop() -> void:
 	bd.free()
 
 func _test_creature() -> void:
-	for c in [PS1Creature.rat(), PS1Creature.crawler(), PS1Creature.rat_king(5)]:
+	for c in [PS1Creature.rat(), PS1Creature.crawler(), PS1Creature.rat_king(5), PS1Creature.gargoyle()]:
 		add_child(c)
 		var ap: AnimationPlayer = c.animation_player()
 		check(ap != null, "creature: has an AnimationPlayer")
-		for a in ["idle", "walk", "run", "attack", "slam", "spin", "hit", "die"]:
+		for a in ["idle", "walk", "run", "attack", "slam", "spin", "hit", "die", "pounce", "perch", "wake"]:
 			check(ap.has_animation(a), "creature: animation %s" % a)
+		check((c.find_child("WingL", true, false) != null) == (c.wing_span > 0.0), "creature: wings only when wing_span > 0")
 		check(c.heads().size() == c.cluster, "creature: one head per body")
 		ap.play("attack")
 		ap.seek(0.45, true)
@@ -772,3 +777,89 @@ func _test_event_freed() -> void:
 	var b := g.build({stone = PS1.material(PS1Textures.ashlar())})
 	check(b.find_children("*", "CollisionShape3D", false, false).size() == 3, "gothic: graveyard props collide")
 	b.free()
+
+func _test_sequence() -> void:
+	var seq := PS1Sequence.new()
+	seq.name = "TestBells"
+	seq.order = PackedStringArray(["moon", "valley", "dead"])
+	add_child(seq)
+	var fails := [0]
+	var solved := [0]
+	seq.failed.connect(func(_id): fails[0] += 1)
+	seq.solved.connect(func(): solved[0] += 1)
+	check(seq.expected() == "moon", "sequence: starts at the first id")
+	check(seq.step("valley") == PS1Sequence.Result.WRONG, "sequence: wrong first step")
+	check(seq.step("moon") == PS1Sequence.Result.CORRECT and seq.progress() == 1, "sequence: right step advances")
+	check(seq.step("dead") == PS1Sequence.Result.WRONG and seq.progress() == 0, "sequence: wrong step resets")
+	check(seq.step("moon") == PS1Sequence.Result.CORRECT and seq.step("moon") == PS1Sequence.Result.CORRECT and seq.progress() == 1,
+		"sequence: repeating the first step restarts at 1")
+	seq.step("valley")
+	check(seq.step("dead") == PS1Sequence.Result.SOLVED and seq.is_solved(), "sequence: solved")
+	check(PS1Events.get_var("test_bells_solved") == 1, "sequence: solved variable set")
+	check(seq.step("moon") == PS1Sequence.Result.DONE, "sequence: done after solved")
+	check(fails[0] == 3 and solved[0] == 1, "sequence: signals (%d fails, %d solved)" % [fails[0], solved[0]])
+	seq.free()
+
+func _test_projectile() -> void:
+	var v := PS1Projectile.aim(Vector3.ZERO, Vector3(0, 0, -20), 25.0, 6.0)
+	check(absf(v.length() - 25.0) < 0.01 and v.y > 0.0 and v.z < 0.0, "projectile: aims up a bit to reach")
+	var wall := StaticBody3D.new()
+	var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(4, 4, 0.5)
+	cs.shape = bs; wall.add_child(cs)
+	wall.position = Vector3(0, 1, -8)
+	add_child(wall)
+	var a := PS1Projectile.arrow()
+	a.stick_time = 0.3
+	add_child(a)
+	var hits := [0]
+	a.hit_world.connect(func(_p, _n, c):
+		if c == wall:
+			hits[0] += 1)
+	a.launch(Vector3(0, 1, 0), Vector3(0, 1, -8), 30.0)
+	await get_tree().create_timer(0.6).timeout
+	check(hits[0] == 1, "projectile: hits the wall")
+	await get_tree().create_timer(0.4).timeout
+	check(not is_instance_valid(a), "projectile: gone after stick_time")
+	wall.free()
+
+func _test_biped() -> void:
+	var b := PS1Biped.archer()
+	add_child(b)
+	var ap := b.animation_player()
+	for n in ["idle", "walk", "walk_back", "run", "shoot", "bash", "hit", "die"]:
+		check(ap.has_animation(n), "biped: animation %s" % n)
+	var released := [0]
+	b.released.connect(func(): released[0] += 1)
+	ap.play("shoot")
+	ap.seek(1.1, true)
+	check(b.string_pull > 0.9, "biped: string drawn at full draw (%.2f)" % b.string_pull)
+	var hl := b.part("HandL")
+	check(hl.global_position.z < -0.35 and hl.global_position.y > 1.2, "biped: bow arm points forward at full draw")
+	ap.seek(1.3, true)
+	check(released[0] == 1 and b.string_pull < 0.1, "biped: released once")
+	ap.play("idle")
+	ap.seek(0.5, true)
+	var head := b.part("Head")
+	check(head.global_position.y > 1.35, "biped: head up high (%.2f)" % head.global_position.y)
+	b.free()
+	var g := PS1Gothic.new()
+	g.bell(Vector3(0, 3, 0))
+	g.rampart(Vector3.ZERO, 20.0, 4.0, 6.0, 1.1, true, [Vector3(1, 5, 8)])
+	var hang := g.belfry(Vector3(10, 0, 0))
+	check(hang.y > 3.0, "gothic: belfry gives the hanging point")
+	var body := g.build({stone = PS1.material(PS1Textures.ashlar())})
+	check(body.find_children("*", "CollisionShape3D", false, false).size() >= 8, "gothic: rampart/belfry colliders")
+	body.free()
+
+func _test_animate() -> void:
+	var n := Node3D.new()
+	add_child(n)
+	PS1CmdAnimate.animate(n, PS1CmdAnimate.Mode.SWING, Vector3(20, 0, 0), 0.6, 2.0)
+	await get_tree().create_timer(0.12).timeout
+	check(absf(n.rotation.x) > 0.05, "animate: swings")
+	await get_tree().create_timer(0.7).timeout
+	check(n.rotation.is_zero_approx(), "animate: back to rest")
+	var tw := PS1CmdAnimate.animate(n, PS1CmdAnimate.Mode.MOVE_BY, Vector3(0, 2, 0), 0.2)
+	await tw.finished
+	check(absf(n.position.y - 2.0) < 0.01, "animate: move_by")
+	n.free()
