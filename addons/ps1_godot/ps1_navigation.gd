@@ -13,7 +13,7 @@ class_name PS1Navigation
 extends RefCounted
 
 ## Agent size used for the bake (meters).
-static var agent_radius := 0.25   # small: 1,2 m arches must stay open (bodies slide on walls anyway)
+static var agent_radius := 0.32   # small: 1,2 m arches must stay open; steer() keeps the body's width off the jambs
 static var agent_height := 1.8
 static var max_climb := 0.38
 static var max_slope := 42.0
@@ -83,13 +83,39 @@ static func steer(body: Node3D, target: Vector3, eye_height := 0.8) -> Vector3:
 		st["goal"] = target
 		var end_ok := not path.is_empty() and Vector2(path[-1].x - target.x, path[-1].z - target.z).length() < 1.5 and absf(path[-1].y - target.y) < 1.5
 		st["reach"] = end_ok
-	# next waypoint not yet reached
+	# aim at the farthest of the next waypoints the body can walk to in a straight line (its
+	# width included): cuts open corners, but never aims through a door jamb
 	var dir := flat.normalized()
-	for p in path:
-		var v := Vector3(p.x - from.x, 0, p.z - from.z)
-		if v.length() > 0.6:
-			dir = v.normalized()
+	var first := -1
+	for i in path.size():
+		if Vector2(path[i].x - from.x, path[i].z - from.z).length() > 0.35:
+			first = i
 			break
+	if first >= 0:
+		var pick := first
+		for i in range(first + 1, mini(first + 4, path.size())):
+			if _clear(body, from + Vector3.UP * 0.5, Vector3(path[i].x, from.y + 0.5, path[i].z)):
+				pick = i
+			else:
+				break
+		dir = Vector3(path[pick].x - from.x, 0, path[pick].z - from.z).normalized()
+	# pressed against a wall (stuck): drop the part of the direction that goes into it, so the body
+	# slides along the wall toward the opening instead of pushing in place
+	if st.get("stuck", false) and body is CharacterBody3D:
+		var cb := body as CharacterBody3D
+		for k in cb.get_slide_collision_count():
+			var n := cb.get_slide_collision(k).get_normal()
+			n.y = 0.0
+			if n.length() < 0.5:
+				continue
+			n = n.normalized()
+			var into := dir.dot(n)
+			if into < 0.0:
+				dir -= n * into
+				if dir.length() < 0.2:   # pushing straight in: pick the side the target is on
+					var t := Vector3(-n.z, 0, n.x)
+					dir = t if t.dot(flat) >= 0.0 else -t
+				dir = (dir.normalized() + n * 0.25).normalized()
 	body.set_meta("_ps1_nav", st)
 	return dir
 

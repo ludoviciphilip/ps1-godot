@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.2
+- PS1Navigation: bodies no longer get stuck on door jambs. `agent_radius` 0.25 -> 0.32 (paths
+  keep off the walls; 1.2 m arches still connect), `steer()` aims at the farthest waypoint the
+  body fits through (width-checked rays) instead of the first one, and a stuck body slides along
+  the wall it is pressing instead of pushing in place. Crypt A/B: enemies stuck while chasing
+  11/33 -> 0/33 trials.
+
 ## 1.5.1
 - PS1InventoryMenu: `required_slots` (slots that can be swapped but never left empty, e.g. the
   only weapon).
