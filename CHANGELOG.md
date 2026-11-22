@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.2
+- PS1Gothic `sewer()`: iron grates close both ends of the channel (`end_grates`, on by default,
+  `grate_surface` for their material). Before, you could walk from the connected rooms straight
+  into the trench and never get out.
+
 ## 1.3.1
 - Fix: an event freed while running (a command changed the scene, e.g. a cave-in that sends the
   player to another area) left `PS1Events.running` stuck at 1, so games that block the pause menu

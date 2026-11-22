@@ -423,7 +423,10 @@ func rock(center: Vector3, size: Vector3, seed_ := 1, collide := false) -> PS1Go
 ## railing keeps characters from dropping into it (no jump needed to get out). Put water on
 ## top of the channel floor (e.g. a PS1Water at start.y - channel_d + 0.35).
 func sewer(start: Vector3, length: float, width := 8.0, height := 4.5, channel_w := 1.8, channel_d := 1.0,
-		bridges := PackedFloat32Array(), rail_height := 1.4, vault_segments := 6) -> PS1Gothic:
+		bridges := PackedFloat32Array(), rail_height := 1.4, vault_segments := 6, end_grates := true,
+		grate_surface := "") -> PS1Gothic:
+	if grate_surface == "":
+		grate_surface = _cur
 	var hw := width * 0.5
 	var hc := channel_w * 0.5
 	var z0 := start.z
@@ -454,6 +457,19 @@ func sewer(start: Vector3, length: float, width := 8.0, height := 4.5, channel_w
 		for sx in [-1.0, 1.0]:
 			var bs := BoxShape3D.new(); bs.size = Vector3(0.2, rail_height, b - a)
 			_shapes.append([xform * Transform3D(Basis(), Vector3(x + sx * (hc + 0.1), y + rail_height * 0.5, z0 - (a + b) * 0.5)), bs])
+	# both ends: an iron grate across the channel (the water runs under it) closes the trench,
+	# so nobody walks in from the rooms the tunnel connects
+	if end_grates:
+		for zz in [z0 - 0.15, z1 + 0.15]:
+			var gs := BoxShape3D.new(); gs.size = Vector3(channel_w + 0.4, rail_height + channel_d, 0.3)
+			_shapes.append([xform * Transform3D(Basis(), Vector3(x, y - channel_d + (rail_height + channel_d) * 0.5, zz)), gs])
+			var old := _cur
+			surface(grate_surface)
+			box(Vector3(x, y + 0.45, zz), Vector3(channel_w + 0.3, 0.12, 0.12), 0.0, true, false)
+			for k in 7:
+				var bx := x - channel_w * 0.5 + channel_w * (k + 0.5) / 7.0
+				box(Vector3(bx, y - channel_d * 0.5 + 0.2, zz), Vector3(0.07, channel_d + 0.5, 0.07), 0.0, true, false)
+			surface(old)
 	var spring := height - hw * 0.6
 	for sx in [-1.0, 1.0]:
 		box(Vector3(x + sx * (hw + 0.3), y + spring * 0.5, zc), Vector3(0.6, spring, length))
