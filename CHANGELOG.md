@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0
+- **PS1Step** (new): step climbing for any CharacterBody3D. `climb(body, visual)` before
+  `move_and_slide()` lifts the body onto a low ledge; `smooth(body, visual, dt)` after it lets
+  the model glide up instead of popping (climbing used to look like a teleport). Enemies can
+  use it too, so they follow the player up a dais.
+- PS1Navigation: the clear-way test sweeps a sphere as wide as the body (two thin rays missed
+  pillars and wide bodies grazed plinths). Wide bodies (radius > agent + 0.12) path on a second
+  navmesh baked at `wide_radius` (0.72), falling back to the normal mesh where it is too tight.
+  New `body_radius(body)`. Flooded-hall A/B (pillars with plinths): stuck 7/16 -> 0/16.
+
 ## 1.6.2
 - `dais()`: default `rise` 0.34 (a 1 m platform gets 3 tiers, not 4).
 

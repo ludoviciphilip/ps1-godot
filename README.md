@@ -358,7 +358,14 @@ var dir := PS1Navigation.steer(self, player.global_position)   # every frame, in
 PS1Navigation.can_see(self, eyes, target, 1)       # line of sight against the level
 ```
 
-Tune the static `agent_radius` (default 0.25 so 1.2 m arches stay open), `agent_height`,
+Wide bodies (bloated, big beasts) get their own wider navmesh automatically (`wide_radius`), so
+they don't graze pillars; the clear-way test sweeps the body's real width (`body_radius()`).
+
+**Steps.** `PS1Step.climb(body, visual)` before `move_and_slide()` and
+`PS1Step.smooth(body, visual, dt)` after it: the body climbs low ledges (up to
+`PS1Step.max_height`) and the model glides up instead of popping.
+
+Tune the static `agent_radius` (default 0.32 so 1.2 m arches stay open), `agent_height`,
 `max_climb`, `max_slope` and `cell` before baking; `PS1Navigation.enabled = false` turns it off
 for A/B tests. `rebake(region)` refreshes it after doors open or walls fall.
 

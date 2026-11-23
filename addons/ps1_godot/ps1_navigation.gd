@@ -20,6 +20,12 @@ static var max_slope := 42.0
 static var cell := 0.125
 ## Off = steer() always walks straight (A/B tests).
 static var enabled := true
+## Wide bodies (radius > agent_radius + 0.12: bloated, big beasts) path on a second navmesh baked
+## with this radius, so their route keeps their own width off pillars and plinths. Where it is
+## too tight for them (narrow doors), they fall back to the normal mesh. 0 = off.
+static var wide_radius := 0.72
+static var _wide_map := RID()
+static var _wide_region: NavigationRegion3D
 
 static func bake(root: Node3D, collision_mask := 1) -> NavigationRegion3D:
 	var nm := NavigationMesh.new()
@@ -45,7 +51,28 @@ static func bake(root: Node3D, collision_mask := 1) -> NavigationRegion3D:
 	NavigationServer3D.parse_source_geometry_data(nm, src, root)
 	NavigationServer3D.bake_from_source_geometry_data(nm, src)
 	region.navigation_mesh = nm
+	if wide_radius > 0.0 and root.is_inside_tree():
+		if not _wide_map.is_valid():
+			_wide_map = NavigationServer3D.map_create()
+		NavigationServer3D.map_set_cell_size(_wide_map, cell)
+		NavigationServer3D.map_set_cell_height(_wide_map, cell * 0.5)
+		NavigationServer3D.map_set_active(_wide_map, true)
+		var wm := nm.duplicate() as NavigationMesh
+		wm.agent_radius = wide_radius
+		NavigationServer3D.bake_from_source_geometry_data(wm, src)
+		if is_instance_valid(_wide_region):
+			_wide_region.queue_free()
+		_wide_region = NavigationRegion3D.new()
+		_wide_region.name = "PS1NavigationWide"
+		root.add_child(_wide_region)
+		_wide_region.set_navigation_map(_wide_map)
+		_wide_region.navigation_mesh = wm
 	return region
+
+static func _map_for(body: Node3D) -> RID:
+	if _wide_map.is_valid() and is_instance_valid(_wide_region) and body_radius(body) > agent_radius + 0.12:
+		return _wide_map
+	return body.get_world_3d().navigation_map
 
 ## Polygons in the baked mesh (0 = nothing walkable was found).
 static func polygon_count(region: NavigationRegion3D) -> int:
@@ -75,11 +102,18 @@ static func steer(body: Node3D, target: Vector3, eye_height := 0.8) -> Vector3:
 		return flat.normalized()
 	var path: PackedVector3Array = st.get("path", PackedVector3Array())
 	if path.is_empty() or now - float(st.get("path_t", 0.0)) > 0.35 or (st.get("goal", target) as Vector3).distance_to(target) > 1.0:
-		var map := body.get_world_3d().navigation_map
+		var map := _map_for(body)
 		path = NavigationServer3D.map_get_path(map, NavigationServer3D.map_get_closest_point(map, from),
 			NavigationServer3D.map_get_closest_point(map, target), true)
+		var normal := body.get_world_3d().navigation_map
+		if map != normal and (path.size() < 2 or Vector2(path[-1].x - target.x, path[-1].z - target.z).length() > 1.5
+				or Vector2(path[0].x - from.x, path[0].z - from.z).length() > 1.0):
+			# too tight for the wide mesh (or standing off it): the normal one gets there
+			path = NavigationServer3D.map_get_path(normal, NavigationServer3D.map_get_closest_point(normal, from),
+				NavigationServer3D.map_get_closest_point(normal, target), true)
 		st["path"] = path
 		st["path_t"] = now
+		st["wide"] = map != normal
 		st["goal"] = target
 		var end_ok := not path.is_empty() and Vector2(path[-1].x - target.x, path[-1].z - target.z).length() < 1.5 and absf(path[-1].y - target.y) < 1.5
 		st["reach"] = end_ok
@@ -141,15 +175,48 @@ static func rebake(region: NavigationRegion3D) -> void:
 	NavigationServer3D.parse_source_geometry_data(nm, src, region.get_parent())
 	NavigationServer3D.bake_from_source_geometry_data(nm, src)
 	region.navigation_mesh = nm
+	if is_instance_valid(_wide_region) and _wide_region.navigation_mesh:
+		var wm := _wide_region.navigation_mesh
+		NavigationServer3D.bake_from_source_geometry_data(wm, src)
+		_wide_region.navigation_mesh = wm
 
+## Can the body's whole width travel from a to b? Sweeps a sphere as wide as the body (rays
+## missed a pillar slimmer than the gap between them, and wide bodies grazed corners).
 static func _clear(body: Node3D, a: Vector3, b: Vector3) -> bool:
 	var space := body.get_world_3d().direct_space_state
 	var excl: Array[RID] = []
 	if body is CollisionObject3D:
 		excl.append((body as CollisionObject3D).get_rid())
-	var side := Vector3(b.z - a.z, 0, a.x - b.x).normalized() * 0.35   # two rays, body width apart
-	for o in [side, -side]:
-		var q := PhysicsRayQueryParameters3D.create(a + o, b + o, 1, excl)
-		if not space.intersect_ray(q).is_empty():
-			return false
-	return true
+	var sp := SphereShape3D.new()
+	sp.radius = minf(body_radius(body) * 1.05, 0.7)
+	# keep the sphere off the floor it stands on
+	var lift := maxf(0.0, body.global_position.y + sp.radius + 0.08 - minf(a.y, b.y))
+	a.y += lift
+	b.y += lift
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = sp
+	q.collision_mask = 1
+	q.exclude = excl
+	q.transform = Transform3D(Basis(), a)
+	q.motion = b - a
+	if not space.intersect_shape(q, 1).is_empty():
+		return false   # already touching something where it stands: let the path decide
+	var r := space.cast_motion(q)
+	return r[0] >= 0.999
+
+## Horizontal radius of a body: meta "ps1_nav_radius", else its first collision shape
+## (capsule, cylinder, sphere or box), else 0.35.
+static func body_radius(body: Node3D) -> float:
+	if body.has_meta("ps1_nav_radius"):
+		return float(body.get_meta("ps1_nav_radius"))
+	for c in body.get_children():
+		if c is CollisionShape3D and (c as CollisionShape3D).shape:
+			var s: Shape3D = (c as CollisionShape3D).shape
+			var r := 0.35
+			if s is CapsuleShape3D: r = (s as CapsuleShape3D).radius
+			elif s is CylinderShape3D: r = (s as CylinderShape3D).radius
+			elif s is SphereShape3D: r = (s as SphereShape3D).radius
+			elif s is BoxShape3D: r = maxf((s as BoxShape3D).size.x, (s as BoxShape3D).size.z) * 0.5
+			body.set_meta("ps1_nav_radius", r)
+			return r
+	return 0.35

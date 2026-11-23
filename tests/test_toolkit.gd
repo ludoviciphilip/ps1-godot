@@ -43,6 +43,7 @@ func _ready() -> void:
 	await _test_projectile()
 	_test_biped()
 	await _test_animate()
+	await _test_step()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -872,6 +873,9 @@ func _test_biped() -> void:
 	check(gd._shapes.size() == 3, "gothic: dais = 3 tiers of steps under 0.34 m (%d)" % gd._shapes.size())
 	var gw := PS1Gothic.new().valve_wheel(Vector3.ZERO)
 	check(gw.mesh().get_surface_count() > 0 and gw._shapes.is_empty(), "gothic: valve wheel mesh, no collider")
+	var nb := Node3D.new()
+	check(PS1Navigation.body_radius(nb) == 0.35, "navigation: default body radius")
+	nb.free()
 	for pn in ["bile", "splash"]:
 		var pp := PS1Particles.preset(pn)
 		check(pp.one_shot, "particles: %s preset" % pn)
@@ -884,6 +888,37 @@ func _test_biped() -> void:
 	var body := g.build({stone = PS1.material(PS1Textures.ashlar())})
 	check(body.find_children("*", "CollisionShape3D", false, false).size() >= 8, "gothic: rampart/belfry colliders")
 	body.free()
+
+func _test_step() -> void:
+	print("PS1Step")
+	var g := PS1Gothic.new()
+	g.box(Vector3(0, -0.5, 0), Vector3(10, 1, 10))
+	g.box(Vector3(0, 0.15, -2.5), Vector3(10, 0.3, 3))   # a 0.3 m ledge ahead (-Z)
+	var lvl := g.build({})
+	lvl.position = Vector3(200, 0, 0)
+	add_child(lvl)
+	var b := CharacterBody3D.new()
+	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.3; cap.height = 1.8
+	cs.shape = cap; cs.position.y = 0.9
+	b.add_child(cs)
+	var vis := Node3D.new(); vis.position.y = 0.9
+	b.add_child(vis)
+	b.position = Vector3(200, 0.05, 0.5)
+	add_child(b)
+	var climbed := 0.0
+	var min_lag := 0.0
+	for i in 60:
+		await get_tree().physics_frame
+		b.velocity = Vector3(0, b.velocity.y - 9.8 / 60.0, -3.0)
+		climbed = maxf(climbed, PS1Step.climb(b, vis))
+		b.move_and_slide()
+		PS1Step.smooth(b, vis, 1.0 / 60.0)
+		min_lag = minf(min_lag, vis.position.y - 0.9)
+	check(climbed > 0.25 and b.global_position.y > 0.25, "step: climbed the ledge (%.2f, y=%.2f)" % [climbed, b.global_position.y])
+	check(min_lag < -0.1, "step: model glides behind the body (%.2f)" % min_lag)
+	check(absf(vis.position.y - 0.9) < 0.01 and PS1Step.offset(b) == Vector3.ZERO, "step: model back on the body")
+	b.free()
+	lvl.free()
 
 func _test_animate() -> void:
 	var n := Node3D.new()
