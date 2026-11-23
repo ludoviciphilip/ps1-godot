@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.1
+- **Fix PS1Audio.music going silent** after quick switches: A -> B -> C within a fade reused A's
+  player while its fade-out (ending in stop()) still ran, so the new track was faded out and
+  stopped. One tween per player now (walking from a bonfire through a boss fog did it).
+- PS1Events: nodes in group `PS1Events.FREEZE_GROUP` (`ps1_freeze_in_events`) stop while any
+  event runs and resume after — enemies no longer attack a player frozen by a cutscene/dialog.
+
 ## 1.14.0
 - PS1Collapse `tremor(parent, at, radius, duration, shake, ceiling)`: the ground shakes, dust
   and grit sift down from the ceiling in falling sheets, a few pebbles drop and nothing stays — a

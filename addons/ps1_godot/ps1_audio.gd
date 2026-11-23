@@ -167,9 +167,7 @@ static func music(stream: AudioStream, fade := 1.5, volume_db := 0.0) -> void:
 		(Engine.get_main_loop() as SceneTree).process_frame.connect(func(): _music_stream = null; music(stream, fade, volume_db), CONNECT_ONE_SHOT)
 		return
 	if old.playing:
-		var tw := old.create_tween()
-		tw.tween_property(old, "volume_db", -80.0, fade)
-		tw.tween_callback(old.stop)
+		_music_fade(old, -80.0, fade, true)
 	if stream:
 		_music_i = 1 - _music_i
 		var nw := _music[_music_i]
@@ -178,8 +176,20 @@ static func music(stream: AudioStream, fade := 1.5, volume_db := 0.0) -> void:
 		nw.stream = s
 		nw.volume_db = -40.0
 		nw.play()
-		var tw2 := nw.create_tween()
-		tw2.tween_property(nw, "volume_db", volume_db, fade)
+		_music_fade(nw, volume_db, fade, false)
+
+# One tween per player: a quick A -> B -> C switch reuses A's player while its fade-out (which
+# ends in stop()) is still running — without killing it, the new track got faded out and stopped,
+# and the music went silent.
+static func _music_fade(p: AudioStreamPlayer, to: float, fade: float, stop_after: bool) -> void:
+	var old_tw: Tween = p.get_meta("ps1_fade") if p.has_meta("ps1_fade") else null
+	if old_tw and old_tw.is_valid():
+		old_tw.kill()
+	var tw := p.create_tween()
+	tw.tween_property(p, "volume_db", to, fade)
+	if stop_after:
+		tw.tween_callback(p.stop)
+	p.set_meta("ps1_fade", tw)
 
 static func current_music() -> AudioStream:
 	return _music_stream

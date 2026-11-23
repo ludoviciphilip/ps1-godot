@@ -72,6 +72,7 @@ static func release_statics() -> void:
 	PS1Events._signals = null
 	PS1Events._dialog = null
 	PS1Events.vars.clear()
+	PS1Events._frozen.clear()
 	PS1DialogBox.blip_sound = null
 	PS1DialogBox.move_sound = null
 	PS1DialogBox.confirm_sound = null

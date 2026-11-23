@@ -46,10 +46,52 @@ func _ready() -> void:
 	await _test_step()
 	await _test_audit()
 	_test_vista()
+	await _test_music_switch()
+	await _test_event_freeze()
 	await _test_foot_lock()
 	await _test_blade_trail()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
+
+## A -> B -> back to A's player (C) before A finished fading out: C must keep playing.
+func _test_music_switch() -> void:
+	print("PS1Audio music")
+	var a := AudioStreamGenerator.new()
+	var b := AudioStreamGenerator.new()
+	var c := AudioStreamGenerator.new()
+	PS1Audio.music(a, 0.05)
+	await get_tree().create_timer(0.2).timeout
+	PS1Audio.music(b, 0.6)       # a fades out over 0.6 s, then stops
+	await get_tree().create_timer(0.2).timeout
+	PS1Audio.music(c, 0.2)       # c reuses a's player while that fade-out still runs
+	await get_tree().create_timer(1.0).timeout
+	var p: AudioStreamPlayer = null
+	for m in PS1Audio._music:
+		if m.stream == c:
+			p = m
+	check(p != null and p.playing and p.volume_db > -10.0, "music: quick switches don't silence the new track (%s, %.0f dB)" % [p.playing if p else false, p.volume_db if p else -99.0])
+	PS1Audio.music(null, 0.05)
+	await get_tree().create_timer(0.2).timeout
+
+func _test_event_freeze() -> void:
+	print("PS1Events freeze")
+	var enemy := Node3D.new()
+	enemy.add_to_group(PS1Events.FREEZE_GROUP)
+	add_child(enemy)
+	var ev := PS1Event.new()
+	var pg := PS1EventPage.new()
+	pg.trigger = PS1EventPage.Trigger.NONE
+	var w := PS1CmdWait.new(); w.seconds = 0.2
+	pg.commands = [w]
+	ev.pages = [pg]
+	add_child(ev)
+	ev.run(null, pg)   # not awaited: check while it runs
+	await get_tree().process_frame
+	var during := enemy.process_mode
+	await get_tree().create_timer(0.4).timeout
+	check(during == Node.PROCESS_MODE_DISABLED and enemy.process_mode == Node.PROCESS_MODE_INHERIT, "events: enemies freeze during an event and resume after")
+	ev.free()
+	enemy.free()
 
 func _test_foot_lock() -> void:
 	print("PS1FootLock")

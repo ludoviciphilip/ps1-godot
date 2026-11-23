@@ -597,6 +597,8 @@ and a **command list**. Select the node and edit it in the **PS1 Events** bottom
   `interact(player)` (`prompt_text()` gives the prompt); freeze the player on
   `PS1Events.signals().event_started / event_finished`; add your input actions to
   `PS1DialogBox.accept_actions` (and cancel/up/down). Variables live in `PS1Events.vars` (save it).
+  Add enemies to group `PS1Events.FREEZE_GROUP`: they stop while an event runs, so nobody hits a
+  player frozen by a cutscene.
 
 ## Level painter
 

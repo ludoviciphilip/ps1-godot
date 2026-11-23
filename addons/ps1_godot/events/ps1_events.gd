@@ -35,12 +35,35 @@ static func dialog() -> PS1DialogBox:
 		tree.root.add_child(_dialog)
 	return _dialog
 
+## Nodes in this group stop (process + physics, children included: their AnimationPlayers,
+## hitboxes, agents) while any event runs and resume when the last one ends. Put enemies in it,
+## or they keep attacking a player frozen by a cutscene or a dialog box.
+const FREEZE_GROUP := &"ps1_freeze_in_events"
+static var _frozen: Array = []   # [node, its process_mode before]
+
 static func _started() -> void:
 	running += 1
 	if running == 1:
+		_freeze(true)
 		signals().event_started.emit()
 
 static func _finished() -> void:
 	running = maxi(running - 1, 0)
 	if running == 0:
+		_freeze(false)
 		signals().event_finished.emit()
+
+static func _freeze(on: bool) -> void:
+	if on:
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree == null:
+			return
+		for n in tree.get_nodes_in_group(FREEZE_GROUP):
+			if n.process_mode != Node.PROCESS_MODE_DISABLED:
+				_frozen.append([n, n.process_mode])
+				n.process_mode = Node.PROCESS_MODE_DISABLED
+	else:
+		for e in _frozen:
+			if is_instance_valid(e[0]):
+				e[0].process_mode = e[1]
+		_frozen.clear()
