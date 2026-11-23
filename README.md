@@ -359,6 +359,10 @@ await PS1Shot.fly(self, [
 ], 1.4)
 ```
 
+Or use a picture: `bd.add_panorama(PS1Backdrop.panorama_texture(img, 1024, 12, Color.GREEN), dir, 120.0)`
+— paint (or generate) the far landscape on a flat green sky; it gets the PS1 look and the live
+sky shows above it.
+
 **PS1Audit.missing_collision(root, area)** lists spots where a wall is visible but has no
 collider — run it headless on every level after big edits.
 

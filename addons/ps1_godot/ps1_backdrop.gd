@@ -137,6 +137,68 @@ static func ridge(seed_ := 1, length := 300.0, height := 40.0, points := 28, dep
 
 # ------------------------------------------------------------------ the big reveal
 
+## A picture as panorama: the image wrapped on a band around the origin (a cylinder, `radius`
+## m), centered on `direction`, `arc` degrees wide, from y=`bottom` to y=`top` (image height).
+## Use panorama_texture() on the source first (PS1 look + sky cut out). Lightning flashes it.
+func add_panorama(tex: Texture2D, direction := Vector3(0, 0, -1), arc := 120.0, radius := 900.0,
+		bottom := -80.0, top := 220.0, haze := 0.0, tint := Color.WHITE) -> MeshInstance3D:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var mid := atan2(direction.x, -direction.z)
+	var segs := maxi(int(arc / 4.0), 4)
+	for i in segs:
+		var u0 := float(i) / segs
+		var u1 := float(i + 1) / segs
+		var a0 := mid + deg_to_rad(arc) * (u0 - 0.5)
+		var a1 := mid + deg_to_rad(arc) * (u1 - 0.5)
+		var p0 := Vector3(sin(a0), 0, -cos(a0)) * radius
+		var p1 := Vector3(sin(a1), 0, -cos(a1)) * radius
+		var quad := [[p0 + Vector3(0, bottom, 0), Vector2(u0, 1)], [p1 + Vector3(0, bottom, 0), Vector2(u1, 1)], [p1 + Vector3(0, top, 0), Vector2(u1, 0)],
+			[p0 + Vector3(0, bottom, 0), Vector2(u0, 1)], [p1 + Vector3(0, top, 0), Vector2(u1, 0)], [p0 + Vector3(0, top, 0), Vector2(u0, 0)]]
+		for v in quad:
+			st.set_uv(v[1])
+			st.add_vertex(v[0])
+	var mi := MeshInstance3D.new()
+	mi.name = "Panorama"
+	mi.mesh = st.commit()
+	var m := ShaderMaterial.new()
+	m.shader = preload("res://addons/ps1_godot/shaders/ps1_panorama.gdshader")
+	m.set_shader_parameter("tex", tex)
+	m.set_shader_parameter("tint", tint)
+	m.set_shader_parameter("haze_color", haze_color)
+	m.set_shader_parameter("haze", haze)
+	m.set_shader_parameter("depth_order", 1.0 + (1.0 - haze) * 8.0 - 0.5)
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.extra_cull_margin = 16384.0
+	mi.set_meta("ps1_no_bake", true)
+	mi.top_level = false
+	add_child(mi)
+	return mi
+
+## Turns any picture (a painting, an AI image, a render) into a PS1 panorama texture: scaled
+## down to `width` px wide, colors cut to `levels` per channel with a 4x4 ordered dither, and
+## the sky removed: pixels close to `sky_key` (a flat color you asked for behind the land, e.g.
+## pure green) become transparent, so the live PS1Sky shows above the land. sky_key alpha 0 =
+## keep the picture's own sky.
+static func panorama_texture(img: Image, width := 1024, levels := 12, sky_key := Color(0, 0, 0, 0), key_tolerance := 0.12) -> ImageTexture:
+	var im := img.duplicate() as Image
+	im.convert(Image.FORMAT_RGBA8)
+	var h := maxi(int(round(float(im.get_height()) * width / im.get_width())), 1)
+	im.resize(width, h, Image.INTERPOLATE_LANCZOS)
+	const BAYER := [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+	var step := 1.0 / float(levels - 1)
+	for y in h:
+		for x in width:
+			var c := im.get_pixel(x, y)
+			if sky_key.a > 0.0 and absf(c.r - sky_key.r) + absf(c.g - sky_key.g) + absf(c.b - sky_key.b) < key_tolerance * 3.0:
+				im.set_pixel(x, y, Color(0, 0, 0, 0))
+				continue
+			var b: float = (float(BAYER[(y % 4) * 4 + (x % 4)]) + 0.5) / 16.0 - 0.5
+			var q := func(v: float) -> float: return clampf(round(v / step + b) * step, 0.0, 1.0)
+			im.set_pixel(x, y, Color(q.call(c.r), q.call(c.g), q.call(c.b), 1.0))
+	return ImageTexture.create_from_image(im)
+
 ## A cathedral city on a crag, about 220 m wide and 150 m tall (scale with `size`), facing +Z.
 ## Windows are a "glow" surface (they take `glow_color`). Deterministic per seed.
 static func citadel(seed_ := 1, size := 1.0) -> ArrayMesh:
@@ -371,6 +433,8 @@ func _set_flash(v: float) -> void:
 			var m := mi.get_surface_override_material(i) as ShaderMaterial
 			if m:
 				m.set_shader_parameter("flash", v)
+		if mi.material_override is ShaderMaterial:
+			(mi.material_override as ShaderMaterial).set_shader_parameter("flash", v)
 
 func _process(dt: float) -> void:
 	if Engine.is_editor_hint() or _lightning_every == Vector2.ZERO:

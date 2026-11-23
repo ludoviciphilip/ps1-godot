@@ -357,7 +357,20 @@ func dais(base: Vector3, size: Vector2, height: float, rise := 0.34, run := 0.6)
 	var tiers := maxi(int(ceil(height / rise - 0.01)), 1)
 	for i in tiers:
 		var h := height - i * (height / tiers)
-		box(base + Vector3(0, h * 0.5, 0), Vector3(size.x + 2.0 * run * i, h, size.y + 2.0 * run * i))
+		box(base + Vector3(0, h * 0.5, 0), Vector3(size.x + 2.0 * run * i, h, size.y + 2.0 * run * i), 0.0, false, false)
+	# collision: one sloped frustum through the step nosings, so bodies walk up (and down) it
+	# like a ramp from any side — climbing box steps one by one looked like teleporting
+	var slope_run := run * (float(tiers) - 0.5)   # between the nosings (feet a bit above) and the last step's edge
+	var hx := size.x * 0.5
+	var hz := size.y * 0.5
+	var ox := hx + slope_run
+	var oz := hz + slope_run
+	var pts := PackedVector3Array([
+		Vector3(-ox, 0, -oz), Vector3(ox, 0, -oz), Vector3(ox, 0, oz), Vector3(-ox, 0, oz),
+		Vector3(-hx, height, -hz), Vector3(hx, height, -hz), Vector3(hx, height, hz), Vector3(-hx, height, hz)])
+	var cs := ConvexPolygonShape3D.new()
+	cs.points = pts
+	_shapes.append([xform * Transform3D(Basis(), base), cs])
 	return self
 
 ## Wall lantern: an arm out of the wall, an open iron cage (two plates joined by four bars) and

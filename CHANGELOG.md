@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0
+- PS1Backdrop `add_panorama(texture, direction, arc, radius, bottom, top)`: a picture wrapped
+  on a band around the horizon, drawn like the far layers (lightning flashes it), and
+  `panorama_texture(image, width, levels, sky_key)`: any painting/render to the PS1 look
+  (downscale, ordered-dither color cut) with the sky keyed out so the live sky shows above.
+- PS1Gothic `dais()`: collides as one sloped frustum through the step nosings — bodies walk up
+  it like a ramp from any side (climbing the box steps one by one looked like teleporting).
+
 ## 1.8.1
 - PS1Backdrop: `citadel()` stands on a real crag (flat top, cliffs falling into the mist) instead
   of loose rocks — it no longer looks like it floats. New `foothills()` (broken hills whose feet
