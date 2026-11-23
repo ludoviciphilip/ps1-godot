@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1
+- PS1Navigation `steer()`: never aims at `path[0]`. That point is only the spot on the mesh
+  nearest the body; when the body stood a little off the mesh (wide bodies along railings) it lay
+  behind it, and the body flipped direction every frame — a sideways shuffle along sewer
+  walkways. Measured on the sewer canal: ~40 direction flips/s -> none.
+
 ## 1.7.0
 - **PS1Step** (new): step climbing for any CharacterBody3D. `climb(body, visual)` before
   `move_and_slide()` lifts the body onto a low ledge; `smooth(body, visual, dt)` after it lets

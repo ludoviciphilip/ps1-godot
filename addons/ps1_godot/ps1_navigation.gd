@@ -121,7 +121,10 @@ static func steer(body: Node3D, target: Vector3, eye_height := 0.8) -> Vector3:
 	# width included): cuts open corners, but never aims through a door jamb
 	var dir := flat.normalized()
 	var first := -1
-	for i in path.size():
+	# path[0] is just the point of the mesh nearest the body: when the body stands a little off
+	# the mesh it can lie BEHIND it, and aiming at it made the body flip back and forth every
+	# frame (sideways shuffle). Steer from the first real waypoint on.
+	for i in range(1, path.size()):
 		if Vector2(path[i].x - from.x, path[i].z - from.z).length() > 0.35:
 			first = i
 			break
