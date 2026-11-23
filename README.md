@@ -380,7 +380,9 @@ await PS1Shot.fly(self, [
 Or use a picture: `bd.add_panorama(PS1Backdrop.panorama_texture(img, 1024, 12, Color.GREEN), dir, 120.0)`
 — paint (or generate) the far landscape on a flat green sky; it gets the PS1 look and the live
 sky shows above it. `bd.fog_panorama(pano, Color(0.24, 0.26, 0.32), 0.8, 0.5)` lets slow fog banks
-drift over its lower half.
+drift over its lower half. One picture covers ~90–120°; to keep the camera from reaching its
+edge, paint the land on both sides and join them first: `PS1Backdrop.stitch([left, img, right])`
+(widen `arc` by the same factor as the width).
 
 **PS1Audit.missing_collision(root, area)** lists spots where a wall is visible but has no
 collider — run it headless on every level after big edits.

@@ -1004,6 +1004,10 @@ func _test_vista() -> void:
 	var pim := ptex.get_image()
 	check(pim.get_width() == 32 and pim.get_pixel(5, 2).a == 0.0 and pim.get_pixel(5, 14).a == 1.0, "backdrop: panorama texture keys the sky out")
 	var pano := bd.add_panorama(ptex, Vector3(1, 0, 0), 90.0)
+	var right := Image.create(40, 16, false, Image.FORMAT_RGB8)
+	right.fill(Color(1, 0, 0))
+	var wide := PS1Backdrop.stitch([src, right], 8)
+	check(wide.get_width() == 64 + 80 - 8 and wide.get_height() == 32 and wide.get_pixel(130, 20).r > 0.9, "backdrop: stitch joins pictures (%dx%d)" % [wide.get_width(), wide.get_height()])
 	check(pano.mesh.get_aabb().size.y > 200.0, "backdrop: panorama band")
 	bd.fog_panorama(pano, Color(0.3, 0.3, 0.35), 0.8, 0.5)
 	var pm := pano.material_override as ShaderMaterial

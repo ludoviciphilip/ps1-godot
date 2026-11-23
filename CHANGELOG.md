@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.13.0
+- PS1Backdrop `stitch(images, blend)`: joins pictures side by side (scaled to one height,
+  cross-faded seams) into one wide panorama. A single painting covers ~90–120°: paint the land
+  to its left and right and stitch them, so turning the camera never reaches the edge.
+
 ## 1.12.0
 - PS1Backdrop `fog_panorama(pano, color, amount, height, patchy, drift, scale)`: drifting fog
   banks over a picture panorama — denser at the bottom, broken into slow patches, 4 dithered

@@ -142,6 +142,9 @@ static func ridge(seed_ := 1, length := 300.0, height := 40.0, points := 28, dep
 ## Use panorama_texture() on the source first (PS1 look + sky cut out). Lightning flashes it.
 ## `order` 0.3 puts it behind the 3D ridges and the mist sea, 9.5 in front of every far layer;
 ## its sides and bottom dither away (`side_fade`, `bottom_fade`) into whatever is behind.
+## A single picture covers ~90–120°: turn the camera and you reach its edge. Paint (or generate)
+## the land to its left and right and join them with stitch() first; widen `arc` by the same
+## factor as the width.
 func add_panorama(tex: Texture2D, direction := Vector3(0, 0, -1), arc := 120.0, radius := 900.0,
 		bottom := -80.0, top := 220.0, haze := 0.0, tint := Color.WHITE, order := 0.3,
 		side_fade := 0.12, bottom_fade := 0.25) -> MeshInstance3D:
@@ -180,6 +183,39 @@ func add_panorama(tex: Texture2D, direction := Vector3(0, 0, -1), arc := 120.0, 
 	mi.top_level = false
 	add_child(mi)
 	return mi
+
+## Joins pictures side by side into one wide panorama image (left to right), scaled to the
+## height of the first; neighbours overlap by `blend` px with a cross-fade so the seams melt.
+## Works on the source images (before panorama_texture), sky key color included.
+static func stitch(images: Array, blend := 48) -> Image:
+	var h: int = (images[0] as Image).get_height()
+	var parts: Array[Image] = []
+	var total := 0
+	for im: Image in images:
+		var c := im.duplicate() as Image
+		c.convert(Image.FORMAT_RGBA8)
+		if c.get_height() != h:
+			c.resize(int(round(float(c.get_width()) * h / c.get_height())), h, Image.INTERPOLATE_LANCZOS)
+		parts.append(c)
+		total += c.get_width()
+	total -= blend * (parts.size() - 1)
+	var out := Image.create(total, h, false, Image.FORMAT_RGBA8)
+	var x0 := 0
+	for k in parts.size():
+		var p := parts[k]
+		var w := p.get_width()
+		for x in w:
+			var ox := x0 + x
+			var a := 1.0
+			if k > 0 and x < blend:
+				a = float(x + 1) / (blend + 1)
+			for y in h:
+				var c := p.get_pixel(x, y)
+				if a < 1.0:
+					c = out.get_pixel(ox, y).lerp(c, a)
+				out.set_pixel(ox, y, c)
+		x0 += w - blend
+	return out
 
 ## Drifting fog banks over a panorama from add_panorama(): they swallow the lower part of the
 ## picture (`amount` 0..1, up to `height` of it), broken into slow patches, lit by lightning.
