@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.0
+- PS1Collapse `tremor(parent, at, radius, duration, shake, ceiling)`: the ground shakes, dust
+  and grit sift down from the ceiling in falling sheets, a few pebbles drop and nothing stays — a
+  warning that a place may give way. Cave-ins (`spawn`) now sift dust too (`dust_streams`).
+- Events: **Scene/Tremor** command (PS1CmdTremor). Particles: `dust_fall` preset.
+
 ## 1.13.0
 - PS1Backdrop `stitch(images, blend)`: joins pictures side by side (scaled to one height,
   cross-faded seams) into one wide panorama. A single painting covers ~90–120°: paint the land

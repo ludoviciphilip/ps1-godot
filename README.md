@@ -295,6 +295,8 @@ var bite_hitbox_origin := rat.heads()[0]   # nodes named "Head" / "Jaw"
 **PS1Collapse** (and the event command *Scene/Collapse*): rocks rain from the ceiling over an
 area, land with dust and stay as rubble, while every node in group `ps1_shake` gets
 `ps1_shake(strength)`. `await PS1Collapse.spawn(self, pos, 8.0, 3.0).finished`.
+`PS1Collapse.tremor(self, pos, 7.0, 2.5)` (or *Scene/Tremor*) only shakes the place and sifts dust
+from the ceiling — foreshadow the cave-in before it happens.
 
 **PS1Gothic** also builds sewers and rooms: `sewer()` (channel between walkways, barrel vault,
 stone bridges, invisible railings so nobody falls in), `room()` (walls with door gaps and

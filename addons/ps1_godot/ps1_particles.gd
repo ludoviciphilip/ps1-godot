@@ -298,6 +298,13 @@ static func preset(name: String) -> PS1Particles:
 			p.speed_min = 0.02; p.speed_max = 0.08; p.spread = 180; p.turbulence = 0.08
 			p.size_start = 0.06; p.size_end = 0.06; p.update_fps = 12
 			p.colors = _grad([Color(0.6, 0.55, 0.45, 0.6), Color(0.65, 0.6, 0.5, 0.8), Color(0.6, 0.55, 0.45, 0.3)])
+		"dust_fall":  # dust and grit sifting down from a ceiling (tremors, cave-ins): a falling sheet
+			p.rate = 38; p.amount = 90; p.lifetime = 1.7; p.blend = Blend.DITHER; p.shape = Shape.BOX
+			p.shape_extents = Vector3(0.18, 0.05, 0.18); p.direction = Vector3.DOWN; p.spread = 3
+			p.speed_min = 0.4; p.speed_max = 1.1; p.gravity = Vector3(0, -2.6, 0); p.damping = 0.6
+			p.turbulence = 0.05; p.size_start = 0.07; p.size_end = 0.26; p.update_fps = 20; p.texture_name = "puff"
+			p.rate = 55; p.amount = 110
+			p.colors = _grad([Color(0.2, 0.18, 0.15, 0.0), Color(0.24, 0.22, 0.18, 0.9), Color(0.2, 0.19, 0.16, 0.0)])
 		"ash":        # body crumbling to ash (one-shot): grey flakes drift up and away
 			p.one_shot = true; p.burst_count = 40; p.amount = 48; p.lifetime = 1.8; p.auto_free = true; p.blend = Blend.DITHER
 			p.shape = Shape.BOX; p.shape_extents = Vector3(0.35, 0.8, 0.35); p.spread = 50; p.speed_min = 0.3; p.speed_max = 1.0

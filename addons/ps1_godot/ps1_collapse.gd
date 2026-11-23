@@ -5,6 +5,10 @@
 ##   var c := PS1Collapse.spawn(self, arena_center, 8.0, 3.0)   # radius, seconds
 ##   await c.finished
 ##
+## A tremor (the ground shakes, dust and grit sift down, a few pebbles, nothing stays):
+##
+##   PS1Collapse.tremor(self, room_center, 7.0, 2.5)          # radius, seconds
+##
 ## Shake: every node in group "ps1_shake" gets `ps1_shake(strength)` called (add your camera to
 ## it), and the `rumble(strength)` signal fires. Rocks are visual only (no physics bodies).
 class_name PS1Collapse
@@ -25,6 +29,9 @@ signal finished
 ## PS1Audio sound played at the start ("" = none).
 @export var sound := ""
 @export var material: Material
+## Dust sifting down from the ceiling: this many falling sheets ("dust_fall" particles) at random
+## spots, staggered over the duration.
+@export var dust_streams := 8
 
 var _t := 0.0
 var _next_rock := 0.0
@@ -32,6 +39,22 @@ var _next_shake := 0.0
 var _falling: Array = []   # [node, velocity, floor_y, spin]
 var _spawned := 0
 var _done := false
+
+## A tremor instead of a cave-in: shaking, dust sifting down from `ceiling`, a few pebbles that
+## don't stay. Warn the player that a place is about to give way.
+static func tremor(parent: Node, at: Vector3, radius_ := 7.0, duration_ := 2.5, shake_ := 0.6, ceiling_ := 6.0) -> PS1Collapse:
+	var c := PS1Collapse.new()
+	c.radius = radius_
+	c.duration = duration_
+	c.shake = shake_
+	c.ceiling = ceiling_
+	c.rocks = int(radius_ * 1.2)
+	c.rock_size = Vector2(0.07, 0.2)
+	c.keep_debris = false
+	c.dust_streams = int(radius_ * 1.8)
+	parent.add_child(c)
+	c.global_position = at
+	return c
 
 static func spawn(parent: Node, at: Vector3, radius_ := 8.0, duration_ := 3.0) -> PS1Collapse:
 	var c := PS1Collapse.new()
@@ -46,6 +69,23 @@ func _ready() -> void:
 		material = PS1Convert.make(PS1Textures.mossy_rock(), {color = Color(0.7, 0.7, 0.72)})
 	if sound != "":
 		PS1Audio.play(sound, global_position + Vector3.UP * 2.0)
+	for i in dust_streams:
+		_dust_stream(float(i) / maxf(dust_streams, 1) * duration * 0.6)
+
+func _dust_stream(delay: float) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay, false).timeout
+	if not is_inside_tree():
+		return
+	var a := randf() * TAU
+	var r := sqrt(randf()) * radius
+	var p := PS1Particles.preset("dust_fall")
+	p.rate *= randf_range(0.6, 1.3)
+	get_parent().add_child(p)
+	p.global_position = global_position + Vector3(cos(a) * r, ceiling - 0.2, sin(a) * r)
+	await get_tree().create_timer(maxf(duration - delay, 0.4) * randf_range(0.6, 1.0), false).timeout
+	if is_instance_valid(p):
+		p.stop(true)
 
 func _process(dt: float) -> void:
 	_t += dt

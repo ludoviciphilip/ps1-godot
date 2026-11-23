@@ -829,6 +829,16 @@ func _test_collapse() -> void:
 	check(shakes[0] > 0, "collapse: shakes")
 	check(c.get_child_count() == 6, "collapse: rubble stays")
 	c.free()
+	var tr := PS1Collapse.tremor(self, Vector3(300, 0, 0), 3.0, 0.5, 0.5, 2.0)
+	var dust := [0]
+	await get_tree().create_timer(0.3).timeout
+	for n in get_children():
+		if n is PS1Particles and n.global_position.y > 1.5 and n.global_position.x > 290.0:
+			dust[0] += 1
+	await tr.finished
+	await get_tree().create_timer(0.2).timeout
+	check(dust[0] > 0 and tr.get_child_count() == 0, "collapse: tremor sifts dust, leaves no rubble (%d streams)" % dust[0])
+	tr.free()
 
 ## An event freed mid-run (scene change) must release PS1Events.running.
 func _test_event_freed() -> void:
