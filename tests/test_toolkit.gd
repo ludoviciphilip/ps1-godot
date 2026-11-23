@@ -46,8 +46,75 @@ func _ready() -> void:
 	await _test_step()
 	await _test_audit()
 	_test_vista()
+	await _test_foot_lock()
+	await _test_blade_trail()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
+
+func _test_foot_lock() -> void:
+	print("PS1FootLock")
+	var body := Node3D.new()
+	body.position = Vector3(400, 0, 0)
+	add_child(body)
+	var sk := Skeleton3D.new()
+	body.add_child(sk)
+	var bones := [["Hips", -1, Vector3(0, 1.0, 0)]]
+	for side in [["Left", 0.12], ["Right", -0.12]]:
+		bones.append([side[0] + "UpLeg", 0, Vector3(side[1], -0.05, 0)])
+		bones.append([side[0] + "Leg", -2, Vector3(0, -0.4, 0.12)])     # knees bent: room to reach
+		bones.append([side[0] + "Foot", -2, Vector3(0, -0.4, -0.12)])
+	for i in bones.size():
+		var bi := sk.add_bone(bones[i][0])
+		var parent: int = bones[i][1]
+		if parent < -1:
+			parent = i + parent + 1   # -2 = the bone added just before
+		if parent >= 0:
+			sk.set_bone_parent(bi, parent)
+		sk.set_bone_rest(bi, Transform3D(Basis(), bones[i][2]))
+		sk.set_bone_pose(bi, Transform3D(Basis(), bones[i][2]))
+	var lock := PS1FootLock.attach(sk, body)
+	check(lock != null and lock._legs.size() == 2, "foot lock: finds both legs")
+	lock.fade_in = 0.0
+	lock.enable(true)
+	var lf := sk.find_bone("LeftFoot")
+	# an animated skeleton is dirty every frame; this one is static, so "animate" it
+	var hips_rest: Transform3D = sk.get_bone_rest(0)
+	var tick := func(secs: float) -> void:
+		var t_end := Time.get_ticks_msec() + int(secs * 1000.0)
+		while Time.get_ticks_msec() < t_end:
+			sk.set_bone_pose(0, hips_rest)
+			await get_tree().create_timer(0.01).timeout
+	var seen := [Vector3.ZERO]   # read the pose right after the modifiers ran
+	sk.skeleton_updated.connect(func(): seen[0] = sk.global_transform * sk.get_bone_global_pose(lf).origin)
+	var foot := func() -> Vector3: return seen[0]
+	await tick.call(0.1)
+	var p0: Vector3 = foot.call()
+	body.position.z -= 0.12   # the body lunges less than a stride: the foot stays put
+	await tick.call(0.1)
+	var p1: Vector3 = foot.call()
+	check(Vector2(p1.x - p0.x, p1.z - p0.z).length() < 0.03, "foot lock: planted foot stays while the body moves (%.3f m)" % Vector2(p1.x - p0.x, p1.z - p0.z).length())
+	body.position.z -= 0.5    # past the stride: it steps
+	await tick.call(0.5)
+	var p2: Vector3 = foot.call()
+	check(lock.steps_taken > 0 and absf(p2.z - body.position.z) < 0.1, "foot lock: steps to catch up (%d steps, foot z %.2f body z %.2f)" % [lock.steps_taken, p2.z, body.position.z])
+	lock.enable(false)
+	body.queue_free()
+
+func _test_blade_trail() -> void:
+	print("PS1BladeTrail")
+	var blade := Node3D.new()
+	blade.position = Vector3(500, 1, 0)
+	add_child(blade)
+	var tr := PS1BladeTrail.attach(blade, Vector3(0, 0.2, 0), Vector3(0, 1.0, 0))
+	tr.start("ember")
+	for i in 8:
+		blade.rotate_z(0.3)
+		await get_tree().create_timer(0.02).timeout
+	check(tr._samples.size() >= 3 and tr.mesh.get_surface_count() == 1, "blade trail: ribbon built while swinging (%d samples)" % tr._samples.size())
+	tr.stop()
+	await get_tree().create_timer(0.4).timeout
+	check(tr.mesh.get_surface_count() == 0, "blade trail: fades out after stop")
+	blade.queue_free()
 
 func _vertex_color_near(mi: MeshInstance3D, p: Vector3) -> Color:
 	var arr := mi.mesh.surface_get_arrays(0)

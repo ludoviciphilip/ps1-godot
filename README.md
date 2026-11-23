@@ -345,6 +345,24 @@ statue or slides a wall (`PS1CmdAnimate.animate()` from code).
 you from falling, merlons on the outer side, gaps for stairs and balconies), `belfry()`,
 `bell()` and `lathe()` (any surface of revolution).
 
+### Planted feet and blade trails (1.11)
+
+When code moves a character (an attack lunge, knockback) while its animation keeps the feet
+still, the feet skate. `PS1FootLock` pins them and turns the lunge into steps:
+
+```gdscript
+var feet := PS1FootLock.attach(skeleton, self)   # self = the CharacterBody3D (its origin = floor)
+feet.enable(state == ATTACK)                     # each frame; fades in/out
+```
+
+`PS1BladeTrail` draws the arc a sword sweeps (edge line, colored body, streaks, sparks):
+
+```gdscript
+var trail := PS1BladeTrail.attach(sword_mesh, Vector3(0, 0.1, 0), Vector3(0, 1.0, 0))
+trail.start("steel")   # at the swing; "ember", "blood", "arcane" or a Dictionary
+trail.stop()           # it fades on its own
+```
+
 ### The big reveal (1.8)
 
 `PS1Backdrop.citadel()`, `colossus()`, `broken_bridge()` and `foothills()` are far-scenery meshes for the "new

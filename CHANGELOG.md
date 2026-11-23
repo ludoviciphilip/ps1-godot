@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.11.0
+- **PS1FootLock** (new): planted feet for characters that code moves (lunges, attack steps,
+  knockback). A SkeletonModifier3D that pins each planted foot to the floor and, once the body
+  has moved `stride` away, takes a quick step (lift, arc, plant) to where the animation wants
+  it — one foot at a time. Feet the animation lifts itself (kicks, steps) follow it. Analytic
+  two-bone IK keeps the knee where the animation had it. `PS1FootLock.attach(skeleton, body)`,
+  `enable(true/false)` (fades).
+- **PS1BladeTrail** (new): the ribbon a blade sweeps, Catmull-Rom smoothed between frames,
+  white-hot edge line, colored body fading toward the hilt and with age, wind streaks, sparks
+  shed from the tip and an optional light riding the tip; PS1 additive blend, dithered alpha
+  steps, 5-bit color. Looks: `steel`, `ember`, `blood`, `arcane` or your own Dictionary.
+  Freezes with hitstop (time scale).
+
 ## 1.10.0
 - `add_panorama()`: `order` (behind the ridges and mist sea, or in front of every far layer),
   `side_fade` / `bottom_fade` — the picture's edges dither away so it melts into the scenery
