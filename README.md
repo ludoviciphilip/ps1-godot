@@ -298,7 +298,7 @@ area, land with dust and stay as rubble, while every node in group `ps1_shake` g
 
 **PS1Gothic** also builds sewers and rooms: `sewer()` (channel between walkways, barrel vault,
 stone bridges, invisible railings so nobody falls in), `room()` (walls with door gaps and
-lintels), `rock()`, `spindle()`/`limb()` for organic shapes, and `quad_away()`/`quad_toward()`
+lintels), `dais()` (a platform with steps all round), `valve_wheel()`, `rock()`, `spindle()`/`limb()` for organic shapes, and `quad_away()`/`quad_toward()`
 to get the winding right without thinking about it.
 
 ## Gargoyles, archers and puzzles

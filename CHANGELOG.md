@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.1
+- PS1Gothic `dais()`: a raised platform ringed by tiers of steps, climbable from any side.
+- PS1Gothic `valve_wheel()`: a solid iron wheel (rim, spokes with handles, hub) for sluices,
+  gates and winches.
+
 ## 1.6.0
 - New creature presets: `PS1Creature.leech()` (legless segmented body, new `head_style = "maw"`:
   a round mouth ringed with teeth), `PS1Biped.drowned()` (bloated, bald, huge belly) and

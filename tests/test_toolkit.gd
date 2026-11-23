@@ -868,6 +868,10 @@ func _test_biped() -> void:
 	add_child(lc)
 	check(lc.find_child("Mouth", true, false) != null and lc.animation_player().has_animation("attack"), "creature: leech maw + lunge")
 	lc.free()
+	var gd := PS1Gothic.new().dais(Vector3.ZERO, Vector2(4, 3), 1.0)
+	check(gd._shapes.size() == 3, "gothic: dais = 3 tiers of steps under 0.34 m (%d)" % gd._shapes.size())
+	var gw := PS1Gothic.new().valve_wheel(Vector3.ZERO)
+	check(gw.mesh().get_surface_count() > 0 and gw._shapes.is_empty(), "gothic: valve wheel mesh, no collider")
 	for pn in ["bile", "splash"]:
 		var pp := PS1Particles.preset(pn)
 		check(pp.one_shot, "particles: %s preset" % pn)

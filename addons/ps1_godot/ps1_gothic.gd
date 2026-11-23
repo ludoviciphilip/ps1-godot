@@ -344,6 +344,32 @@ func steps(base: Vector3, width: float, count: int, rise := 0.2, run := 0.35) ->
 	# top landing stays solid
 	return self
 
+## Raised platform you can climb from any side: a `size.x` x `size.y` top `height` above
+## `base` (floor center), ringed by tiers of steps (each at most `rise` high, `run` deep) so
+## there is no "wrong side". Keep `rise` under the character's step height.
+func dais(base: Vector3, size: Vector2, height: float, rise := 0.33, run := 0.6) -> PS1Gothic:
+	var tiers := maxi(int(ceil(height / rise - 0.01)), 1)
+	for i in tiers:
+		var h := height - i * (height / tiers)
+		box(base + Vector3(0, h * 0.5, 0), Vector3(size.x + 2.0 * run * i, h, size.y + 2.0 * run * i))
+	return self
+
+## Iron valve wheel (sluices, gates, winches): rim, `spokes` spokes with handles and a hub,
+## solid all round. Stands in the XY plane facing +Z (turn it with `rot_y`). No collider.
+func valve_wheel(center: Vector3, radius := 0.7, spokes := 6, thick := 0.05, rot_y := 0.0) -> PS1Gothic:
+	var b := Basis(Vector3.UP, rot_y)
+	var n := 12
+	for i in n:
+		var a0 := TAU * i / n
+		var a1 := TAU * (i + 1) / n
+		limb(center + b * Vector3(cos(a0), sin(a0), 0) * radius, center + b * Vector3(cos(a1), sin(a1), 0) * radius, thick, thick, 5)
+	for i in spokes:
+		var d := b * Vector3(cos(TAU * i / spokes), sin(TAU * i / spokes), 0)
+		limb(center + d * radius * 0.12, center + d * radius * 0.97, thick * 0.7, thick * 0.6, 4)
+		limb(center + d * radius, center + d * radius * 1.18, thick * 0.6, thick * 0.75, 4)
+	limb(center + b * Vector3(0, 0, -thick * 4.0), center + b * Vector3(0, 0, thick * 2.0), radius * 0.16, radius * 0.16, 8)
+	return self
+
 ## Wall section with a pointed doorway through it (XY plane, facing +Z, centered on
 ## `center_bottom`): `wall_w` x `wall_h` x `depth`, opening `span` wide whose jambs rise
 ## `spring` before the arch. Collision leaves the doorway walkable.
