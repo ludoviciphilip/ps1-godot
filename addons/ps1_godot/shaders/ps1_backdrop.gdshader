@@ -17,6 +17,7 @@ uniform float mist_height = 0.0;     // world Y below which the mist covers it
 uniform float mist_fade = 12.0;
 uniform float emission = 0.0;        // windows: 1 = full color, untouched by haze/light
 uniform float depth_order = 1.0;     // layers: bigger = drawn nearer (in front of others)
+uniform float flash = 0.0;           // lightning: far layers wash out toward a pale flash
 
 varying vec3 world_pos;
 varying vec3 world_n;
@@ -41,5 +42,6 @@ void fragment() {
 	float mist = 1.0 - smoothstep(mist_height, mist_height + mist_fade, world_pos.y);
 	c = mix(c, mist_color.rgb, mist * 0.85);
 	c = mix(c, color.rgb, emission * (1.0 - mist * 0.6));
+	c += flash * vec3(0.5, 0.55, 0.72) * (0.14 + haze * 0.6) * (1.0 - emission);
 	ALBEDO = c;
 }

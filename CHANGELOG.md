@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.0
+- **PS1Backdrop reveal kit**: `citadel()` (a cathedral city on a crag facing the viewer: twin
+  west towers, rose window and lit door, one immense crossing spire, lit town windows),
+  `colossus()` (a kneeling stone giant on a planted sword), `broken_bridge()`,
+  `add_lightning()` / `strike()` (flashes sky, clouds, far layers and an optional light, draws a
+  bolt, emits `lightning` for your thunder) and `add_birds()` (crows circling a point).
+- PS1Sky: `moon_size`, `moon_halo`, a glowing patch of horizon (`glow_color`,
+  `glow_direction`, `glow_spread`, `glow_height`) and `set_flash()`.
+- **PS1Shot** (new): `await PS1Shot.fly(owner, keys, back)` — a scripted camera flies through
+  keyed points looking at targets and glides back to the game camera.
+- **PS1Audit** (new): `missing_collision()` finds walls you can see but walk through (visible
+  meshes vs. colliders, on the reachable navmesh only).
+- PS1Gothic: `sconce()` (wall lantern with a real cage, optionally on a post over a parapet);
+  `rampart()`'s wall body now collides (the yard below walks along it); `steps()` is solid
+  from the sides (one box per step under the ramp).
+
 ## 1.7.1
 - PS1Navigation `steer()`: never aims at `path[0]`. That point is only the spot on the mesh
   nearest the body; when the body stood a little off the mesh (wide bodies along railings) it lay

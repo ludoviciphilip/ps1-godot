@@ -44,6 +44,8 @@ func _ready() -> void:
 	_test_biped()
 	await _test_animate()
 	await _test_step()
+	await _test_audit()
+	_test_vista()
 	print("RESULT: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	get_tree().quit(1 if _fails else 0)
 
@@ -888,6 +890,49 @@ func _test_biped() -> void:
 	var body := g.build({stone = PS1.material(PS1Textures.ashlar())})
 	check(body.find_children("*", "CollisionShape3D", false, false).size() >= 8, "gothic: rampart/belfry colliders")
 	body.free()
+
+func _test_audit() -> void:
+	print("PS1Audit")
+	var root := Node3D.new()
+	root.position = Vector3(400, 0, 0)
+	add_child(root)
+	var g := PS1Gothic.new()
+	g.box(Vector3(0, -0.5, 0), Vector3(12, 1, 12))          # floor (collides)
+	g.box(Vector3(3, 1.5, 0), Vector3(0.6, 3, 6))            # wall (collides)
+	root.add_child(g.build({}))
+	var ghost := PS1Gothic.new()
+	ghost.box(Vector3(-3, 1.5, 0), Vector3(0.6, 3, 6), 0.0, false, false)   # wall you can see but walk through
+	root.add_child(ghost.build({}, false))
+	await get_tree().physics_frame
+	var holes: Array[Vector3] = await PS1Audit.missing_collision(root, AABB(Vector3(394, -5, -5), Vector3(12, 10, 10)), 0.5, [3.0])
+	var left := holes.filter(func(p): return p.x < 400.0)
+	var right := holes.filter(func(p): return p.x > 400.0)
+	check(left.size() > 0, "audit: finds the wall without collider (%d)" % left.size())
+	check(right.is_empty(), "audit: solid wall is fine (%d)" % right.size())
+	root.free()
+
+func _test_vista() -> void:
+	print("PS1Backdrop reveal kit")
+	for m: ArrayMesh in [PS1Backdrop.citadel(3), PS1Backdrop.colossus(), PS1Backdrop.broken_bridge()]:
+		check(m.get_surface_count() > 0 and m.get_aabb().size.y > 30.0, "backdrop: reveal mesh %s" % m.get_aabb().size)
+	var cit := PS1Backdrop.citadel(3)
+	var has_glow := false
+	for i in cit.get_surface_count():
+		has_glow = has_glow or cit.surface_get_name(i) == "glow"
+	check(has_glow, "backdrop: citadel has lit windows")
+	var bd := PS1Backdrop.new()
+	add_child(bd)
+	var got := [0]
+	bd.lightning.connect(func(_s, _d): got[0] += 1)
+	bd.add_lightning(null, Vector2(100, 100))
+	bd.strike(1.0)
+	check(got[0] == 1, "backdrop: strike() emits lightning")
+	var birds := bd.add_birds(5, Vector3.ZERO, 10.0)
+	check((birds.get_child(0) as MultiMeshInstance3D).multimesh.instance_count == 5, "backdrop: birds")
+	var gs := PS1Gothic.new()
+	var flame := gs.sconce(Vector3(0, 2, 0), Vector3.RIGHT, 1.0)
+	check(flame.y < 2.0 and gs.mesh().get_surface_count() > 0, "gothic: sconce on a post")
+	bd.free()
 
 func _test_step() -> void:
 	print("PS1Step")

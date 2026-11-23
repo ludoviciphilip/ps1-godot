@@ -334,6 +334,12 @@ func steps(base: Vector3, width: float, count: int, rise := 0.2, run := 0.35) ->
 	for i in count:
 		var h := rise * (i + 1)
 		box(base + Vector3(0, h * 0.5, -run * (i + 0.5)), Vector3(width, h, run), 0.0, false, false)
+	# the stair's body is solid from the sides and below: one box per step, its top just under
+	# the ramp (the ramp stays the walking surface)
+	for i in range(1, count):
+		var top := rise * i - 0.04
+		var bs0 := BoxShape3D.new(); bs0.size = Vector3(width, top, run + 0.04)   # overlap: no seams
+		_shapes.append([xform * Transform3D(Basis(), base + Vector3(0, top * 0.5, -run * (i + 0.5))), bs0])
 	var length := run * count
 	var height := rise * count
 	var ang := atan2(height, length)
@@ -353,6 +359,28 @@ func dais(base: Vector3, size: Vector2, height: float, rise := 0.34, run := 0.6)
 		var h := height - i * (height / tiers)
 		box(base + Vector3(0, h * 0.5, 0), Vector3(size.x + 2.0 * run * i, h, size.y + 2.0 * run * i))
 	return self
+
+## Wall lantern: an arm out of the wall, an open iron cage (two plates joined by four bars) and
+## a bowl for the flame. `pos` = centre of the cage, `out` = direction from the wall into the
+## room (the wall face is ~0.35 m behind `pos`). `post_from` (a height, optional): the wall is
+## lower than the lantern (a parapet) — an iron post rises from that height to hold it.
+## Returns where the flame goes.
+func sconce(pos: Vector3, out: Vector3, post_from := NAN) -> Vector3:
+	out = Vector3(out.x, 0, out.z).normalized()
+	var wall := pos - out * 0.35
+	var arm_y := pos.y - 0.1
+	limb(wall, pos - out * 0.05 + Vector3(0, -0.1, 0), 0.045, 0.035, 4)
+	if is_finite(post_from) and post_from < arm_y:
+		limb(Vector3(wall.x, post_from, wall.z), Vector3(wall.x, arm_y + 0.08, wall.z), 0.05, 0.045, 5)
+		box(Vector3(wall.x, post_from + 0.04, wall.z), Vector3(0.22, 0.08, 0.22), 0.0, false, false)   # foot plate
+	box(pos + Vector3(0, -0.25, 0), Vector3(0.3, 0.06, 0.3), 0.0, true, false)
+	box(pos + Vector3(0, 0.25, 0), Vector3(0.3, 0.06, 0.3), 0.0, true, false)
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var c := pos + Vector3(sx * 0.13, 0, sz * 0.13)
+			limb(c + Vector3(0, -0.25, 0), c + Vector3(0, 0.25, 0), 0.015, 0.015, 3)
+	box(pos + Vector3(0, -0.19, 0), Vector3(0.18, 0.06, 0.18), 0.0, true, false)   # the bowl
+	return pos + Vector3(0, -0.22, 0)
 
 ## Iron valve wheel (sluices, gates, winches): rim, `spokes` spokes with handles and a hub,
 ## solid all round. Stands in the XY plane facing +Z (turn it with `rot_y`). No collider.
@@ -638,7 +666,7 @@ func rampart(start: Vector3, length: float, width := 4.0, drop := 8.0, parapet :
 	var zc := (z0 + z1) * 0.5
 	# walkway slab and the wall body under it
 	box(Vector3(start.x, start.y - 0.25, zc), Vector3(width + 1.2, 0.5, length))
-	box(Vector3(start.x, start.y - 0.5 - (drop - 0.5) * 0.5, zc), Vector3(width + 1.2, drop - 0.5, length), 0.0, false, false)
+	box(Vector3(start.x, start.y - 0.5 - (drop - 0.5) * 0.5, zc), Vector3(width + 1.2, drop - 0.5, length))   # solid: the yard below walks along it
 	for side in [-1.0, 1.0]:
 		var x: float = start.x + side * (hw + 0.3)
 		var cuts := []

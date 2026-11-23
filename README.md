@@ -345,6 +345,23 @@ statue or slides a wall (`PS1CmdAnimate.animate()` from code).
 you from falling, merlons on the outer side, gaps for stairs and balconies), `belfry()`,
 `bell()` and `lathe()` (any surface of revolution).
 
+### The big reveal (1.8)
+
+`PS1Backdrop.citadel()`, `colossus()` and `broken_bridge()` are far-scenery meshes for the "new
+area, look at that" moment; `add_lightning(sky, every, direction, light)` makes sheet
+lightning over them (connect `lightning` to play thunder) and `add_birds()` circles crows.
+`PS1Sky` got a bigger moon with a halo and a glowing patch of horizon. To show it, fly a camera:
+
+```gdscript
+await PS1Shot.fly(self, [
+    {pos = Vector3(9, 5, -15), look = cathedral_pos, t = 1.8},
+    {pos = Vector3(12, 5.5, -19), look = cathedral_pos, t = 3.6},
+], 1.4)
+```
+
+**PS1Audit.missing_collision(root, area)** lists spots where a wall is visible but has no
+collider — run it headless on every level after big edits.
+
 ## Navigation, inventory and combat effects
 
 **Navigation for code-built levels.** Levels made with PS1Gothic / the level painter don't ship a

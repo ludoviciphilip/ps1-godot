@@ -18,6 +18,12 @@ uniform float stars = 0.6;
 uniform vec3 moon_direction = vec3(0.4, 0.45, -0.8);
 uniform vec4 moon_color : source_color = vec4(0.85, 0.88, 0.95, 1.0);
 uniform float moon_size = 0.035;
+uniform float moon_halo = 0.0;          // glow ring around the moon (0 = none)
+uniform vec3 glow_direction = vec3(1.0, 0.0, 0.0);   // a glowing patch of horizon (fires, a far city)
+uniform vec4 glow_color : source_color = vec4(0.0, 0.0, 0.0, 0.0);   // alpha = strength
+uniform float glow_spread = 6.0;        // bigger = narrower patch
+uniform float glow_height = 0.35;
+uniform float flash = 0.0;              // lightning: lights the clouds and the sky for a moment
 
 varying vec3 dir;
 
@@ -45,10 +51,19 @@ void fragment() {
 	c += vec3(s) * 0.7 * stars;
 	// Moon.
 	float m = dot(d, normalize(moon_direction));
-	c = mix(c, moon_color.rgb, step(1.0 - moon_size * moon_size, m));
+	// Horizon glow (quantized in 4 bands, PS1-style).
+	vec2 gd = normalize(glow_direction.xz + vec2(1e-5));
+	float g = pow(max(dot(normalize(d.xz + vec2(1e-5)), gd), 0.0), glow_spread) * (1.0 - smoothstep(-0.05, glow_height, d.y));
+	c += glow_color.rgb * floor(g * glow_color.a * 4.0 + 0.5) / 4.0;
+	// Moon halo (two hard rings) and the moon.
+	float r2 = moon_size * moon_size;
+	c += moon_color.rgb * moon_halo * (step(1.0 - r2 * 9.0, m) * 0.12 + step(1.0 - r2 * 3.5, m) * 0.12);
+	c = mix(c, moon_color.rgb, step(1.0 - r2, m));
 	// Clouds: planar projection of the dome, scrolling.
 	vec2 uv = d.xz / max(d.y + 0.15, 0.05) / clouds_scale + clouds_speed * TIME;
 	float cl = texture(clouds_tex, uv).r * smoothstep(0.0, 0.35, d.y);
 	c = mix(c, clouds_color.rgb, cl * clouds_color.a);
+	// Lightning: clouds light up from inside, the whole sky a little.
+	c += flash * vec3(0.55, 0.6, 0.78) * (0.3 + cl * 1.5);
 	ALBEDO = c;
 }
