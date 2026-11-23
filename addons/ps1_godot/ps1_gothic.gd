@@ -347,7 +347,7 @@ func steps(base: Vector3, width: float, count: int, rise := 0.2, run := 0.35) ->
 ## Raised platform you can climb from any side: a `size.x` x `size.y` top `height` above
 ## `base` (floor center), ringed by tiers of steps (each at most `rise` high, `run` deep) so
 ## there is no "wrong side". Keep `rise` under the character's step height.
-func dais(base: Vector3, size: Vector2, height: float, rise := 0.33, run := 0.6) -> PS1Gothic:
+func dais(base: Vector3, size: Vector2, height: float, rise := 0.34, run := 0.6) -> PS1Gothic:
 	var tiers := maxi(int(ceil(height / rise - 0.01)), 1)
 	for i in tiers:
 		var h := height - i * (height / tiers)

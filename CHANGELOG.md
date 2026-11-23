@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.2
+- `dais()`: default `rise` 0.34 (a 1 m platform gets 3 tiers, not 4).
+
 ## 1.6.1
 - PS1Gothic `dais()`: a raised platform ringed by tiers of steps, climbable from any side.
 - PS1Gothic `valve_wheel()`: a solid iron wheel (rim, spokes with handles, hub) for sluices,
