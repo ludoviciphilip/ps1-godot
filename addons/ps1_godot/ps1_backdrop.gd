@@ -181,6 +181,21 @@ func add_panorama(tex: Texture2D, direction := Vector3(0, 0, -1), arc := 120.0, 
 	add_child(mi)
 	return mi
 
+## Drifting fog banks over a panorama from add_panorama(): they swallow the lower part of the
+## picture (`amount` 0..1, up to `height` of it), broken into slow patches, lit by lightning.
+func fog_panorama(pano: MeshInstance3D, color := Color(0.32, 0.34, 0.4), amount := 0.75, height := 0.5,
+		patchy := 0.6, drift := 0.012, scale := 6.0) -> void:
+	var m := pano.material_override as ShaderMaterial
+	var tex := m.get_shader_parameter("tex") as Texture2D
+	m.set_shader_parameter("fog_color", color)
+	m.set_shader_parameter("fog_amount", amount)
+	m.set_shader_parameter("fog_height", height)
+	m.set_shader_parameter("fog_patchy", patchy)
+	m.set_shader_parameter("fog_drift", drift)
+	m.set_shader_parameter("fog_scale", scale)
+	if tex:
+		m.set_shader_parameter("fog_aspect", float(tex.get_width()) / tex.get_height())
+
 ## Turns any picture (a painting, an AI image, a render) into a PS1 panorama texture: scaled
 ## down to `width` px wide, colors cut to `levels` per channel with a 4x4 ordered dither, and
 ## the sky removed: pixels close to `sky_key` (a flat color you asked for behind the land, e.g.

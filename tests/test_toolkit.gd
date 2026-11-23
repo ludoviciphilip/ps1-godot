@@ -1005,6 +1005,9 @@ func _test_vista() -> void:
 	check(pim.get_width() == 32 and pim.get_pixel(5, 2).a == 0.0 and pim.get_pixel(5, 14).a == 1.0, "backdrop: panorama texture keys the sky out")
 	var pano := bd.add_panorama(ptex, Vector3(1, 0, 0), 90.0)
 	check(pano.mesh.get_aabb().size.y > 200.0, "backdrop: panorama band")
+	bd.fog_panorama(pano, Color(0.3, 0.3, 0.35), 0.8, 0.5)
+	var pm := pano.material_override as ShaderMaterial
+	check(is_equal_approx(float(pm.get_shader_parameter("fog_amount")), 0.8) and is_equal_approx(float(pm.get_shader_parameter("fog_aspect")), 2.0), "backdrop: panorama fog set")
 	var gs := PS1Gothic.new()
 	var flame := gs.sconce(Vector3(0, 2, 0), Vector3.RIGHT, 1.0)
 	check(flame.y < 2.0 and gs.mesh().get_surface_count() > 0, "gothic: sconce on a post")

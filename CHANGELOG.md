@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.0
+- PS1Backdrop `fog_panorama(pano, color, amount, height, patchy, drift, scale)`: drifting fog
+  banks over a picture panorama — denser at the bottom, broken into slow patches, 4 dithered
+  steps on the low-res grid, lit by lightning. The landmarks stay visible above it.
+- Panorama shader: its edge dither now follows the low-res grid (it was at native pixels).
+
 ## 1.11.0
 - **PS1FootLock** (new): planted feet for characters that code moves (lunges, attack steps,
   knockback). A SkeletonModifier3D that pins each planted foot to the floor and, once the body
