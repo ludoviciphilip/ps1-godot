@@ -145,11 +145,10 @@ static func citadel(seed_ := 1, size := 1.0) -> ArrayMesh:
 	var k := size
 	var g := PS1Gothic.new()
 	g.surface("stone")
-	# the crag: a pile of rocks narrowing to the top
-	for i in 7:
-		var w := rng.randf_range(50, 90) * k
-		g.rock(Vector3(rng.randf_range(-90, 90) * k, rng.randf_range(-70, -35) * k, rng.randf_range(-40, 10) * k), Vector3(w, rng.randf_range(50, 80) * k, w * 0.7), seed_ * 10 + i)
-	g.rock(Vector3(0, -30 * k, -10 * k), Vector3(200 * k, 60 * k, 90 * k), seed_ * 10 + 9)
+	# the crag: a mountain the city stands on — a flat top under the buildings, cliffs falling
+	# far down into the valley mist (so nothing floats)
+	g.surface("stone")
+	_crag(g, Vector3(0, 0, -12 * k), 125.0 * k, 300.0 * k, 260.0 * k, seed_)
 	# curtain wall along the crag's edge
 	g.box(Vector3(0, 6 * k, 22 * k), Vector3(190 * k, 12 * k, 3 * k))
 	for x in range(-90, 91, 30):
@@ -208,6 +207,46 @@ static func citadel(seed_ := 1, size := 1.0) -> ArrayMesh:
 	for z in range(-48, 2, 6):
 		for sx in [-1.0, 1.0]:
 			g.box(Vector3(sx * 13.2 * k, 36 * k, z * k), Vector3(0.4, 7.0, 2.6) * k, 0.0, true, false)
+	return g.mesh()
+
+# A mesa: rings from the flat top (radius r_top at y=0) down to y=-depth (radius r_bottom), each
+# ring jagged; cliffs facing out. Shared by citadel() and foothills().
+static func _crag(g: PS1Gothic, c: Vector3, r_top: float, r_bottom: float, depth: float, seed_ := 1, sides := 18, rings := 5) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_ * 31 + 7
+	var ring_pts := []
+	for j in rings + 1:
+		var f := float(j) / rings
+		var y := -depth * pow(f, 1.3)
+		var r := lerpf(r_top, r_bottom, pow(f, 0.8))
+		var pts := []
+		for i in sides:
+			var a := TAU * i / sides
+			var rr := r * rng.randf_range(0.82, 1.12)
+			pts.append(c + Vector3(cos(a) * rr, y + (rng.randf_range(-0.06, 0.02) * depth if j > 0 else 0.0), sin(a) * rr * 0.75))
+		ring_pts.append(pts)
+	for i in sides:
+		g.tri(c, ring_pts[0][(i + 1) % sides], ring_pts[0][i])
+	for j in rings:
+		for i in sides:
+			var a: Vector3 = ring_pts[j][i]
+			var b: Vector3 = ring_pts[j][(i + 1) % sides]
+			var a2: Vector3 = ring_pts[j + 1][i]
+			var b2: Vector3 = ring_pts[j + 1][(i + 1) % sides]
+			g.quad_away(c + Vector3(0, -depth * (j + 0.5) / rings, 0), a, b, b2, a2)
+
+## Foothills: a low broken massif (`width` m, peaks up to `height`) whose feet go `depth` m
+## down into the mist — valley floor for far scenery (put cities on crags behind it).
+static func foothills(seed_ := 1, width := 600.0, height := 60.0, depth := 120.0) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var g := PS1Gothic.new()
+	g.surface("stone")
+	var n := int(width / 90.0) + 2
+	for i in n:
+		var x := -width * 0.5 + width * float(i) / (n - 1) + rng.randf_range(-20, 20)
+		var r := rng.randf_range(45, 85)
+		_crag(g, Vector3(x, rng.randf_range(0.3, 1.0) * height, rng.randf_range(-30, 30)), r * 0.25, r * 1.4, height + depth, seed_ * 13 + i, 9, 3)
 	return g.mesh()
 
 ## A kneeling stone giant (about 90 m tall with `size` 1), head bowed over a sword planted in

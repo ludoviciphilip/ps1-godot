@@ -913,7 +913,7 @@ func _test_audit() -> void:
 
 func _test_vista() -> void:
 	print("PS1Backdrop reveal kit")
-	for m: ArrayMesh in [PS1Backdrop.citadel(3), PS1Backdrop.colossus(), PS1Backdrop.broken_bridge()]:
+	for m: ArrayMesh in [PS1Backdrop.citadel(3), PS1Backdrop.colossus(), PS1Backdrop.broken_bridge(), PS1Backdrop.foothills(2)]:
 		check(m.get_surface_count() > 0 and m.get_aabb().size.y > 30.0, "backdrop: reveal mesh %s" % m.get_aabb().size)
 	var cit := PS1Backdrop.citadel(3)
 	var has_glow := false

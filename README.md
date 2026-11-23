@@ -347,7 +347,7 @@ you from falling, merlons on the outer side, gaps for stairs and balconies), `be
 
 ### The big reveal (1.8)
 
-`PS1Backdrop.citadel()`, `colossus()` and `broken_bridge()` are far-scenery meshes for the "new
+`PS1Backdrop.citadel()`, `colossus()`, `broken_bridge()` and `foothills()` are far-scenery meshes for the "new
 area, look at that" moment; `add_lightning(sky, every, direction, light)` makes sheet
 lightning over them (connect `lightning` to play thunder) and `add_birds()` circles crows.
 `PS1Sky` got a bigger moon with a halo and a glowing patch of horizon. To show it, fly a camera:

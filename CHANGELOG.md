@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+- PS1Backdrop: `citadel()` stands on a real crag (flat top, cliffs falling into the mist) instead
+  of loose rocks — it no longer looks like it floats. New `foothills()` (broken hills whose feet
+  sink into the mist) for the valley floor between you and the far scenery.
+- PS1Sky: the horizon glow stays on the horizon (it bled below it and painted the valley orange).
+
 ## 1.8.0
 - **PS1Backdrop reveal kit**: `citadel()` (a cathedral city on a crag facing the viewer: twin
   west towers, rose window and lit door, one immense crossing spire, lit town windows),

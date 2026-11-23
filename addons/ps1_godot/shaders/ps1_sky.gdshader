@@ -53,7 +53,7 @@ void fragment() {
 	float m = dot(d, normalize(moon_direction));
 	// Horizon glow (quantized in 4 bands, PS1-style).
 	vec2 gd = normalize(glow_direction.xz + vec2(1e-5));
-	float g = pow(max(dot(normalize(d.xz + vec2(1e-5)), gd), 0.0), glow_spread) * (1.0 - smoothstep(-0.05, glow_height, d.y));
+	float g = pow(max(dot(normalize(d.xz + vec2(1e-5)), gd), 0.0), glow_spread) * (1.0 - smoothstep(0.0, glow_height, d.y)) * smoothstep(-0.12, 0.0, d.y);
 	c += glow_color.rgb * floor(g * glow_color.a * 4.0 + 0.5) / 4.0;
 	// Moon halo (two hard rings) and the moon.
 	float r2 = moon_size * moon_size;
