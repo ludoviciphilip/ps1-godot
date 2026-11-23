@@ -13,6 +13,11 @@ uniform vec4 haze_color : source_color = vec4(0.1, 0.12, 0.16, 1.0);
 uniform float haze : hint_range(0.0, 1.0) = 0.0;
 uniform float depth_order = 1.0;
 uniform float flash = 0.0;
+// soft edges: the picture fades out (PS1 screen-door dither) over this fraction of its width at
+// the sides and of its height at the bottom, so it melts into the mist/ridges instead of
+// reading as a framed rectangle
+uniform float side_fade = 0.12;
+uniform float bottom_fade = 0.25;
 
 void vertex() {
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
@@ -26,7 +31,11 @@ void vertex() {
 
 void fragment() {
 	vec4 t = texture(tex, UV);
-	if (t.a < 0.5) {
+	float f = smoothstep(0.0, side_fade, UV.x) * smoothstep(0.0, side_fade, 1.0 - UV.x) * smoothstep(0.0, bottom_fade, 1.0 - UV.y);
+	ivec2 q = ivec2(FRAGCOORD.xy) % 4;
+	const float B[16] = float[16](0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0, 3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0);
+	float bayer = (B[q.y * 4 + q.x] + 0.5) / 16.0;
+	if (t.a < 0.5 || f < bayer) {
 		discard;
 	}
 	vec3 c = t.rgb * tint.rgb;

@@ -140,8 +140,11 @@ static func ridge(seed_ := 1, length := 300.0, height := 40.0, points := 28, dep
 ## A picture as panorama: the image wrapped on a band around the origin (a cylinder, `radius`
 ## m), centered on `direction`, `arc` degrees wide, from y=`bottom` to y=`top` (image height).
 ## Use panorama_texture() on the source first (PS1 look + sky cut out). Lightning flashes it.
+## `order` 0.3 puts it behind the 3D ridges and the mist sea, 9.5 in front of every far layer;
+## its sides and bottom dither away (`side_fade`, `bottom_fade`) into whatever is behind.
 func add_panorama(tex: Texture2D, direction := Vector3(0, 0, -1), arc := 120.0, radius := 900.0,
-		bottom := -80.0, top := 220.0, haze := 0.0, tint := Color.WHITE) -> MeshInstance3D:
+		bottom := -80.0, top := 220.0, haze := 0.0, tint := Color.WHITE, order := 0.3,
+		side_fade := 0.12, bottom_fade := 0.25) -> MeshInstance3D:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var mid := atan2(direction.x, -direction.z)
@@ -167,7 +170,9 @@ func add_panorama(tex: Texture2D, direction := Vector3(0, 0, -1), arc := 120.0, 
 	m.set_shader_parameter("tint", tint)
 	m.set_shader_parameter("haze_color", haze_color)
 	m.set_shader_parameter("haze", haze)
-	m.set_shader_parameter("depth_order", 1.0 + (1.0 - haze) * 8.0 - 0.5)
+	m.set_shader_parameter("depth_order", order)   # default: behind the ridges and the mist sea
+	m.set_shader_parameter("side_fade", side_fade)
+	m.set_shader_parameter("bottom_fade", bottom_fade)
 	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.extra_cull_margin = 16384.0
@@ -187,16 +192,23 @@ static func panorama_texture(img: Image, width := 1024, levels := 12, sky_key :=
 	var h := maxi(int(round(float(im.get_height()) * width / im.get_width())), 1)
 	im.resize(width, h, Image.INTERPOLATE_LANCZOS)
 	const BAYER := [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
-	var step := 1.0 / float(levels - 1)
+	var lv := float(levels - 1)
+	# despill: the key's main channel (e.g. green) can't beat the others on the kept land,
+	# so the soft edges of the painting don't keep a green fringe
+	var kc := 0 if sky_key.r >= maxf(sky_key.g, sky_key.b) else (1 if sky_key.g >= sky_key.b else 2)
+	var tol := key_tolerance * 3.0
 	for y in h:
 		for x in width:
 			var c := im.get_pixel(x, y)
-			if sky_key.a > 0.0 and absf(c.r - sky_key.r) + absf(c.g - sky_key.g) + absf(c.b - sky_key.b) < key_tolerance * 3.0:
-				im.set_pixel(x, y, Color(0, 0, 0, 0))
-				continue
+			if sky_key.a > 0.0:
+				if absf(c.r - sky_key.r) + absf(c.g - sky_key.g) + absf(c.b - sky_key.b) < tol:
+					im.set_pixel(x, y, Color(0, 0, 0, 0))
+					continue
+				if kc == 0: c.r = minf(c.r, maxf(c.g, c.b))
+				elif kc == 1: c.g = minf(c.g, maxf(c.r, c.b))
+				else: c.b = minf(c.b, maxf(c.r, c.g))
 			var b: float = (float(BAYER[(y % 4) * 4 + (x % 4)]) + 0.5) / 16.0 - 0.5
-			var q := func(v: float) -> float: return clampf(round(v / step + b) * step, 0.0, 1.0)
-			im.set_pixel(x, y, Color(q.call(c.r), q.call(c.g), q.call(c.b), 1.0))
+			im.set_pixel(x, y, Color(clampf(round(c.r * lv + b) / lv, 0.0, 1.0), clampf(round(c.g * lv + b) / lv, 0.0, 1.0), clampf(round(c.b * lv + b) / lv, 0.0, 1.0), 1.0))
 	return ImageTexture.create_from_image(im)
 
 ## A cathedral city on a crag, about 220 m wide and 150 m tall (scale with `size`), facing +Z.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.0
+- `add_panorama()`: `order` (behind the ridges and mist sea, or in front of every far layer),
+  `side_fade` / `bottom_fade` — the picture's edges dither away so it melts into the scenery
+  instead of reading as a framed rectangle.
+- `panorama_texture()`: despill (no green fringe around the land after keying the sky out).
+
 ## 1.9.0
 - PS1Backdrop `add_panorama(texture, direction, arc, radius, bottom, top)`: a picture wrapped
   on a band around the horizon, drawn like the far layers (lightning flashes it), and
