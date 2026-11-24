@@ -11,3 +11,10 @@
 /CHANGELOG.md export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
+# Asset Store rule: only the addons folder at the zip root
+/README.md export-ignore
+/LICENSE export-ignore
+/icon.png export-ignore
+/icon.png.import export-ignore
+/screenshots export-ignore
+/ps1_bake_cache export-ignore
