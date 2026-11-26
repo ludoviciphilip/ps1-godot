@@ -1,8 +1,24 @@
 # PS1 Maker
 
-A small, drop-in toolkit for making **PlayStation 1-style 3D games in Godot 4** (Godot 4.5 or newer; tested on 4.5, 4.6 and 4.7).
+**Open-source PS1 / PSX retro 3D toolkit for Godot 4** — vertex jitter, affine texture warping, dithering and baked vertex lighting, plus a level painter, procedural dungeons and RPG Maker-style events.
 
-It reproduces the hardware quirks that make PS1 games look the way they do, without getting in the way of modern gameplay code:
+[![License: MIT](https://img.shields.io/github/license/ludoviciphilip/ps1-godot)](LICENSE)
+[![GDScript](https://img.shields.io/badge/GDScript-pure-478cbf)](addons/ps1_godot)
+![Godot 4.5+](https://img.shields.io/badge/Godot-4.5%2B-478cbf?logo=godotengine&logoColor=white)
+
+**[Features](#the-ps1-look)** · **[Install](#install)** · **[Usage](#usage)** · **[Demo](#demo)**
+
+## Why
+
+Requires **Godot 4.5 or newer** (tested on 4.5, 4.6 and 4.7). Godot's renderer is built for modern lighting, so getting an authentic PS1 / PSX look — wobbly
+vertex-snapped geometry, warping affine textures, 15-bit dithered color, pre-lit Silent Hill/Resident
+Evil-style vertex lighting — normally means writing it all from scratch. PS1 Maker reproduces the
+hardware quirks that make PS1 games look the way they do, without getting in the way of modern
+gameplay code, and adds the production tools (level painter, procedural dungeons, RPG Maker-style
+events, menus, particles, audio) to actually ship a game with that look. It grew out of, and is
+battle-tested in, a real souls-like/horror project.
+
+## The PS1 look
 
 | Effect | How |
 |---|---|
@@ -700,6 +716,20 @@ pre-1.0 days, so older projects keep working.)
 - [x] Auto walls / ceilings: paint floors, walls follow
 - [x] Asset Library package
 - [x] Particles, audio, RPG Maker-style events
+
+## Alternatives
+
+A few other Godot 4 plugins reproduce the PS1 look (vertex jitter, affine texture mapping,
+dithering): [PS1 / PSX Visuals](https://godotengine.org/asset-library/asset/4557),
+[PSX Look Free](https://godotengine.org/asset-library/asset/5493) and
+[PS1 / PSX Visuals - GD4 Port](https://godotengine.org/asset-library/asset/4687) are good,
+shader-focused options if all you need is the look. PS1 Maker covers the same rendering quirks
+plus the production side — a grid level painter, procedural dungeons, RPG Maker-style events,
+baked lighting, settings/pause menus and translations — because it was built to ship a whole game,
+not just a shader.
+
+"PlayStation" and "PS1" are trademarks of Sony Interactive Entertainment Inc. This project is an
+independent, fan-made toolkit and is not affiliated with or endorsed by Sony.
 
 ## License
 

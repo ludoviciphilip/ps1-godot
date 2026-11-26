@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in PS1 Maker isn't working as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps, ideally from a fresh scene (which node/class, which settings).
+    validations:
+      required: true
+  - type: input
+    id: addon-version
+    attributes:
+      label: PS1 Maker version
+      description: From addons/ps1_godot/plugin.cfg (`version`), or the AssetLib entry you installed.
+      placeholder: e.g. 1.14.1
+    validations:
+      required: true
+  - type: input
+    id: godot-version
+    attributes:
+      label: Godot version
+      placeholder: e.g. 4.5.1, 4.6, 4.7.1
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Other (specify below)
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Error output, a minimal project, or a screenshot/video helps a lot.

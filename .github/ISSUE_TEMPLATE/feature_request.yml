@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest something for PS1 Maker
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the need?
+      description: What are you trying to build, and where does the toolkit fall short today?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would the feature/API look like? A code sketch is welcome.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workaround you're using today, or other approaches.
+    validations:
+      required: false
